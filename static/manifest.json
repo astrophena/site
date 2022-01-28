@@ -1,0 +1,29 @@
+{
+  "short_name": "astrophena.name",
+  "name": "Ilya Mateyko",
+  "icons": [
+    {
+      "src": "/icons/36x36.webp",
+      "type": "image/webp",
+      "sizes": "36x36",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/192x192.webp",
+      "type": "image/webp",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/512x512.webp",
+      "type": "image/webp",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "background_color": "#12161a",
+  "theme_color": "#12161a",
+  "display": "browser",
+  "scope": "/",
+  "start_url": "/"
+}

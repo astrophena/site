@@ -1,0 +1,192 @@
+! Title: astrophena's website blocklist
+! Expires: 4 days
+
+!
+! VK (desktop version)
+!
+
+! Music banner
+vk.com##.audio_promo
+
+! Stories in feed
+vk.com##.stories_feed_wrap
+
+! Feed tabs and buttons
+vk.com##.feed_section_live
+vk.com##.feed_section_recommended
+vk.com###feed_add_list_icon
+vk.com###feed_filters
+
+! Possible friends
+vk.com##.friends_possible_block
+
+! Music tabs and buttons
+vk.com##._audio_section_tab__recoms
+vk.com##._audio_section_tab__explore
+vk.com##._audio_section_tab__updates
+vk.com##.CatalogBlock__subscription
+vk.com##.CatalogBlock__audio_friends_separator
+vk.com##.CatalogMyAudiosHeader.CatalogBlock__title
+
+! Profile name in the header
+vk.com##.TopNavBtn__profileName
+
+! Messenger placeholder
+vk.com##.im-page--center-empty
+
+! Navigation
+vk.com###l_nwsf
+vk.com##.left_menu_nav_wrap
+vk.com##.left_settings
+vk.com###l_doc
+
+! Friends
+vk.com##.friends_section_find
+vk.com##._ui_rmenu_lists_toggle
+vk.com##.ui_rmenu_sep
+vk.com###invite_button
+
+! "People you may know"
+vk.com##.profile_friends_recomm
+
+! Profile actions
+vk.com##.PageActionsClosedProfile
+vk.com##._page_actions_container
+
+! Fast chat
+vk.com###fastchat-reforged
+
+! Ecosystem menu
+vk.com##.TopNavBtn__ecosystemMenuLink
+
+!
+! VK (mobile version)
+!
+
+! Main menu entries
+m.vk.com##.mmi_feed
+m.vk.com##.mmi_recommended
+m.vk.com##.mmi_groups
+m.vk.com##.mmi_apps
+m.vk.com##.mmi_ads
+m.vk.com##.mmi_likes
+m.vk.com##.mmi_fave
+m.vk.com##.mmi_docs
+m.vk.com##.mmi_search
+
+! Logo
+m.vk.com##.lmh_logo_wrap
+
+! Help link
+m.vk.com##.mmi_help
+
+! Bottom bar (on mobile)
+m.vk.com##[data-tabbar="feed"]
+m.vk.com##[data-tabbar="recommend"]
+
+!
+! DuckDuckGo
+!
+
+! Header
+duckduckgo.com##.header__label.showcase
+duckduckgo.com##.social
+duckduckgo.com##.tag-home
+
+! Feedback prompts
+duckduckgo.com##.js-feedback-prompt-generic
+duckduckgo.com##.js-feedback-btn-wrap
+
+! Footer
+duckduckgo.com##.footer
+
+! Related searches
+duckduckgo.com##.t-m.related-searches
+
+! Site links
+duckduckgo.com##.js-sitelinks
+
+!
+! BLM banners
+!
+
+##.devsite-banner-message
+pkg.go.dev##.go-Banner
+
+!
+! pkg.go.dev
+!
+
+! Footer
+pkg.go.dev##.go-Footer
+
+!
+! Reddit
+!
+
+! Premium banner
+old.reddit.com##.premium-banner
+
+! Redesign switch button
+old.reddit.com###redesign-beta-optin-btn
+
+! Chat
+||old.reddit.com/chat/minimize$subdocument
+
+! Online indicator
+old.reddit.com##.presence_circle
+
+! Sign up ads
+old.reddit.com##.listingsignupbar
+old.reddit.com##.commentsignupbar
+
+! Trending subreddits
+old.reddit.com##.trending-subreddits
+
+! Footer
+old.reddit.com##.footer-parent
+
+! Ads
+old.reddit.com##.ad-container
+
+! Read next
+old.reddit.com##.read-next
+
+! Cookie banner
+old.reddit.com##.cookie-infobar
+
+!
+! 2ch.hk
+!
+
+! Header
+2ch.hk##.logo.header__logo
+2ch.hk##.header__adminbar
+
+! Footer
+2ch.hk##hr
+2ch.hk##.adminbar-bottom.adminbar.desktop
+2ch.hk##.footer__info
+2ch.hk##.nb
+
+! Left sidebar
+2ch.hk##.cntnt__left
+
+! Left sidebar opener
+2ch.hk##.hidefm.desktop
+
+! Favorites
+2ch.hk##.bb
+
+! Up and down arrows
+2ch.hk##.na
+
+! Plashque
+2ch.hk###plashque
+
+!
+! Cookie banners
+!
+
+! BBC Russian
+bbc.com##.e1o5up6o5.bbc-bmxm2b
