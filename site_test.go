@@ -171,7 +171,7 @@ func TestURLTemplateFunc(t *testing.T) {
 	}{
 		"EnvDevBaseURLSet": {
 			c: &Config{
-				Env:     env.Dev,
+				Env:     Dev,
 				BaseURL: bu,
 			},
 			in:   "/test",
@@ -179,14 +179,14 @@ func TestURLTemplateFunc(t *testing.T) {
 		},
 		"EnvProdBaseURLNotSet": {
 			c: &Config{
-				Env: env.Prod,
+				Env: Prod,
 			},
 			in:   "/lol",
 			want: "/lol",
 		},
 		"EnvProdBaseURLSet": {
 			c: &Config{
-				Env:     env.Prod,
+				Env:     Prod,
 				BaseURL: bu,
 			},
 			in:   "/hello",

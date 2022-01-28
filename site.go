@@ -67,9 +67,6 @@ import (
 	ttemplate "text/template"
 	"time"
 
-	"go.astrophena.name/site/internal/env"
-	"go.astrophena.name/site/internal/logger"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/feeds"
 	"github.com/russross/blackfriday/v2"
@@ -88,6 +85,16 @@ var (
 	errInvalidPermalink        = errors.New("invalid permalink")
 )
 
+// Env is the environment in which site can run.
+type Env string
+
+// Available environments.
+const (
+	Dev     = Env("dev")
+	Staging = Env("staging")
+	Prod    = Env("prod")
+)
+
 // Config represents a build configuration.
 type Config struct {
 	// Title is the title of the site.
@@ -100,7 +107,7 @@ type Config struct {
 	// absolute URLs from relative ones.
 	//
 	// Staging builds are mostly similar to prod builds, but drafts are included.
-	Env env.Env
+	Env Env
 	// BaseURL is the base URL of the site.
 	BaseURL *url.URL
 	// Src is the directory where to read files from.  If empty, uses the current
@@ -110,7 +117,7 @@ type Config struct {
 	// directory.
 	Dst string
 	// Logf specifies a logger to use. If nil, log.Printf is used.
-	Logf logger.Logf
+	Logf func(format string, args ...any)
 }
 
 func (c *Config) setDefaults() {
@@ -131,7 +138,7 @@ func (c *Config) setDefaults() {
 	}
 
 	if c.Env == "" {
-		c.Env = env.Dev
+		c.Env = Dev
 	}
 
 	if c.BaseURL == nil {
@@ -400,7 +407,7 @@ func newBuildContext(c *Config) *buildContext {
 }
 
 func (b *buildContext) url(base string) string {
-	if b.c.Env == env.Dev || b.c.BaseURL == nil {
+	if b.c.Env == Dev || b.c.BaseURL == nil {
 		return base
 	}
 	u := *b.c.BaseURL
@@ -465,7 +472,7 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 	if err := p.parse(f); err != nil {
 		return err
 	}
-	if !p.Draft || b.c.Env != env.Prod {
+	if !p.Draft || b.c.Env != Prod {
 		b.pages = append(b.pages, p)
 	}
 
@@ -668,7 +675,7 @@ func (b *buildContext) buildFeeds() error {
 		}
 
 		// Exclude drafts from feed in prod.
-		if p.Draft && b.c.Env == env.Prod {
+		if p.Draft && b.c.Env == Prod {
 			continue
 		}
 

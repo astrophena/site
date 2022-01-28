@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 
 	"go.astrophena.name/site"
-	"go.astrophena.name/site/internal/env"
 )
 
 func main() {
@@ -37,7 +36,7 @@ func main() {
 	}
 
 	c := &site.Config{
-		Env:  env.Env(*envFlag),
+		Env:  site.Env(*envFlag),
 		Src:  ".",
 		Dst:  *dirFlag,
 		Logf: logf,
