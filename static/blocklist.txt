@@ -107,13 +107,6 @@ duckduckgo.com##.t-m.related-searches
 duckduckgo.com##.js-sitelinks
 
 !
-! BLM banners
-!
-
-##.devsite-banner-message
-pkg.go.dev##.go-Banner
-
-!
 ! pkg.go.dev
 !
 
