@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-
-	"go.astrophena.name/site/internal/env"
 )
 
 func TestStripComments(t *testing.T) {
