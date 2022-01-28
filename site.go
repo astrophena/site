@@ -289,6 +289,8 @@ func Serve(c *Config, addr string) error {
 	return s.Shutdown(ctx)
 }
 
+// Copied from
+// https://github.com/brandur/modulir/blob/1ff912fdc45a79cb4d8d9f199d213ae9c3598cbd/watch.go#L201.
 func shouldRebuild(path string, op fsnotify.Op) bool {
 	base := filepath.Base(path)
 
