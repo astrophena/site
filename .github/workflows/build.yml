@@ -22,7 +22,7 @@ jobs:
             ~/.cache/go-build
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Build
-        run: ./build.go
+        run: ./build.go -env prod
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
