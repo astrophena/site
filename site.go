@@ -117,7 +117,7 @@ type Config struct {
 	// directory.
 	Dst string
 	// Logf specifies a logger to use. If nil, log.Printf is used.
-	Logf func(format string, args ...any)
+	Logf func(format string, args ...interface{})
 }
 
 func (c *Config) setDefaults() {
