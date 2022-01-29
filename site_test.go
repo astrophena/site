@@ -50,7 +50,7 @@ func TestPage(t *testing.T) {
 		wantErr       error
 		wantType      string
 	}{
-		"ValidFrontmatter": {
+		"valid frontmatter": {
 			name: "foo.md",
 			content: `{
   "title": "Foo",
@@ -61,12 +61,12 @@ func TestPage(t *testing.T) {
 Foo.
 `,
 		},
-		"NoFrontmatter": {
+		"no frontmatter": {
 			name:    "bar.md",
 			content: "Hello, world!",
 			wantErr: errFrontmatterMissing,
 		},
-		"InvalidFrontmatterMissingTitle": {
+		"invalid frontmatter (missing title)": {
 			name: "invalid.md",
 			content: `{
   "template": "layout",
@@ -77,12 +77,12 @@ Bar.
 `,
 			wantErr: errFrontmatterMissingParam,
 		},
-		"UnsupportedFormat": {
+		"unsupported format": {
 			name:    "unsupported.rst",
 			content: "Sample text.",
 			wantErr: errFormatUnsupported,
 		},
-		"InvalidPermalink": {
+		"invalid permalink": {
 			name: "permalink.md",
 			content: `{
   "title": "Foo",
@@ -94,7 +94,7 @@ Test.
 `,
 			wantErr: errInvalidPermalink,
 		},
-		"DefaultType": {
+		"default type": {
 			name: "default-type.md",
 			content: `{
   "title": "Foo",
@@ -106,7 +106,7 @@ Test.
 `,
 			wantType: "page",
 		},
-		"TypeBlog": {
+		"blog type": {
 			name: "type-blog.md",
 			content: `{
   "title": "Foo",
@@ -119,7 +119,7 @@ Test
 `,
 			wantType: "blog",
 		},
-		"ModelineComment": {
+		"modeline comment": {
 			name: "modeline-comment.html",
 			content: `<!-- vim: set ft=gotplhtml: -->
 {
@@ -167,7 +167,7 @@ func TestURLTemplateFunc(t *testing.T) {
 		in   string
 		want string
 	}{
-		"EnvDevBaseURLSet": {
+		"env dev (base URL set)": {
 			c: &Config{
 				Env:     Dev,
 				BaseURL: bu,
@@ -175,14 +175,14 @@ func TestURLTemplateFunc(t *testing.T) {
 			in:   "/test",
 			want: "/test",
 		},
-		"EnvProdBaseURLNotSet": {
+		"env prod (base URL not set)": {
 			c: &Config{
 				Env: Prod,
 			},
 			in:   "/lol",
 			want: "/lol",
 		},
-		"EnvProdBaseURLSet": {
+		"env prod (base URL set)": {
 			c: &Config{
 				Env:     Prod,
 				BaseURL: bu,

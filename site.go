@@ -10,7 +10,7 @@
 //             generated site.
 //  templates  These are the templates that wrap pages. Templates are
 //             chosen on a page-by-page basis in the front matter.
-//             They must have the '.tmpl' extension.
+//             They must have the '.html' extension.
 //
 // Page Layout
 //
@@ -426,7 +426,7 @@ func (b *buildContext) parseTemplates(path string, d fs.DirEntry, err error) err
 		return nil
 	}
 
-	if filepath.Ext(path) != ".tmpl" {
+	if filepath.Ext(path) != ".html" {
 		return nil
 	}
 
