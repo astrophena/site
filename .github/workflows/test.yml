@@ -1,14 +1,12 @@
-name: 'Deploy'
+name: 'Test'
 on:
-  workflow_run:
-    workflows: ['Test']
-    types: ['completed']
+  push:
     branches: ['master']
+  pull_request:
 jobs:
-  deploy:
-    name: 'Deploy'
+  test:
+    name: 'Test'
     runs-on: 'ubuntu-latest'
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: 'Check out'
         uses: 'actions/checkout@v2.4.0'
@@ -29,11 +27,9 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: 'Install Node.js dependencies'
         run: 'npm install'
-      - name: 'Build'
+      - name: 'Check formatting'
+        run: 'npm run check'
+      - name: 'Run tests'
+        run: 'go test'
+      - name: 'Try to build'
         run: './build.go -env prod'
-      - name: 'Deploy'
-        uses: 'peaceiris/actions-gh-pages@v3.8.0'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: './build'
-          cname: 'astrophena.name'
