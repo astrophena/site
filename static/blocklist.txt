@@ -59,6 +59,10 @@ vk.com###fastchat-reforged
 ! Ecosystem menu
 vk.com##.TopNavBtn__ecosystemMenuLink
 
+! Hide audio icon
+vk.com###top_audio
+vk.com##.TopNavBtn__audio
+
 !
 ! VK (mobile version)
 !
