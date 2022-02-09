@@ -66,9 +66,6 @@ vk.com##.TopNavBtn__audio
 ! "Find friends" in Messenger
 vk.com##.ConvoListFindFriendsStub
 
-! Music button in header
-vk.com##.TopNavBtn__audio
-
 !
 ! VK (mobile version)
 !
