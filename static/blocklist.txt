@@ -63,6 +63,12 @@ vk.com##.TopNavBtn__ecosystemMenuLink
 vk.com###top_audio
 vk.com##.TopNavBtn__audio
 
+! "Find friends" in Messenger
+vk.com##.ConvoListFindFriendsStub
+
+! Music button in header
+vk.com##.TopNavBtn__audio
+
 !
 ! VK (mobile version)
 !
@@ -180,6 +186,58 @@ old.reddit.com##.cookie-infobar
 
 ! Plashque
 2ch.hk###plashque
+
+!
+! Yandex Music
+!
+
+! Notification dot
+music.yandex.*##.playlist-notification
+
+! Sidebar ad
+music.yandex.*##.teaser
+
+! Header
+music.yandex.*##.d-header__title
+
+! Footer
+music.yandex.*##.footer
+
+! Chart
+music.yandex.*##.page-line_chart
+
+! Logo
+music.yandex.*##.head-kids__left
+
+!
+! Yandex
+!
+
+! Plus points
+yandex.*##.plus-points
+
+! News widget
+yandex.*##.widget_name_topnews
+
+!
+! Yandex Disk
+!
+
+! App install link
+disk.yandex.*##.AppLink
+
+! Footer
+disk.yandex.*##.footer
+disk.yandex.*##.InfoSpace__Button
+
+! "Enhance" button
+disk.yandex.*##.PSHeader-Pro
+
+! Services
+disk.yandex.*##.PSHeader-Center
+
+! Logo
+disk.yandex.*##.PSHeaderLogo360
 
 !
 ! Cookie banners
