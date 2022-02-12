@@ -236,6 +236,18 @@ disk.yandex.*##.PSHeader-Center
 ! Logo
 disk.yandex.*##.PSHeaderLogo360
 
+! Downloads
+disk.yandex.*##.LeftColumnNavigation__Item_type_downloads
+
+! Scans
+disk.yandex.*##.LeftColumnNavigation__Item_type_scans
+
+! Mail archive
+disk.yandex.*##.LeftColumnNavigation__Item_type_aux
+
+! Recent
+disk.yandex.*##.LeftColumnNavigation__Item_type_recent
+
 !
 ! Cookie banners
 !
