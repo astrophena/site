@@ -66,6 +66,9 @@ vk.com##.TopNavBtn__audio
 ! "Find friends" in Messenger
 vk.com##.ConvoListFindFriendsStub
 
+! Emoji button in Messenger
+vk.com##._emoji_btn
+
 !
 ! VK (mobile version)
 !
