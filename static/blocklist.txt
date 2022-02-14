@@ -58,6 +58,7 @@ vk.com###fastchat-reforged
 
 ! Ecosystem menu
 vk.com##.TopNavBtn__ecosystemMenuLink
+vk.com##.EcosystemAccountMenu_col__RUs5p
 
 ! Hide audio icon
 vk.com###top_audio
