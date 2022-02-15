@@ -89,14 +89,18 @@ var (
 	errInvalidPermalink        = errors.New("invalid permalink")
 )
 
-// Env is the environment in which site can run.
+// Env is the environment for which site can be built.
 type Env string
 
 // Available environments.
 const (
-	Dev     = Env("dev")
+	// Everything is included.
+	Dev = Env("dev")
+	// Drafts are excluded. Also the base URL is used to derive absolute URLs from
+	// relative ones.
+	Prod = Env("prod")
+	// Mostly similar to prod, but drafts are included.
 	Staging = Env("staging")
-	Prod    = Env("prod")
 )
 
 // Config represents a build configuration.
@@ -106,11 +110,6 @@ type Config struct {
 	// Author is the name of the author of the site.
 	Author string
 	// Env is the environment to use when building.
-	//
-	// In prod builds drafts are excluded. Also the base URL is used to derive
-	// absolute URLs from relative ones.
-	//
-	// Staging builds are mostly similar to prod builds, but drafts are included.
 	Env Env
 	// BaseURL is the base URL of the site.
 	BaseURL *url.URL
