@@ -1,5 +1,7 @@
 # [astrophena.name](https://astrophena.name)
 
+[![Go Documentation](https://godocs.io/go.astrophena.name/site?status.svg)](https://godocs.io/go.astrophena.name/site)
+
 This is my personal website, hosted on [GitHub Pages](https://pages.github.com).
 
 ## Serving locally
