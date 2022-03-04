@@ -89,6 +89,9 @@ var (
 	errInvalidPermalink        = errors.New("invalid permalink")
 )
 
+// Logf is a simple printf-like logging function.
+type Logf func(format string, args ...interface{})
+
 // Env is the environment for which site can be built.
 type Env string
 
@@ -120,7 +123,7 @@ type Config struct {
 	// directory.
 	Dst string
 	// Logf specifies a logger to use. If nil, log.Printf is used.
-	Logf func(format string, args ...interface{})
+	Logf Logf
 }
 
 func (c *Config) setDefaults() {
