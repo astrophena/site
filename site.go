@@ -353,6 +353,7 @@ func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
 		return nil, err
 	}
 
+	//lint:ignore SA4006 TODO
 	s, err := f.Stat()
 	if s.IsDir() {
 		index := filepath.Join(path, "index.html")

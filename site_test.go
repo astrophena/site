@@ -31,6 +31,8 @@ Foo.
 <!-- LOL. -->
 `
 
+	const strippedContent = "<p>Foo.</p>"
+
 	p := &Page{name: "foo.md"}
 	if err := p.parse(strings.NewReader(content)); err != nil {
 		t.Fatal(err)
@@ -41,10 +43,10 @@ Foo.
 		t.Fatal(err)
 	}
 
-	// Check if all comments has been removed.
-	comments := htmlCommentRe.FindAll(buf.Bytes(), -1)
-	if len(comments) > 0 {
-		t.Fatalf("not all comments has been stripped, %d remains", len(comments))
+	// Don't care about whitespace.
+	got := strings.TrimSpace(buf.String())
+	if got != strippedContent {
+		t.Fatalf("want %q, got %q", strippedContent, got)
 	}
 }
 
