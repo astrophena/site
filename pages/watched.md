@@ -34,6 +34,7 @@ liked.
 ## Shows {#shows}
 
 - [Doctor Who (1963)](https://www.imdb.com/title/tt0056751/)
+- [Poirot (1989)](https://www.imdb.com/title/tt0094525/)
 - [Doctor Who (2005)](https://www.imdb.com/title/tt0436992/)
 - [The Thick of It (2005)](https://www.imdb.com/title/tt0459159/)
 - [Torchwood (2006)](https://www.imdb.com/title/tt0485301/)
@@ -52,3 +53,4 @@ liked.
 - [McDonald & Dodds (2020)](https://www.imdb.com/title/tt10720914/)
 - [Miss Scarlet and the Duke (2020)](https://www.imdb.com/title/tt8270592/)
 - [Vigil (2021)](https://www.imdb.com/title/tt11846996/)
+- [The Chelsea Detective (2022)](https://www.imdb.com/title/tt14321914/)
