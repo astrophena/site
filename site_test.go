@@ -9,9 +9,22 @@ import (
 	"errors"
 	"html/template"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 )
+
+func TestBuild(t *testing.T) {
+	tmp, err := os.MkdirTemp("", "site-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmp)
+
+	if err := Build(&Config{Dst: tmp}); err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestStripComments(t *testing.T) {
 	b := newBuildContext(&Config{})
