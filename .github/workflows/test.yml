@@ -24,12 +24,11 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: |
+            ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: 'Install Node.js dependencies'
         run: 'npm install'
       - name: 'Check formatting'
         run: 'npm run check'
       - name: 'Run tests'
         run: 'go test'
-      - name: 'Try to build'
-        run: './build.go -env prod'
