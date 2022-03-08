@@ -2,7 +2,15 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-// Package site builds the site.
+// Package site builds https://astrophena.name.
+//
+// In most cases it is used from the build.go tool:
+//
+//  $ ./build.go
+//
+// To see all available flags, run:
+//
+//  $ ./build.go -help
 //
 // Directory Structure
 //

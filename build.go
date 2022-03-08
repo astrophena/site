@@ -11,6 +11,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,10 +23,16 @@ func main() {
 	log.SetFlags(0)
 
 	var (
-		dirFlag   = flag.String("dir", filepath.Join(".", "build"), "Directory where to put the built site.")
-		envFlag   = flag.String("env", "dev", "Environment to build for.")
-		serveFlag = flag.String("serve", "", "Serve the site on `host:port`.")
+		dirFlag    = flag.String("dir", filepath.Join(".", "build"), "Directory where to put the built site.")
+		envFlag    = flag.String("env", "dev", "Environment to build for.")
+		serveFlag  = flag.Bool("serve", false, "Serve the site.")
+		listenFlag = flag.String("listen", "localhost:3000", "Listen when serving the site on `host:port`.")
 	)
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Available flags:\n\n")
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nSee https://go.astrophena.name/site for other documentation.\n")
+	}
 	flag.Parse()
 
 	// Check if we are executed from repo root.
@@ -46,8 +53,8 @@ func main() {
 		Logf: logf,
 	}
 
-	if *serveFlag != "" {
-		if err := site.Serve(c, *serveFlag); err != nil {
+	if *serveFlag {
+		if err := site.Serve(c, *listenFlag); err != nil {
 			log.Fatal(err)
 		}
 		return
