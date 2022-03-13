@@ -220,6 +220,15 @@ yandex.*##.plus-points
 ! News widget
 yandex.*##.widget_name_topnews
 
+! Services list
+yandex.by##.services-new__content
+
+! Widgets
+yandex.*##.widgets__item
+
+! Voice search
+yandex.*##.input__voice-search
+
 !
 ! Yandex Disk
 !
