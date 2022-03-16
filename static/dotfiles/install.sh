@@ -23,7 +23,7 @@ _() {
 	}
 
 	DOTFILES="$HOME/src/dotfiles"
-	[[ "$CODESPACES" == "true" ]] && {
+	[[ "${CODESPACES:-}" == "true" ]] && {
 		# GitHub Codespaces clones dotfiles there.
 		# See https://docs.github.com/en/codespaces/troubleshooting/troubleshooting-dotfiles-for-codespaces.
 		DOTFILES="/workspaces/.codespaces/.persistedshare/dotfiles"
