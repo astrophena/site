@@ -70,4 +70,4 @@ func main() {
 	return
 }
 
-func logf(format string, args ...interface{}) { log.Printf("==> "+format, args...) }
+func logf(format string, args ...any) { log.Printf("==> "+format, args...) }

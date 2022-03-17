@@ -98,7 +98,7 @@ var (
 )
 
 // Logf is a simple printf-like logging function.
-type Logf func(format string, args ...interface{})
+type Logf func(format string, args ...any)
 
 // Env is the environment for which site can be built.
 type Env string
