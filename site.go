@@ -53,6 +53,7 @@
 //                                pages are returned.
 //  {{ url base }}                Returns the URL based on joining the
 //                                site base URL with the supplied URL.
+//  {{ path . }}                  Returns a path to the page source.
 package site
 
 import (
@@ -198,11 +199,11 @@ func Build(c *Config) error {
 
 	// Build pages.
 	for _, p := range b.pages {
-		if err := os.MkdirAll(filepath.Dir(filepath.Join(b.c.Dst, p.path)), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(b.c.Dst, p.dstPath)), 0o755); err != nil {
 			return err
 		}
 
-		f, err := os.Create(filepath.Join(b.c.Dst, p.path))
+		f, err := os.Create(filepath.Join(b.c.Dst, p.dstPath))
 		if err != nil {
 			return err
 		}
@@ -417,7 +418,8 @@ func newBuildContext(c *Config) *buildContext {
 			}
 			return pages
 		},
-		"url": b.url,
+		"url":  b.url,
+		"path": func(p *Page) string { return p.name },
 	}
 
 	return b
@@ -507,7 +509,7 @@ type Page struct {
 	ContentOnly bool   `json:"content_only"` // content_only: Determines whether this page should be rendered without header and footer, false by default.
 
 	name     string // page name with the extension
-	path     string // path to the page source
+	dstPath  string // where to write the built page
 	contents []byte // page contents without front matter
 }
 
@@ -607,10 +609,11 @@ func (p *Page) parse(r io.Reader) error {
 	if _, err := url.ParseRequestURI(p.Permalink); err != nil {
 		return fmt.Errorf("%s: %w: %v", p.name, errInvalidPermalink, err)
 	}
-	p.path = p.Permalink
-	if !strings.HasSuffix(p.path, ".html") {
-		p.path = p.path + "/index.html"
+	p.dstPath = p.Permalink
+	if !strings.HasSuffix(p.dstPath, ".html") {
+		p.dstPath = p.dstPath + "/index.html"
 	}
+	p.dstPath = path.Clean(p.dstPath)
 
 	return nil
 }
