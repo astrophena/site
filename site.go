@@ -637,11 +637,13 @@ func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error
 		p.contents = blackfriday.Run(p.contents)
 	}
 
+	p.contents = htmlCommentRe.ReplaceAll(p.contents, []byte{})
+
 	var buf bytes.Buffer
 	if err := tpl.Execute(&buf, p); err != nil {
 		return fmt.Errorf("%s: failed to execute template %q: %w", p.name, p.Template, err)
 	}
-	_, err = w.Write(htmlCommentRe.ReplaceAll(buf.Bytes(), []byte{}))
+	_, err = w.Write(p.contents)
 	return err
 }
 
