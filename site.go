@@ -643,7 +643,8 @@ func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error
 	if err := tpl.Execute(&buf, p); err != nil {
 		return fmt.Errorf("%s: failed to execute template %q: %w", p.name, p.Template, err)
 	}
-	_, err = w.Write(p.contents)
+
+	_, err = buf.WriteTo(w)
 	return err
 }
 
