@@ -25,7 +25,7 @@ func main() {
 	var (
 		envFlag    = flag.String("env", "dev", "Environment to build for.")
 		serveFlag  = flag.Bool("serve", false, "Serve the site.")
-		listenFlag = flag.String("listen", "localhost:3000", "Listen when serving the site on `host:port`.")
+		listenFlag = flag.String("listen", "localhost:3000", "Listen on `host:port` when serving the site.")
 	)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: ./build.go [flags] [dir]\n")

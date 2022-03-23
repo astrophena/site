@@ -118,13 +118,6 @@ duckduckgo.com##.t-m.related-searches
 duckduckgo.com##.js-sitelinks
 
 !
-! pkg.go.dev
-!
-
-! Footer
-pkg.go.dev##.go-Footer
-
-!
 ! Reddit
 !
 
@@ -260,10 +253,3 @@ disk.yandex.*##.LeftColumnNavigation__Item_type_aux
 
 ! Recent
 disk.yandex.*##.LeftColumnNavigation__Item_type_recent
-
-!
-! Cookie banners
-!
-
-! BBC Russian
-bbc.com##.e1o5up6o5.bbc-bmxm2b
