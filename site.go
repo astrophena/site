@@ -501,6 +501,7 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 // Page represents a site page. The exported fields is the front matter fields.
 type Page struct {
 	Title       string `json:"title"`        // title: Page title, required.
+	Summary     string `json:"summary"`      // summary: Page summary, optional.
 	Type        string `json:"type"`         // type: Used to distinguish different kinds of pages, page by default.
 	Permalink   string `json:"permalink"`    // permalink: Output path for the page, required.
 	Date        *date  `json:"date"`         // date: Publication date in the 'year-month-day' format, e.g. 2006-01-02, optional.
@@ -687,9 +688,10 @@ func (b *buildContext) copyStatic(path string, d fs.DirEntry, err error) error {
 
 func (b *buildContext) buildFeeds() error {
 	feed := &feeds.Feed{
-		Title:  b.c.Title,
-		Link:   &feeds.Link{Href: b.c.BaseURL.String()},
-		Author: &feeds.Author{Name: b.c.Author},
+		Title:   b.c.Title,
+		Link:    &feeds.Link{Href: b.c.BaseURL.String() + "/"},
+		Author:  &feeds.Author{Name: b.c.Author},
+		Created: time.Now(),
 	}
 
 	for _, p := range b.pages {
@@ -706,11 +708,12 @@ func (b *buildContext) buildFeeds() error {
 		pu.Path = path.Join(pu.Path, p.Permalink)
 
 		feed.Items = append(feed.Items, &feeds.Item{
-			Title:   p.Title,
-			Link:    &feeds.Link{Href: pu.String()},
-			Author:  feed.Author,
-			Created: p.Date.Time,
-			Content: string(p.contents),
+			Title:       p.Title,
+			Link:        &feeds.Link{Href: pu.String()},
+			Author:      feed.Author,
+			Created:     p.Date.Time,
+			Description: p.Summary,
+			Content:     string(p.contents),
 		})
 	}
 
