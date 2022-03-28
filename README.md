@@ -11,6 +11,7 @@ You need the latest [Go] installed.
 ```sh
 $ git clone https://github.com/astrophena/astrophena.github.io.git site
 $ cd site
+$ script/bootstrap
 $ ./build.go -serve
 ```
 
@@ -25,7 +26,7 @@ All code in this repository are formatted by:
 
 [Node.js](https://nodejs.org) is required to run [Prettier].
 
-Run `npm run fmt` to format everything. `npm run check` verifies if the code is
+Run `script/fmt` to format everything. `script/lint` verifies if the code is
 correctly formatted.
 
 ## License

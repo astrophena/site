@@ -46,7 +46,7 @@ Foo.
 
 	const strippedContent = "<p>Foo.</p>"
 
-	p := &Page{name: "foo.md"}
+	p := &Page{path: "foo.md"}
 	if err := p.parse(strings.NewReader(content)); err != nil {
 		t.Fatal(err)
 	}
@@ -154,7 +154,7 @@ Test
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			p := &Page{name: tc.name}
+			p := &Page{path: tc.name}
 			err := p.parse(strings.NewReader(tc.content))
 
 			// Don't use && because we want to trap all cases where err is

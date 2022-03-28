@@ -42,17 +42,23 @@
 // In templates, the following functions can be used:
 //
 //  {{ content page }}            Returns the page content.
+//
 //  {{ formatDate format date }}  Formats the given date based on the supplied
 //                                format.
+//
 //  {{ env }}                     Returns an environment used for
 //                                building the site.
+//
 //  {{ image path alt }}          Returns the HTML that shows the image from
 //                                provided path and alt text.
+//
 //  {{ pages type }}              Returns the slice of pages of
 //                                supplied type. If type is empty, all
 //                                pages are returned.
+//
 //  {{ url base }}                Returns the URL based on joining the
 //                                site base URL with the supplied URL.
+//
 //  {{ path . }}                  Returns a path to the page source.
 package site
 
@@ -211,7 +217,7 @@ func Build(c *Config) error {
 
 		tpl, ok := b.templates[p.Template]
 		if !ok {
-			return fmt.Errorf("%s: no such template %q", p.name, p.Template)
+			return fmt.Errorf("%s: no such template %q", p.path, p.Template)
 		}
 		if err := p.build(b, tpl, f); err != nil {
 			return err
@@ -219,7 +225,7 @@ func Build(c *Config) error {
 	}
 
 	// Build feeds.
-	if err := b.buildFeeds(); err != nil {
+	if err := b.buildFeed(); err != nil {
 		return err
 	}
 
@@ -419,7 +425,7 @@ func newBuildContext(c *Config) *buildContext {
 			return pages
 		},
 		"url":  b.url,
-		"path": func(p *Page) string { return p.name },
+		"path": func(p *Page) string { return p.path },
 	}
 
 	return b
@@ -476,7 +482,7 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 		return nil
 	}
 
-	// A special case, but ignore creates on files that look like Vim backups.
+	// Ignore files that look like Vim backups.
 	if strings.HasSuffix(path, "~") {
 		return nil
 	}
@@ -487,7 +493,7 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 	}
 	defer f.Close()
 
-	p := &Page{name: path}
+	p := &Page{path: path}
 	if err := p.parse(f); err != nil {
 		return err
 	}
@@ -501,7 +507,7 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 // Page represents a site page. The exported fields is the front matter fields.
 type Page struct {
 	Title       string `json:"title"`        // title: Page title, required.
-	Summary     string `json:"summary"`      // summary: Page summary, optional.
+	Summary     string `json:"summary"`      // summary: Page summary, used in RSS feed, optional.
 	Type        string `json:"type"`         // type: Used to distinguish different kinds of pages, page by default.
 	Permalink   string `json:"permalink"`    // permalink: Output path for the page, required.
 	Date        *date  `json:"date"`         // date: Publication date in the 'year-month-day' format, e.g. 2006-01-02, optional.
@@ -509,7 +515,7 @@ type Page struct {
 	Template    string `json:"template"`     // template: Template that should be used for rendering this page, required.
 	ContentOnly bool   `json:"content_only"` // content_only: Determines whether this page should be rendered without header and footer, false by default.
 
-	name     string // page name with the extension
+	path     string // path to the page source
 	dstPath  string // where to write the built page
 	contents []byte // page contents without front matter
 }
@@ -540,13 +546,13 @@ func (p *Page) parse(r io.Reader) error {
 	// Check that format of the page is supported.
 	var supported bool
 	for _, f := range SupportedFormats {
-		if filepath.Ext(p.name) == f {
+		if filepath.Ext(p.path) == f {
 			supported = true
 			break
 		}
 	}
 	if !supported {
-		return fmt.Errorf("%s: %w", p.name, errFormatUnsupported)
+		return fmt.Errorf("%s: %w", p.path, errFormatUnsupported)
 	}
 
 	const (
@@ -587,16 +593,16 @@ func (p *Page) parse(r io.Reader) error {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("%s: %w: %v", p.name, errFrontmatterSplit, err)
+		return fmt.Errorf("%s: %w: %v", p.path, errFrontmatterSplit, err)
 	}
 	if len(frontmatter) == 0 {
-		return fmt.Errorf("%s: %w", p.name, errFrontmatterMissing)
+		return fmt.Errorf("%s: %w", p.path, errFrontmatterMissing)
 	}
 	p.contents = contents
 
 	// Parse the front matter.
 	if err := json.Unmarshal(frontmatter, p); err != nil {
-		return fmt.Errorf("%s: %w: %v", p.name, errFrontmatterParse, err)
+		return fmt.Errorf("%s: %w: %v", p.path, errFrontmatterParse, err)
 	}
 	// Set the default page type.
 	if p.Type == "" {
@@ -605,10 +611,10 @@ func (p *Page) parse(r io.Reader) error {
 
 	// Check front matter fields.
 	if p.Title == "" || p.Template == "" || p.Permalink == "" {
-		return fmt.Errorf("%s: %w", p.name, errFrontmatterMissingParam)
+		return fmt.Errorf("%s: %w", p.path, errFrontmatterMissingParam)
 	}
 	if _, err := url.ParseRequestURI(p.Permalink); err != nil {
-		return fmt.Errorf("%s: %w: %v", p.name, errInvalidPermalink, err)
+		return fmt.Errorf("%s: %w: %v", p.path, errInvalidPermalink, err)
 	}
 	p.dstPath = p.Permalink
 	if !strings.HasSuffix(p.dstPath, ".html") {
@@ -624,17 +630,17 @@ var htmlCommentRe = regexp.MustCompile("<!--(.*?)-->")
 func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error {
 	// We use here text/template, but not html/template because we didn't want to
 	// escape any HTML on the Markdown source.
-	ptpl, err := ttemplate.New(p.name).Funcs(ttemplate.FuncMap(b.funcs)).Parse(string(p.contents))
+	ptpl, err := ttemplate.New(p.path).Funcs(ttemplate.FuncMap(b.funcs)).Parse(string(p.contents))
 	if err != nil {
 		return err
 	}
 	var pbuf bytes.Buffer
 	if err = ptpl.Execute(&pbuf, p); err != nil {
-		return fmt.Errorf("%s: failed to execute page template: %w", p.name, err)
+		return fmt.Errorf("%s: failed to execute page template: %w", p.path, err)
 	}
 	p.contents = pbuf.Bytes()
 
-	if filepath.Ext(p.name) == ".md" {
+	if filepath.Ext(p.path) == ".md" {
 		p.contents = blackfriday.Run(p.contents)
 	}
 
@@ -642,7 +648,7 @@ func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error
 
 	var buf bytes.Buffer
 	if err := tpl.Execute(&buf, p); err != nil {
-		return fmt.Errorf("%s: failed to execute template %q: %w", p.name, p.Template, err)
+		return fmt.Errorf("%s: failed to execute template %q: %w", p.path, p.Template, err)
 	}
 
 	_, err = buf.WriteTo(w)
@@ -686,7 +692,7 @@ func (b *buildContext) copyStatic(path string, d fs.DirEntry, err error) error {
 	return nil
 }
 
-func (b *buildContext) buildFeeds() error {
+func (b *buildContext) buildFeed() error {
 	feed := &feeds.Feed{
 		Title:   b.c.Title,
 		Link:    &feeds.Link{Href: b.c.BaseURL.String() + "/"},
