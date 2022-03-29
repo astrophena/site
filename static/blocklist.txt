@@ -70,6 +70,9 @@ vk.com##.ConvoListFindFriendsStub
 ! Emoji button in Messenger
 vk.com##._emoji_btn
 
+! Profile link
+vk.com##.ownerButton_contact_card
+
 !
 ! VK (mobile version)
 !
