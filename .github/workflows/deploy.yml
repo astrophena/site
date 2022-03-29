@@ -4,6 +4,7 @@ on:
     workflows: ['Test']
     types: ['completed']
     branches: ['master']
+  workflow_dispatch:
 jobs:
   deploy:
     name: 'Deploy'
