@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-# © 2022 Ilya Mateyko. All rights reserved.
-# Use of this source code is governed by the MIT
-# license that can be found in the LICENSE file.
-
 set -euo pipefail
 cd "$(dirname $0)/.."
 
+goInstall() {
+	go install -ldflags="-s -w -buildid=" -trimpath "$1"
+}
+
 [[ -d node_modules ]] || npm install
-command -v goimports &>/dev/null || go install golang.org/x/tools/cmd/goimports@latest
-command -v shfmt &>/dev/null || go install mvdan.cc/sh/v3/cmd/shfmt@latest
+command -v goimports &>/dev/null || goInstall golang.org/x/tools/cmd/goimports@latest
+command -v shfmt &>/dev/null || goInstall mvdan.cc/sh/v3/cmd/shfmt@latest
