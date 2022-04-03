@@ -417,3 +417,19 @@ li {
   font-size: 1rem;
   margin-top: -1rem;
 }
+
+/* Icons */
+.icon {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  display: inline-block;
+  padding-right: 2px;
+  padding-bottom: 4px;
+}
+
+/* Current link in a header */
+nav a.current {
+  color: var(--accent) !important;
+  border-color: var(--accent);
+}

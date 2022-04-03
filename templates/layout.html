@@ -23,8 +23,8 @@
       <header>
         <h1>Ilya Mateyko</h1>
         <nav>
-          <a href="/">Home</a>
-          <a href="/watched">Watched</a>
+          {{ navLink . "Home" "home" "/" }}
+          {{ navLink . "Watched" "watched" "/watched" }}
         </nav>
       </header>
     {{ end }}

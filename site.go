@@ -426,9 +426,27 @@ func newBuildContext(c *Config) *buildContext {
 		},
 		"url":  b.url,
 		"path": func(p *Page) string { return p.path },
+		"icon": b.icon,
+		"navLink": func(p *Page, title, iconName, path string) template.HTML {
+			add := ""
+			if p.Permalink == path {
+				add = `class="current"`
+			}
+			return template.HTML(fmt.Sprintf(`
+			<a href="%s"%s>%s%s</a>
+		`, b.url(path), add, b.icon(iconName), title))
+		},
 	}
 
 	return b
+}
+
+func (b *buildContext) icon(name string) template.HTML {
+	return template.HTML(fmt.Sprintf(`
+			<svg class="icon" aria-hidden="true">
+				<use xlink:href="%s#icon-%s"/>
+			</svg>
+		`, b.url("/icons/sprite.svg"), name))
 }
 
 func (b *buildContext) url(base string) string {
