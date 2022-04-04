@@ -21,6 +21,7 @@ Open http://localhost:3000 in your browser.
 All code in this repository are formatted by:
 
 - [gofmt](https://godocs.io/cmd/gofmt) ([Go])
+- [shfmt](https://godocs.io/mvdan.cc/sh/v3/cmd/shfmt) (shell scripts)
 - [Prettier] (Markdown, HTML and CSS)
 
 [Node.js](https://nodejs.org) is required to run [Prettier].
