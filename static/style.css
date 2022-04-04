@@ -41,11 +41,9 @@
 /* Set the global variables for everything. */
 :root {
   /* Set sans-serif & mono fonts */
-  --sans-font: apple-system, BlinkMacSystemFont, avenir next, avenir,
-    'Nimbus Sans L', roboto, noto, segoe ui, arial, helvetica, helvetica neue,
-    sans-serif;
-  --mono-font: 'Fira Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono',
-    monospace;
+  --sans-font: apple-system, BlinkMacSystemFont, avenir next, avenir, 'Nimbus Sans L', roboto, noto,
+    segoe ui, arial, helvetica, helvetica neue, sans-serif;
+  --mono-font: 'Fira Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
 
   /* Dark theme */
   --bg: #212121;

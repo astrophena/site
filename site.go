@@ -60,6 +60,11 @@
 //                                site base URL with the supplied URL.
 //
 //  {{ path . }}                  Returns a path to the page source.
+//
+//  {{ icon name }}               Returns the HTML that shows the icon with
+//                                provided name.
+//
+//  {{ navLink page
 package site
 
 import (
@@ -368,8 +373,10 @@ func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
 		return nil, err
 	}
 
-	//lint:ignore SA4006 TODO
 	s, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
 	if s.IsDir() {
 		index := filepath.Join(path, "index.html")
 		if _, err := nfs.fs.Open(index); err != nil {
@@ -386,9 +393,8 @@ func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
 }
 
 type buildContext struct {
-	c     *Config
-	funcs template.FuncMap
-
+	c         *Config
+	funcs     template.FuncMap
 	pages     []*Page
 	templates map[string]*template.Template
 }
