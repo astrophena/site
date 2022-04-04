@@ -1,8 +1,4 @@
-//usr/bin/env go run $0 $@ ; exit "$?"
-
-// © 2022 Ilya Mateyko. All rights reserved.
-// Use of this source code is governed by the MIT
-// license that can be found in the LICENSE file.
+//usr/bin/env go run $0 $@; exit $?
 
 //go:build ignore
 
@@ -31,7 +27,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: ./build.go [flags] [dir]\n")
 		fmt.Fprintf(os.Stderr, "Available flags:\n\n")
 		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nSee https://go.astrophena.name/site for other documentation.\n")
 	}
 	flag.Parse()
 

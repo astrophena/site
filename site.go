@@ -4,14 +4,6 @@
 
 // Package site builds https://astrophena.name.
 //
-// In most cases it is used from the build.go tool:
-//
-//  $ ./build.go
-//
-// To see all available flags, run:
-//
-//  $ ./build.go -help
-//
 // Directory Structure
 //
 // Site has the following directories:
@@ -64,7 +56,7 @@
 //  {{ icon name }}               Returns the HTML that shows the icon with
 //                                provided name.
 //
-//  {{ navLink page
+// TODO: Document navLink function.
 package site
 
 import (
@@ -248,7 +240,7 @@ func Serve(c *Config, addr string) error {
 
 	c.Logf("Performing an initial build...")
 	if err := Build(c); err != nil {
-		return err
+		c.Logf("Initial build failed: %v", err)
 	}
 
 	watcher, err := fsnotify.NewWatcher()
@@ -292,7 +284,7 @@ func Serve(c *Config, addr string) error {
 				continue
 			}
 
-			c.Logf("Changed %s, rebuilding the site.", event.Name)
+			c.Logf("Changed %s (%v), rebuilding the site.", event.Name, event.Op)
 			if err := Build(c); err != nil {
 				c.Logf("Failed to rebuild the site: %v", err)
 			}
