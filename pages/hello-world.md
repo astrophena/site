@@ -12,6 +12,5 @@
 
 This is the first post on [astrophena.name](https://astrophena.name).
 
-I finally fleshed out my new
-[static site generator](https://go.astrophena.name/site) and it's time to write
-something.
+I finally fleshed out my new [static site generator](https://go.astrophena.name/site) and it's time
+to write something.

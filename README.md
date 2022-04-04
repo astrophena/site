@@ -11,7 +11,7 @@ You need the latest [Go] installed.
 ```sh
 $ git clone https://github.com/astrophena/astrophena.github.io.git site
 $ cd site
-$ ./build.go -serve
+$ script/build
 ```
 
 Open http://localhost:3000 in your browser.
@@ -25,13 +25,11 @@ All code in this repository are formatted by:
 
 [Node.js](https://nodejs.org) is required to run [Prettier].
 
-Run `script/fmt` to format everything. `script/lint` verifies if the code is
-correctly formatted.
+Run `script/test` to format everything. CI verifies if the code is correctly formatted.
 
 ## License
 
-The content for this website is
-[CC-BY](https://creativecommons.org/licenses/by/4.0/), the
+The content for this website is [CC-BY](https://creativecommons.org/licenses/by/4.0/), the
 [code](https://github.com/astrophena/astrophena.github.io) is
 [MIT](https://opensource.org/licenses/MIT).
 

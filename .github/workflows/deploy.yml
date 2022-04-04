@@ -1,16 +1,13 @@
-name: 'Deploy'
+name: 'Test and deploy'
 on:
-  workflow_run:
-    workflows: ['Test']
-    types: ['completed']
+  push:
     branches: ['master']
+  pull_request:
   workflow_dispatch:
 jobs:
-  deploy:
-    name: 'Deploy'
+  test:
+    name: 'Test'
     runs-on: 'ubuntu-latest'
-    if: |
-      ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: 'Check out'
         uses: 'actions/checkout@v3'
@@ -24,14 +21,37 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-          key: |
-            ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}"
+      - name: 'Set up Node.js'
+        uses: 'actions/setup-node@v3'
+        with:
+          cache: 'npm'
+      - name: 'Test'
+        run: 'script/test'
+  deploy:
+    name: 'Deploy'
+    needs: 'test'
+    if: "github.event_name != 'pull_request'"
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Check out'
+        uses: 'actions/checkout@v3'
+      - name: 'Set up Go'
+        uses: 'actions/setup-go@v3'
+        with:
+          go-version: '1.18'
+      - name: 'Cache Go dependencies'
+        uses: 'actions/cache@v3'
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}"
       - name: 'Build'
-        run: './build.go -env prod'
+        run: 'script/build -env prod'
       - name: 'Deploy'
         uses: 'peaceiris/actions-gh-pages@v3.8.0'
         with:
-          github_token: |
-            ${{ secrets.GITHUB_TOKEN }}
+          github_token: '${{ secrets.GITHUB_TOKEN }}'
           publish_dir: './build'
           cname: 'astrophena.name'

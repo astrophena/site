@@ -9,8 +9,7 @@
 
 # Watched
 
-This is a collection of [movies](#movies) and [shows](#shows) I watched and
-liked.
+This is a collection of [movies](#movies) and [shows](#shows) I watched and liked.
 
 ## Movies {#movies}
 

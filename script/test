@@ -1,11 +1,28 @@
 #!/usr/bin/env bash
 
-# © 2022 Ilya Mateyko. All rights reserved.
-# Use of this source code is governed by the MIT
-# license that can be found in the LICENSE file.
-
 set -euo pipefail
-cd "$(dirname $0)/.."
+if [[ ! -L "$0" ]]; then
+	cd "$(dirname $0)/.."
+else
+	# Symlinked. Called from a Git hook.
+	cd "$(dirname $0)/../.."
+fi
 
-script/lint
+script/bootstrap
+
+prettier="node_modules/.bin/prettier"
+
+if [[ ! -z "${CI:-}" ]]; then
+	echo "==> Linting..."
+	goimports -d .
+	shfmt -d .
+	"$prettier" --check .
+else
+	echo "==> Formatting..."
+	goimports -w .
+	shfmt -w .
+	"$prettier" --write .
+fi
+
+echo "==> Running the tests..."
 CGO_ENABLED=0 go test

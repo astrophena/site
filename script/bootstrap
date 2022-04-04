@@ -7,6 +7,7 @@ goInstall() {
 	go install -ldflags="-s -w -buildid=" -trimpath "$1"
 }
 
+git config core.hooksPath script/hooks
 [[ -d node_modules ]] || npm install
 command -v goimports &>/dev/null || goInstall golang.org/x/tools/cmd/goimports@latest
 command -v shfmt &>/dev/null || goInstall mvdan.cc/sh/v3/cmd/shfmt@latest
