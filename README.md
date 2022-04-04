@@ -11,7 +11,7 @@ You need the latest [Go] installed.
 ```sh
 $ git clone https://github.com/astrophena/astrophena.github.io.git site
 $ cd site
-$ script/build
+$ script/server
 ```
 
 Open http://localhost:3000 in your browser.
