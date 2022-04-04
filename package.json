@@ -2,6 +2,6 @@
   "private": true,
   "devDependencies": {
     "prettier": "^2.6.1",
-    "prettier-plugin-go-template": "^0.0.11"
+    "prettier-plugin-go-template": "^0.0.12"
   }
 }
