@@ -252,7 +252,7 @@ func Serve(c *Config, addr string) error {
 		filepath.Join(c.Src, "static"),
 		filepath.Join(c.Src, "templates"),
 	} {
-		if err := watcher.Add(dir); err != nil {
+		if err := watchRecursive(watcher, dir); err != nil {
 			return err
 		}
 	}
@@ -279,6 +279,7 @@ func Serve(c *Config, addr string) error {
 	}()
 	go func() {
 		c.Logf("Started watching for new changes.")
+		c.Logf("If you has created new directories, please restart the server.")
 		for event := range watcher.Events {
 			if !shouldRebuild(event.Name, event.Op) {
 				continue
@@ -305,6 +306,18 @@ func Serve(c *Config, addr string) error {
 	defer cancel()
 
 	return s.Shutdown(ctx)
+}
+
+func watchRecursive(w *fsnotify.Watcher, dir string) error {
+	return filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			return nil
+		}
+		return w.Add(path)
+	})
 }
 
 // Copied from
