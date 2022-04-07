@@ -13,16 +13,6 @@
     <link rel="manifest" href="{{ url "/manifest.json" }}" />
     <link rel="stylesheet" href="{{ url "/style.css" }}" />
     <title>{{ .Title }}</title>
-    {{ if liveReloadEnabled }}
-      <script>
-        const events = new EventSource('/_reload')
-        events.addEventListener('reload', (e) => {
-          setTimeout(() => {
-            window.location.reload()
-          }, 1000)
-        })
-      </script>
-    {{ end }}
   </head>
   <body>
     {{ if not .ContentOnly }}
@@ -37,7 +27,7 @@
     <main>
       {{ if eq .Type "post" }}
         <h1>{{ .Title }}</h1>
-        {{ if not .Date.IsZero }}
+        {{ if and .Date (not .Date.IsZero) }}
           <p class="meta">{{ formatDate "January 2, 2006" .Date }}</p>
         {{ end }}
       {{ end }}

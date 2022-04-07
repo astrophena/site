@@ -9,7 +9,8 @@
 // Site has the following directories:
 //
 //  build      This is where the generated site will be placed by default.
-//  pages      All content for the site lives inside this directory.
+//  pages      All content for the site lives inside this directory. HTML and
+//             Markdown formats can be used.
 //  static     Files in this directory will be copied verbatim to the
 //             generated site.
 //  templates  These are the templates that wrap pages. Templates are
@@ -28,35 +29,6 @@
 //  }
 //
 // See Page for all available front matter fields.
-//
-// Template Functions
-//
-// In templates, the following functions can be used:
-//
-//  {{ content page }}            Returns the page content.
-//
-//  {{ formatDate format date }}  Formats the given date based on the supplied
-//                                format.
-//
-//  {{ env }}                     Returns an environment used for
-//                                building the site.
-//
-//  {{ image path alt }}          Returns the HTML that shows the image from
-//                                provided path and alt text.
-//
-//  {{ pages type }}              Returns the slice of pages of
-//                                supplied type. If type is empty, all
-//                                pages are returned.
-//
-//  {{ url base }}                Returns the URL based on joining the
-//                                site base URL with the supplied URL.
-//
-//  {{ path . }}                  Returns a path to the page source.
-//
-//  {{ icon name }}               Returns the HTML that shows the icon with
-//                                provided name.
-//
-// TODO: Document navLink function.
 package site
 
 import (
@@ -78,8 +50,8 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
-	"sync"
 	"syscall"
 	ttemplate "text/template"
 	"time"
@@ -88,9 +60,6 @@ import (
 	"github.com/gorilla/feeds"
 	"github.com/russross/blackfriday/v2"
 )
-
-// SupportedFormats contains supported page formats.
-var SupportedFormats = []string{".html", ".md"}
 
 // Possible errors, used in tests.
 var (
@@ -115,8 +84,6 @@ const (
 	// Drafts are excluded. Also the base URL is used to derive absolute URLs from
 	// relative ones.
 	Prod = Env("prod")
-	// Mostly similar to prod, but drafts are included.
-	Staging = Env("staging")
 )
 
 // Config represents a build configuration.
@@ -129,16 +96,14 @@ type Config struct {
 	Env Env
 	// BaseURL is the base URL of the site.
 	BaseURL *url.URL
-	// Src is the directory where to read files from.  If empty, uses the current
+	// Src is the directory where to read files from. If empty, uses the current
 	// directory.
 	Src string
-	// Dst is the directory where to write files.  If empty, uses the build
+	// Dst is the directory where to write files. If empty, uses the build
 	// directory.
 	Dst string
 	// Logf specifies a logger to use. If nil, log.Printf is used.
 	Logf Logf
-
-	liveReloadEnabled bool
 }
 
 func (c *Config) setDefaults() {
@@ -181,8 +146,6 @@ func (c *Config) setDefaults() {
 // Build builds a site based on the provided Config.
 func Build(c *Config) error {
 	c.setDefaults()
-
-	// Prepare the build context and template functions.
 	b := newBuildContext(c)
 
 	// Parse templates and pages.
@@ -192,6 +155,14 @@ func Build(c *Config) error {
 	if err := filepath.WalkDir(filepath.Join(b.c.Src, "pages"), b.parsePages); err != nil {
 		return err
 	}
+
+	// Sort pages by date. Pages without date are pushed to the end.
+	sort.Slice(b.pages, func(i, j int) bool {
+		if b.pages[i].Date == nil || b.pages[j].Date == nil {
+			return true
+		}
+		return !b.pages[i].Date.Time.Before(b.pages[j].Date.Time)
+	})
 
 	// Clean up after previous build.
 	if _, err := os.Stat(b.c.Dst); err == nil {
@@ -203,7 +174,7 @@ func Build(c *Config) error {
 		return err
 	}
 
-	// Build pages.
+	// Build pages and RSS feed.
 	for _, p := range b.pages {
 		if err := os.MkdirAll(filepath.Dir(filepath.Join(b.c.Dst, p.dstPath)), 0o755); err != nil {
 			return err
@@ -223,8 +194,6 @@ func Build(c *Config) error {
 			return err
 		}
 	}
-
-	// Build feeds.
 	if err := b.buildFeed(); err != nil {
 		return err
 	}
@@ -272,14 +241,10 @@ func Serve(c *Config, addr string) error {
 	mux.Handle("/", http.FileServer(neuteredFileSystem{http.Dir(c.Dst)}))
 
 	var (
-		reload     = make(chan struct{}, 1)
-		stopReload = make(chan struct{}, 1)
+		errc = make(chan error, 1)
+		s    = &http.Server{Handler: mux}
 	)
-	c.liveReloadEnabled = true
-	mux.HandleFunc("/_reload", reloadHandler(c, reload, stopReload))
 
-	errc := make(chan error, 1)
-	s := &http.Server{Handler: mux}
 	go func() {
 		if err := s.Serve(l); err != nil {
 			if err != http.ErrServerClosed {
@@ -287,9 +252,10 @@ func Serve(c *Config, addr string) error {
 			}
 		}
 	}()
+
 	go func() {
 		c.Logf("Started watching for new changes.")
-		c.Logf("If you has created new directories, please restart the server.")
+		c.Logf("If you have created new directories, please restart the server.")
 		for event := range watcher.Events {
 			if !shouldRebuild(event.Name, event.Op) {
 				continue
@@ -299,7 +265,6 @@ func Serve(c *Config, addr string) error {
 			if err := Build(c); err != nil {
 				c.Logf("Failed to rebuild the site: %v", err)
 			}
-			reload <- struct{}{} // reload the page
 		}
 	}()
 
@@ -376,39 +341,6 @@ func shouldRebuild(path string, op fsnotify.Op) bool {
 	return false
 }
 
-var sseUnsupportedLogOnce sync.Once
-
-func reloadHandler(c *Config, events, stop <-chan struct{}) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		// Should be set by default, but do this anyway.
-		w.Header().Set("Connection", "keep-alive")
-
-		flusher, ok := w.(http.Flusher)
-		if !ok {
-			// Log the warning message only once to don't spam the terminal.
-			sseUnsupportedLogOnce.Do(func() {
-				c.Logf("WARNING: Your browser does not support server-sent events (SSE), live reload will not work.")
-			})
-			return
-		}
-
-	loop:
-		for {
-			select {
-			case <-events:
-				fmt.Fprintf(w, "event: reload\ndata\n\n")
-				flusher.Flush()
-			case <-stop:
-				break loop
-			case <-r.Context().Done():
-				return
-			}
-		}
-	}
-}
-
 // neuteredFileSystem is an implementation of http.FileSystem which prevents
 // showing directory listings when using http.FileServer.
 type neuteredFileSystem struct {
@@ -455,43 +387,14 @@ func newBuildContext(c *Config) *buildContext {
 	}
 
 	b.funcs = template.FuncMap{
-		"content": func(p *Page) template.HTML {
-			return template.HTML(p.contents)
-		},
-		"formatDate": func(format string, d *date) string {
-			return d.Time.Format(format)
-		},
-		"env": func() string { return string(b.c.Env) },
-		"image": func(path, caption string) template.HTML {
-			const tmpl = `<img alt="%[2]s" src="%[1]s" loading="lazy"/>`
-			s := fmt.Sprintf(tmpl, b.url(path), caption)
-			return template.HTML(s)
-		},
-		"pages": func(typ string) []*Page {
-			if typ == "" {
-				return b.pages
-			}
-			var pages []*Page
-			for _, p := range b.pages {
-				if p.Type == typ {
-					pages = append(pages, p)
-				}
-			}
-			return pages
-		},
-		"url":  b.url,
-		"path": func(p *Page) string { return p.path },
-		"icon": b.icon,
-		"navLink": func(p *Page, title, iconName, path string) template.HTML {
-			add := ""
-			if p.Permalink == path {
-				add = `class="current"`
-			}
-			return template.HTML(fmt.Sprintf(`
-			<a href="%s"%s>%s%s</a>
-		`, b.url(path), add, b.icon(iconName), title))
-		},
-		"liveReloadEnabled": func() bool { return b.c.liveReloadEnabled },
+		"content":    func(p *Page) template.HTML { return template.HTML(p.contents) },
+		"formatDate": func(format string, d *date) string { return d.Time.Format(format) },
+		"icon":       b.icon,
+		"image":      b.image,
+		"navLink":    b.navLink,
+		"pages":      b.pagesByType,
+		"path":       func(p *Page) string { return p.path },
+		"url":        b.url,
 	}
 
 	return b
@@ -499,10 +402,36 @@ func newBuildContext(c *Config) *buildContext {
 
 func (b *buildContext) icon(name string) template.HTML {
 	return template.HTML(fmt.Sprintf(`
-			<svg class="icon" aria-hidden="true">
-				<use xlink:href="%s#icon-%s"/>
-			</svg>
-		`, b.url("/icons/sprite.svg"), name))
+<svg class="icon" aria-hidden="true">
+  <use xlink:href="%s#icon-%s"/>
+</svg>`, b.url("/icons/sprite.svg"), name))
+}
+
+func (b *buildContext) image(path, caption string) template.HTML {
+	const tmpl = `<img alt="%[2]s" src="%[1]s" loading="lazy"/>`
+	s := fmt.Sprintf(tmpl, b.url(path), caption)
+	return template.HTML(s)
+}
+
+func (b *buildContext) navLink(p *Page, title, iconName, path string) template.HTML {
+	var add string
+	if p.Permalink == path {
+		add = ` class="current"`
+	}
+	return template.HTML(fmt.Sprintf(`<a href="%s"%s>%s%s</a>`, b.url(path), add, b.icon(iconName), title))
+}
+
+func (b *buildContext) pagesByType(typ string) []*Page {
+	if typ == "" {
+		return b.pages
+	}
+	var pages []*Page
+	for _, p := range b.pages {
+		if p.Type == typ {
+			pages = append(pages, p)
+		}
+	}
+	return pages
 }
 
 func (b *buildContext) url(base string) string {
@@ -619,7 +548,7 @@ func (d *date) UnmarshalJSON(p []byte) error {
 func (p *Page) parse(r io.Reader) error {
 	// Check that format of the page is supported.
 	var supported bool
-	for _, f := range SupportedFormats {
+	for _, f := range []string{".html", ".md"} {
 		if filepath.Ext(p.path) == f {
 			supported = true
 			break
@@ -702,7 +631,7 @@ func (p *Page) parse(r io.Reader) error {
 var htmlCommentRe = regexp.MustCompile("<!--(.*?)-->")
 
 func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error {
-	// We use here text/template, but not html/template because we didn't want to
+	// We use here text/template, but not html/template because we don't want to
 	// escape any HTML on the Markdown source.
 	ptpl, err := ttemplate.New(p.path).Funcs(ttemplate.FuncMap(b.funcs)).Parse(string(p.contents))
 	if err != nil {
@@ -779,7 +708,6 @@ func (b *buildContext) buildFeed() error {
 			continue
 		}
 
-		// Exclude drafts from feed in prod.
 		if p.Draft && b.c.Env == Prod {
 			continue
 		}
@@ -787,14 +715,17 @@ func (b *buildContext) buildFeed() error {
 		pu := *b.c.BaseURL
 		pu.Path = path.Join(pu.Path, p.Permalink)
 
-		feed.Items = append(feed.Items, &feeds.Item{
+		item := &feeds.Item{
 			Title:       p.Title,
 			Link:        &feeds.Link{Href: pu.String()},
 			Author:      feed.Author,
-			Created:     p.Date.Time,
 			Description: p.Summary,
 			Content:     string(p.contents),
-		})
+		}
+		if p.Date != nil {
+			item.Created = p.Date.Time
+		}
+		feed.Items = append(feed.Items, item)
 	}
 
 	bf, err := feed.ToAtom()
