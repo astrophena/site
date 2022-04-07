@@ -79,6 +79,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"syscall"
 	ttemplate "text/template"
 	"time"
@@ -136,6 +137,8 @@ type Config struct {
 	Dst string
 	// Logf specifies a logger to use. If nil, log.Printf is used.
 	Logf Logf
+
+	liveReloadEnabled bool
 }
 
 func (c *Config) setDefaults() {
@@ -268,6 +271,13 @@ func Serve(c *Config, addr string) error {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(neuteredFileSystem{http.Dir(c.Dst)}))
 
+	var (
+		reload     = make(chan struct{}, 1)
+		stopReload = make(chan struct{}, 1)
+	)
+	c.liveReloadEnabled = true
+	mux.HandleFunc("/_reload", reloadHandler(c, reload, stopReload))
+
 	errc := make(chan error, 1)
 	s := &http.Server{Handler: mux}
 	go func() {
@@ -289,6 +299,7 @@ func Serve(c *Config, addr string) error {
 			if err := Build(c); err != nil {
 				c.Logf("Failed to rebuild the site: %v", err)
 			}
+			reload <- struct{}{} // reload the page
 		}
 	}()
 
@@ -363,6 +374,39 @@ func shouldRebuild(path string, op fsnotify.Op) bool {
 	//  for that instead.
 	//
 	return false
+}
+
+var sseUnsupportedLogOnce sync.Once
+
+func reloadHandler(c *Config, events, stop <-chan struct{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		// Should be set by default, but do this anyway.
+		w.Header().Set("Connection", "keep-alive")
+
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			// Log the warning message only once to don't spam the terminal.
+			sseUnsupportedLogOnce.Do(func() {
+				c.Logf("WARNING: Your browser does not support server-sent events (SSE), live reload will not work.")
+			})
+			return
+		}
+
+	loop:
+		for {
+			select {
+			case <-events:
+				fmt.Fprintf(w, "event: reload\ndata\n\n")
+				flusher.Flush()
+			case <-stop:
+				break loop
+			case <-r.Context().Done():
+				return
+			}
+		}
+	}
 }
 
 // neuteredFileSystem is an implementation of http.FileSystem which prevents
@@ -447,6 +491,7 @@ func newBuildContext(c *Config) *buildContext {
 			<a href="%s"%s>%s%s</a>
 		`, b.url(path), add, b.icon(iconName), title))
 		},
+		"liveReloadEnabled": func() bool { return b.c.liveReloadEnabled },
 	}
 
 	return b
