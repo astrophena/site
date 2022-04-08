@@ -157,7 +157,7 @@ func Build(c *Config) error {
 	}
 
 	// Sort pages by date. Pages without date are pushed to the end.
-	sort.Slice(b.pages, func(i, j int) bool {
+	sort.SliceStable(b.pages, func(i, j int) bool {
 		if b.pages[i].Date == nil || b.pages[j].Date == nil {
 			return true
 		}
