@@ -5,6 +5,7 @@ if [[ ! -L "$0" ]]; then
 	cd "$(dirname $0)/.."
 else
 	# Symlinked. Called from a Git hook.
+	GIT_HOOK="true"
 	cd "$(dirname $0)/../.."
 fi
 
@@ -12,7 +13,7 @@ script/bootstrap
 
 prettier="node_modules/.bin/prettier"
 
-if [[ ! -z "${CI:-}" ]]; then
+if [[ ! -z "${CI:-}" ]] || [[ ! -z "${GIT_HOOK:-}" ]]; then
 	echo "==> Linting..."
 	goimports -d .
 	shfmt -d .
@@ -25,4 +26,4 @@ else
 fi
 
 echo "==> Running the tests..."
-CGO_ENABLED=0 go test
+CGO_ENABLED=0 go test ./...
