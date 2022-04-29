@@ -39,6 +39,9 @@ vk.com###l_nwsf
 vk.com##.left_menu_nav_wrap
 vk.com##.left_settings
 vk.com###l_doc
+vk.com###l_ap
+vk.com###react_rootEcosystemServicesNavigationEntry
+vk.com###react_rootEcosystemAccountMenuEntry
 
 ! Friends
 vk.com##.friends_section_find
@@ -55,10 +58,6 @@ vk.com##._page_actions_container
 
 ! Fast chat
 vk.com###fastchat-reforged
-
-! Ecosystem menu
-vk.com##.TopNavBtn__ecosystemMenuLink
-vk.com##.EcosystemAccountMenu_col__RUs5p
 
 ! Hide audio icon
 vk.com###top_audio
@@ -256,3 +255,10 @@ disk.yandex.*##.LeftColumnNavigation__Item_type_aux
 
 ! Recent
 disk.yandex.*##.LeftColumnNavigation__Item_type_recent
+
+!
+! Mastodon
+!
+
+! Filtered posts
+mastodon.social##.status__wrapper--filtered
