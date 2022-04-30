@@ -22,6 +22,7 @@ This is a collection of [movies](#movies) and [shows](#shows) I watched and like
 - [The Princess Bride (1987)](https://www.imdb.com/title/tt0093779/)
 - [The Remains of the Day (1993)](https://www.imdb.com/title/tt0107943/)
 - [Before Sunrise (1995)](https://www.imdb.com/title/tt0112471/)
+- [The Big Lebowski (1998)](https://www.imdb.com/title/tt0118715/)
 - [Five Bottles of Vodka (2001)](https://www.imdb.com/title/tt2653232/)
 - [Before Sunset (2004)](https://www.imdb.com/title/tt0381681/)
 - [A Good Year (2006)](https://www.imdb.com/title/tt0401445/)
