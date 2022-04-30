@@ -260,5 +260,8 @@ disk.yandex.*##.LeftColumnNavigation__Item_type_recent
 ! Mastodon
 !
 
+! Profile counters
+mastodon.social##span > strong > span
+
 ! Filtered posts
 mastodon.social##.status__wrapper--filtered
