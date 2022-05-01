@@ -7,7 +7,10 @@ package site
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
+	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -19,19 +22,30 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	tmp, err := os.MkdirTemp("", "site-test-*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
-
-	if err := Build(&Config{Dst: tmp}); err != nil {
+	if err := Build(&Config{Dst: t.TempDir()}); err != nil {
 		t.Fatal(err)
 	}
 }
 
+// getFreePort asks the kernel for a free open port that is ready to use.
+// Copied from
+// https://github.com/phayes/freeport/blob/74d24b5ae9f58fbe4057614465b11352f71cdbea/freeport.go.
+func getFreePort() (port int, err error) {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		return 0, err
+	}
+
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return 0, err
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port, nil
+}
+
 func TestServe(t *testing.T) {
-	_, runServer := os.LookupEnv("SITE_RUN_SERVER")
+	addr, runServer := os.LookupEnv("SITE_RUN_SERVER")
 	if runServer {
 		// Signalize to a parent process that we are ready.
 		serveReadyHook = func() {
@@ -46,7 +60,7 @@ func TestServe(t *testing.T) {
 		}
 		if err := Serve(&Config{
 			Dst: t.TempDir(),
-		}, "localhost:0"); err != nil {
+		}, addr); err != nil {
 			t.Fatal(err)
 		}
 		return
@@ -57,10 +71,17 @@ func TestServe(t *testing.T) {
 		wg  sync.WaitGroup
 	)
 
+	// Find a free port for us.
+	port, err := getFreePort()
+	if err != nil {
+		t.Fatalf("Failed to find a free port: %v", err)
+	}
+	addr = fmt.Sprintf("localhost:%d", port)
+
 	// Start the server in a subprocess.
 	server := exec.Command(os.Args[0], "-test.run=TestServe")
 	server.Stderr = &buf
-	server.Env = append(os.Environ(), "SITE_RUN_SERVER=1")
+	server.Env = append(os.Environ(), "SITE_RUN_SERVER="+addr)
 	go func() {
 		wg.Add(1)
 		if err := server.Run(); err != nil {
@@ -73,6 +94,18 @@ func TestServe(t *testing.T) {
 	ready := make(chan os.Signal, 1)
 	signal.Notify(ready, syscall.SIGUSR1)
 	<-ready
+
+	// Make some HTTP requests.
+	urls := []string{"/", "/blocklist.txt", "/watched/"}
+	for _, u := range urls {
+		req, err := http.Get("http://" + addr + u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if req.StatusCode != http.StatusOK {
+			t.Fatalf("GET %s: want status code 200, got %d", u, req.StatusCode)
+		}
+	}
 
 	// Try to gracefully shutdown the server.
 	if err := server.Process.Signal(os.Interrupt); err != nil {
