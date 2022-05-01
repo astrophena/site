@@ -206,6 +206,8 @@ func Build(c *Config) error {
 	return nil
 }
 
+var serveReadyHook func() // used in tests, called when Serve started serving the site
+
 // Serve builds the site and starts serving it on a provided host:port.
 func Serve(c *Config, addr string) error {
 	c.setDefaults()
@@ -267,6 +269,10 @@ func Serve(c *Config, addr string) error {
 			}
 		}
 	}()
+
+	if serveReadyHook != nil {
+		serveReadyHook()
+	}
 
 	exit := make(chan os.Signal, 1)
 	signal.Notify(exit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

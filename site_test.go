@@ -10,7 +10,11 @@ import (
 	"html/template"
 	"net/url"
 	"os"
+	"os/exec"
+	"os/signal"
 	"strings"
+	"sync"
+	"syscall"
 	"testing"
 )
 
@@ -24,6 +28,60 @@ func TestBuild(t *testing.T) {
 	if err := Build(&Config{Dst: tmp}); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestServe(t *testing.T) {
+	_, runServer := os.LookupEnv("SITE_RUN_SERVER")
+	if runServer {
+		// Signalize to a parent process that we are ready.
+		serveReadyHook = func() {
+			ppid := os.Getppid()
+			proc, err := os.FindProcess(ppid)
+			if err != nil {
+				t.Fatalf("os.FindProcess(): %v", err)
+			}
+			if err := proc.Signal(syscall.SIGUSR1); err != nil {
+				t.Fatalf("Failed to send a signal: %v", err)
+			}
+		}
+		if err := Serve(&Config{
+			Dst: t.TempDir(),
+		}, "localhost:0"); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+
+	var (
+		buf bytes.Buffer
+		wg  sync.WaitGroup
+	)
+
+	// Start the server in a subprocess.
+	server := exec.Command(os.Args[0], "-test.run=TestServe")
+	server.Stderr = &buf
+	server.Env = append(os.Environ(), "SITE_RUN_SERVER=1")
+	go func() {
+		wg.Add(1)
+		if err := server.Run(); err != nil {
+			t.Fatalf("Test server crashed: %v", err)
+		}
+		wg.Done()
+	}()
+
+	// Wait until the server is ready.
+	ready := make(chan os.Signal, 1)
+	signal.Notify(ready, syscall.SIGUSR1)
+	<-ready
+
+	// Try to gracefully shutdown the server.
+	if err := server.Process.Signal(os.Interrupt); err != nil {
+		t.Fatalf("Failed to send a signal to running test server: %v", err)
+	}
+
+	// Wait until the server successfully shuts down.
+	wg.Wait()
+	t.Logf("Test server output:\n%s", buf.String())
 }
 
 func TestStripComments(t *testing.T) {
