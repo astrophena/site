@@ -19,8 +19,8 @@
 //
 // Page Layout
 //
-// Each page must be of the supported format (see SupportedFormats) and have
-// JSON front matter in the beginning:
+// Each page must be of the supported format (HTML or Markdown) and have JSON
+// front matter in the beginning:
 //
 //  {
 //    "title": "Hello, world!",
@@ -241,14 +241,14 @@ func Serve(c *Config, addr string) error {
 	mux.Handle("/", http.FileServer(neuteredFileSystem{http.Dir(c.Dst)}))
 
 	var (
-		errc = make(chan error, 1)
-		s    = &http.Server{Handler: mux}
+		errCh = make(chan error, 1)
+		s     = &http.Server{Handler: mux}
 	)
 
 	go func() {
 		if err := s.Serve(l); err != nil {
 			if err != http.ErrServerClosed {
-				errc <- err
+				errCh <- err
 			}
 		}
 	}()
@@ -274,7 +274,7 @@ func Serve(c *Config, addr string) error {
 	select {
 	case sig := <-exit:
 		c.Logf("Received %s, gracefully shutting down...", sig)
-	case <-errc:
+	case <-errCh:
 		return err
 	}
 
