@@ -202,7 +202,7 @@ Bar.
 
 Test.
 `,
-			wantErr: errInvalidPermalink,
+			wantErr: errPermalinkInvalid,
 		},
 		"default type": {
 			name: "default-type.md",

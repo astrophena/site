@@ -68,7 +68,7 @@ var (
 	errFrontmatterMissing      = errors.New("missing frontmatter")
 	errFrontmatterMissingParam = errors.New("missing required frontmatter parameter (title, template, permalink)")
 	errFormatUnsupported       = errors.New("format unsupported")
-	errInvalidPermalink        = errors.New("invalid permalink")
+	errPermalinkInvalid        = errors.New("invalid permalink")
 )
 
 // Logf is a simple printf-like logging function.
@@ -623,7 +623,7 @@ func (p *Page) parse(r io.Reader) error {
 		return fmt.Errorf("%s: %w", p.path, errFrontmatterMissingParam)
 	}
 	if _, err := url.ParseRequestURI(p.Permalink); err != nil {
-		return fmt.Errorf("%s: %w: %v", p.path, errInvalidPermalink, err)
+		return fmt.Errorf("%s: %w: %v", p.path, errPermalinkInvalid, err)
 	}
 	p.dstPath = p.Permalink
 	if !strings.HasSuffix(p.dstPath, ".html") {
