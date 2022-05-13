@@ -17,13 +17,17 @@ if [[ ! -z "${CI:-}" ]] || [[ ! -z "${GIT_HOOK:-}" ]]; then
 	echo "==> Linting..."
 	goimports -d .
 	shfmt -d .
-	"$prettier" --check .
+	"$prettier" --check --loglevel warn .
 else
 	echo "==> Formatting..."
 	goimports -w .
 	shfmt -w .
-	"$prettier" --write .
+	"$prettier" --write --loglevel warn .
 fi
 
 echo "==> Running the tests..."
-CGO_ENABLED=0 go test ./...
+# Show 'go test' output only if it failed.
+set +e
+out="$(go test ./... 2>&1)"
+[[ "$?" != "0" ]] && echo >&2 "$out"
+set -e
