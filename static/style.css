@@ -85,10 +85,11 @@ header {
   flex-wrap: wrap;
 }
 
-/* Remove header padding on smaller screens. */
+/* Remove header padding and change bottom margin on smaller screens. */
 @media only screen and (max-width: 1200px) {
   header {
     padding: 1rem 0rem 0rem 0rem;
+    margin-bottom: -1rem;
   }
 }
 
