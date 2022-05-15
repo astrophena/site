@@ -88,11 +88,13 @@ header {
 /* Hide the scrollbar in navigation. */
 
 header nav {
-  scrollbar-width: none;
+  /* See https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Scrollbars#scrollbar-width. */
+  scrollbar-width: none; /* Firefox */
 }
 
 header nav::-webkit-scrollbar {
-  display: none;
+  /* See https://developer.mozilla.org/en-US/docs/Web/CSS/::-webkit-scrollbar#-webkit-scrollbar. */
+  display: none; /* Chrome & friends */
 }
 
 /* Remove header padding and change bottom margin on smaller screens. */
