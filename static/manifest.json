@@ -13,12 +13,6 @@
       "type": "image/webp",
       "sizes": "192x192",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/512x512.webp",
-      "type": "image/webp",
-      "sizes": "512x512",
-      "purpose": "any maskable"
     }
   ],
   "background_color": "#12161a",
