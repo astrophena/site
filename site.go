@@ -496,6 +496,11 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 		return nil
 	}
 
+	// Ignore .gitignore files.
+	if strings.Contains(path, ".gitignore") {
+		return nil
+	}
+
 	f, err := os.Open(path)
 	if err != nil {
 		return err
