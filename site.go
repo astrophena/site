@@ -414,7 +414,10 @@ func (b *buildContext) icon(name string) template.HTML {
 }
 
 func (b *buildContext) image(path, caption string) template.HTML {
-	const tmpl = `<img alt="%[2]s" src="%[1]s" loading="lazy"/>`
+	const tmpl = `<figure>
+  <img alt="%[2]s" src="%[1]s" loading="lazy"/>
+  <figcaption>%[2]s</figcaption>
+</figure>`
 	s := fmt.Sprintf(tmpl, b.url(path), caption)
 	return template.HTML(s)
 }

@@ -324,13 +324,17 @@ mark {
   background: var(--accent-light);
 }
 
-main img {
-  max-width: 100%;
-  border-radius: 5px;
-}
-
 figure {
   margin: 0;
+}
+
+figure img {
+  display: block;
+  border-radius: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0.5rem;
+  width: 50%;
 }
 
 figcaption {
@@ -361,7 +365,6 @@ pre,
 kbd,
 samp {
   font-family: var(--mono-font);
-  font-size: 1.1rem;
   color: var(--code);
 }
 
