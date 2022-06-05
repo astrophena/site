@@ -35,11 +35,14 @@
     </main>
     {{ if not .ContentOnly }}
       <footer>
+        <a href="https://github.com/astrophena/astrophena.github.io/edit/master/{{ path . }}"
+          >Edit</a
+        >
+        this
         <a href="https://github.com/astrophena/astrophena.github.io/blob/master/{{ path . }}"
-          >Edit this page</a
+          >page</a
         >. The content for this website is
-        <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY</a>, the
-        <a href="https://github.com/astrophena/astrophena.github.io">code</a> is
+        <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY</a>, the code is
         <a href="https://github.com/astrophena/astrophena.github.io/blob/master/LICENSE">MIT</a>.
       </footer>
     {{ end }}
