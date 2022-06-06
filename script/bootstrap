@@ -11,9 +11,9 @@ goInstall() {
 }
 
 git config core.hooksPath script/hooks
-[[ -d node_modules ]] || {
-	echo "==> Installing Prettier..."
-	npm install
-}
+if ! command -v prettier &>/dev/null; then
+	npm install -g prettier prettier-plugin-go-template
+fi
 goInstall goimports golang.org/x/tools/cmd/goimports
 goInstall shfmt mvdan.cc/sh/v3/cmd/shfmt
+goInstall actionlint github.com/rhysd/actionlint/cmd/actionlint

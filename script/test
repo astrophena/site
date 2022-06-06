@@ -11,18 +11,17 @@ fi
 
 script/bootstrap
 
-prettier="node_modules/.bin/prettier"
-
 if [[ ! -z "${CI:-}" ]] || [[ ! -z "${GIT_HOOK:-}" ]]; then
 	echo "==> Linting..."
 	goimports -d .
 	shfmt -d .
-	"$prettier" --check --loglevel warn .
+	prettier --check --loglevel warn .
+	actionlint .github/workflows/*.yml
 else
 	echo "==> Formatting..."
 	goimports -w .
 	shfmt -w .
-	"$prettier" --write --loglevel warn .
+	prettier --write --loglevel warn .
 fi
 
 echo "==> Running the tests..."

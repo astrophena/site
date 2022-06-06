@@ -12,9 +12,3 @@ updates:
       interval: 'weekly'
     commit-message:
       prefix: '.github:'
-  - package-ecosystem: 'npm'
-    directory: '/'
-    schedule:
-      interval: 'weekly'
-    commit-message:
-      prefix: 'package.json:'
