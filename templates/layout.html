@@ -9,7 +9,11 @@
     <meta name="format-detection" content="telephone=no" />
     <link rel="icon" href="{{ url "/icons/36x36.webp" }}" />
     <link rel="apple-touch-icon" href="{{ url "/icons/180x180.webp" }}" />
-    <link rel="alternate" type="application/atom+xml" href="{{ url "/feed.xml" }}" />
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      href="{{ url "/feed.xml" }}"
+    />
     <link rel="manifest" href="{{ url "/manifest.json" }}" />
     <link rel="stylesheet" href="{{ url "/style.css" }}" />
     <title>{{ .Title }}</title>
@@ -35,15 +39,21 @@
     </main>
     {{ if not .ContentOnly }}
       <footer>
-        <a href="https://github.com/astrophena/astrophena.github.io/edit/master/{{ path . }}"
+        <a
+          href="https://github.com/astrophena/astrophena.github.io/edit/master/{{ path . }}"
           >Edit</a
         >
         this
-        <a href="https://github.com/astrophena/astrophena.github.io/blob/master/{{ path . }}"
+        <a
+          href="https://github.com/astrophena/astrophena.github.io/blob/master/{{ path . }}"
           >page</a
         >. The content for this website is
-        <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY</a>, the code is
-        <a href="https://github.com/astrophena/astrophena.github.io/blob/master/LICENSE">MIT</a>.
+        <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY</a>, the
+        code is
+        <a
+          href="https://github.com/astrophena/astrophena.github.io/blob/master/LICENSE"
+          >MIT</a
+        >.
       </footer>
     {{ end }}
   </body>

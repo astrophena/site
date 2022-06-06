@@ -4,7 +4,7 @@ singleQuote: true
 proseWrap: 'always'
 bracketSpacing: false
 trailingComma: 'none'
-printWidth: 100
+printWidth: 80
 overrides:
   - files: '*.html'
     options:
