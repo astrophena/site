@@ -25,6 +25,7 @@ else
 fi
 
 echo "==> Running the tests..."
+staticcheck ./...
 # Show 'go test' output only if it failed.
 set +e
 out="$(go test ./... 2>&1)"

@@ -17,3 +17,4 @@ fi
 goInstall goimports golang.org/x/tools/cmd/goimports
 goInstall shfmt mvdan.cc/sh/v3/cmd/shfmt
 goInstall actionlint github.com/rhysd/actionlint/cmd/actionlint
+goInstall staticcheck honnef.co/go/tools/cmd/staticcheck

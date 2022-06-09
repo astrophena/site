@@ -82,10 +82,11 @@ func TestServe(t *testing.T) {
 	server := exec.Command(os.Args[0], "-test.run=TestServe")
 	server.Stderr = &buf
 	server.Env = append(os.Environ(), "SITE_RUN_SERVER="+addr)
+	errCh := make(chan error, 1)
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		if err := server.Run(); err != nil {
-			t.Fatalf("Test server crashed: %v", err)
+			errCh <- err
 		}
 		wg.Done()
 	}()
@@ -93,7 +94,11 @@ func TestServe(t *testing.T) {
 	// Wait until the server is ready.
 	ready := make(chan os.Signal, 1)
 	signal.Notify(ready, syscall.SIGUSR1)
-	<-ready
+	select {
+	case err := <-errCh:
+		t.Fatalf("Test server crashed: %v", err)
+	case <-ready:
+	}
 
 	// Make some HTTP requests.
 	urls := []string{"/", "/blocklist.txt", "/watched/"}
