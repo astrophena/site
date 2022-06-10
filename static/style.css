@@ -109,6 +109,9 @@ header nav::-webkit-scrollbar {
   header {
     margin-left: 10px;
   }
+  .intro {
+    margin-bottom: -1rem !important;
+  }
 }
 
 /* Remove margins for header text. */
@@ -431,4 +434,9 @@ nav a.current {
 .elsewhere {
   list-style-type: none;
   padding-left: 0 !important;
+}
+
+/* Make intro text on home page look prettier. */
+.intro {
+  margin-bottom: -0.5rem;
 }
