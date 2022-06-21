@@ -33,7 +33,7 @@ formatted.
 
 The content for this website is
 [CC-BY](https://creativecommons.org/licenses/by/4.0/), the code is
-[MIT](https://opensource.org/licenses/MIT).
+[ISC](https://opensource.org/licenses/ISC).
 
 [go]: https://go.dev
 [prettier]: https://prettier.io
