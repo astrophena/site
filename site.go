@@ -239,16 +239,10 @@ func Serve(c *Config, addr string) error {
 	defer l.Close()
 	c.Logf("Listening on %s://%s...", l.Addr().Network(), l.Addr().String())
 
-	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(neuteredFileSystem{http.Dir(c.Dst)}))
-
-	var (
-		errCh = make(chan error, 1)
-		s     = &http.Server{Handler: mux}
-	)
-
+	httpSrv := &http.Server{Handler: http.FileServer(neuteredFileSystem{http.Dir(c.Dst)})}
+	errCh := make(chan error, 1)
 	go func() {
-		if err := s.Serve(l); err != nil {
+		if err := httpSrv.Serve(l); err != nil {
 			if err != http.ErrServerClosed {
 				errCh <- err
 			}
@@ -287,7 +281,7 @@ func Serve(c *Config, addr string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	return s.Shutdown(ctx)
+	return httpSrv.Shutdown(ctx)
 }
 
 func watchRecursive(w *fsnotify.Watcher, dir string) error {

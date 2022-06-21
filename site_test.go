@@ -96,7 +96,7 @@ func TestServe(t *testing.T) {
 	signal.Notify(ready, syscall.SIGUSR1)
 	select {
 	case err := <-errCh:
-		t.Fatalf("Test server crashed: %v", err)
+		t.Fatalf("Test server crashed during startup or runtime: %v", err)
 	case <-ready:
 	}
 
@@ -114,12 +114,17 @@ func TestServe(t *testing.T) {
 
 	// Try to gracefully shutdown the server.
 	if err := server.Process.Signal(os.Interrupt); err != nil {
-		t.Fatalf("Failed to send a signal to running test server: %v", err)
+		t.Fatalf("Failed to send a signal to a running test server: %v", err)
 	}
-
-	// Wait until the server successfully shuts down.
+	// Wait until the server shuts down.
 	wg.Wait()
 	t.Logf("Test server output:\n%s", buf.String())
+	// See if the server failed to shutdown.
+	select {
+	case err := <-errCh:
+		t.Fatalf("Test server crashed during shutdown: %v", err)
+	default:
+	}
 }
 
 func TestStripComments(t *testing.T) {
