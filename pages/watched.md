@@ -7,6 +7,8 @@
 }
 <!-- prettier-ignore-end -->
 
+<!-- Keep this list sorted. -->
+
 # Watched
 
 This is a collection of [movies](#movies) and [shows](#shows) I watched and
@@ -44,6 +46,7 @@ liked.
 - [The Thick of It (2005)](https://www.imdb.com/title/tt0459159/)
 - [Torchwood (2006)](https://www.imdb.com/title/tt0485301/)
 - [Murdoch Mysteries (2008)](https://www.imdb.com/title/tt1091909/)
+- [Death in Paradise (2011)](https://www.imdb.com/title/tt1888075/)
 - [Scott & Bailey (2011)](https://www.imdb.com/title/tt1843678/)
 - [Miss Fisher's Murder Mysteries (2012)](https://www.imdb.com/title/tt1988386/)
 - [A Touch of Cloth (2012)](https://www.imdb.com/title/tt2240991/)

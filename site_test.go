@@ -66,11 +66,6 @@ func TestServe(t *testing.T) {
 		return
 	}
 
-	var (
-		buf bytes.Buffer
-		wg  sync.WaitGroup
-	)
-
 	// Find a free port for us.
 	port, err := getFreePort()
 	if err != nil {
@@ -78,6 +73,10 @@ func TestServe(t *testing.T) {
 	}
 	addr = fmt.Sprintf("localhost:%d", port)
 
+	var (
+		buf bytes.Buffer
+		wg  sync.WaitGroup
+	)
 	// Start the server in a subprocess.
 	server := exec.Command(os.Args[0], "-test.run=TestServe")
 	server.Stderr = &buf

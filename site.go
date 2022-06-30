@@ -2,33 +2,35 @@
 // Use of this source code is governed by the ISC
 // license that can be found in the LICENSE file.
 
-// Package site builds https://astrophena.name.
-//
-// Directory Structure
-//
-// Site has the following directories:
-//
-//  build      This is where the generated site will be placed by default.
-//  pages      All content for the site lives inside this directory. HTML and
-//             Markdown formats can be used.
-//  static     Files in this directory will be copied verbatim to the
-//             generated site.
-//  templates  These are the templates that wrap pages. Templates are
-//             chosen on a page-by-page basis in the front matter.
-//             They must have the '.html' extension.
-//
-// Page Layout
-//
-// Each page must be of the supported format (HTML or Markdown) and have JSON
-// front matter in the beginning:
-//
-//  {
-//    "title": "Hello, world!",
-//    "template": "layout",
-//    "permalink": "/hello-world"
-//  }
-//
-// See Page for all available front matter fields.
+/*
+Package site builds https://astrophena.name.
+
+Directory Structure
+
+Site has the following directories:
+
+ build      This is where the generated site will be placed by default.
+ pages      All content for the site lives inside this directory. HTML and
+            Markdown formats can be used.
+ static     Files in this directory will be copied verbatim to the
+            generated site.
+ templates  These are the templates that wrap pages. Templates are
+            chosen on a page-by-page basis in the front matter.
+            They must have the '.html' extension.
+
+Page Layout
+
+Each page must be of the supported format (HTML or Markdown) and have JSON front
+matter in the beginning:
+
+ {
+   "title": "Hello, world!",
+   "template": "layout",
+   "permalink": "/hello-world"
+ }
+
+See Page for all available front matter fields.
+*/
 package site
 
 import (
@@ -329,15 +331,16 @@ func shouldRebuild(path string, op fsnotify.Op) bool {
 		return true
 	}
 
-	// Ignore everything else. Rationale:
-	//
-	//  * chmod: we don't really care about these as they won't affect build
-	//   output (unless potentially we no longer can read the file, but we'll go
-	//   down that path if it ever becomes a problem).
-	//
-	//  * rename: will produce a following create event as well, so just listen
-	//  for that instead.
-	//
+	/*
+		Ignore everything else. Rationale:
+
+		* chmod: we don't really care about these as they won't affect build
+		output (unless potentially we no longer can read the file, but we'll go
+		down that path if it ever becomes a problem).
+
+		* rename: will produce a following create event as well, so just listen
+		for that instead.
+	*/
 	return false
 }
 

@@ -7,7 +7,7 @@ and a [Go] package that generates it.
 
 ## Serving locally
 
-You need the latest [Go].
+You need the latest [Go] installed.
 
 ```sh
 $ git clone https://github.com/astrophena/astrophena.github.io site
