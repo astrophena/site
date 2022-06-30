@@ -46,7 +46,7 @@ jobs:
             ~/.cache/go-build
           key: "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}"
       - name: 'Build'
-        run: 'script/build -env prod'
+        run: 'script/build.go -env prod'
       - name: 'Deploy'
         uses: 'peaceiris/actions-gh-pages@v3.8.0'
         with:

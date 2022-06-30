@@ -7,13 +7,12 @@ and a [Go] package that generates it.
 
 ## Serving locally
 
-You need the latest [Go] and [Node.js](https://nodejs.org) (needed for running
-[Prettier]) installed.
+You need the latest [Go].
 
 ```sh
 $ git clone https://github.com/astrophena/astrophena.github.io site
 $ cd site
-$ script/server
+$ script/server.go
 ```
 
 Open http://localhost:3000 in your browser.
@@ -26,8 +25,10 @@ All code in this repository are formatted by:
 - [shfmt](https://godocs.io/mvdan.cc/sh/v3/cmd/shfmt) (shell scripts)
 - [Prettier] (Markdown, HTML and CSS)
 
-Run `script/test` to format everything. CI verifies if the code is correctly
-formatted.
+Run `script/test` to format everything. [Node.js](https://nodejs.org) is needed
+for running [Prettier].
+
+CI verifies if the code is correctly formatted.
 
 ## License
 
