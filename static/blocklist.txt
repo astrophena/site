@@ -263,12 +263,16 @@ disk.yandex.*##.LeftColumnNavigation__Item_type_recent
 ! Profile counters
 mastodon.social##span > strong > span
 
-! Filtered posts
-mastodon.social##.status__wrapper--filtered
-
 !
 ! Arhivach
 !
 
 ! Heaven
 arhivach.ng##.post:has(.post_head > .poster_name:has-text(/Heaven/))
+
+!
+! Kinopoisk
+!
+
+! Tooltips
+hd.kinopoisk.ru##.Tooltip
