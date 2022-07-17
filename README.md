@@ -5,8 +5,6 @@
 This is my personal website, hosted on [GitHub Pages](https://pages.github.com)
 and a [Go] package that generates it.
 
-There is a mirror on [SourceHut](https://sr.ht/~astrophena/site).
-
 ## Serving locally
 
 You need the latest [Go] installed.
