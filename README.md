@@ -2,15 +2,14 @@
 
 [![Go Documentation](https://godocs.io/go.astrophena.name/site?status.svg)](https://godocs.io/go.astrophena.name/site)
 
-This is my personal website, hosted on [GitHub Pages](https://pages.github.com)
-and a [Go] package that generates it.
+This is my personal website and a [Go] package that generates it.
 
 ## Serving locally
 
 You need the latest [Go] installed.
 
 ```sh
-$ git clone https://github.com/astrophena/astrophena.github.io site
+$ git clone https://github.com/astrophena/site
 $ cd site
 $ script/server.go
 ```
