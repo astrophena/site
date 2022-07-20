@@ -26,7 +26,7 @@ jobs:
       - name: 'Build'
         run: 'script/build.go -env prod'
       - name: 'Archive'
-        run: 'zip -r . ../site.zip'
+        run: 'zip -r ../site.zip .'
         working-directory: 'build'
       - name: 'Deploy'
         run:
