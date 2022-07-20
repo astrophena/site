@@ -183,6 +183,9 @@ old.reddit.com##.cookie-infobar
 ! Plashque
 2ch.hk###plashque
 
+! Heaven
+2ch.hk##.post:has(span.post__detailpart > .post__anon:has-text(/Heaven/))
+
 !
 ! Yandex Music
 !
