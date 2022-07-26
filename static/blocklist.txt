@@ -187,6 +187,13 @@ old.reddit.com##.cookie-infobar
 2ch.hk##.post:has(span.post__detailpart > .post__anon:has-text(/Heaven/))
 
 !
+! Arhivach
+!
+
+! Heaven
+arhivach.ng##.post:has(.post_head > .poster_name:has-text(/Heaven/))
+
+!
 ! Yandex Music
 !
 
@@ -258,20 +265,6 @@ disk.yandex.*##.LeftColumnNavigation__Item_type_aux
 
 ! Recent
 disk.yandex.*##.LeftColumnNavigation__Item_type_recent
-
-!
-! Mastodon
-!
-
-! Profile counters
-mastodon.social##span > strong > span
-
-!
-! Arhivach
-!
-
-! Heaven
-arhivach.ng##.post:has(.post_head > .poster_name:has-text(/Heaven/))
 
 !
 ! Kinopoisk

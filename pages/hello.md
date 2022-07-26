@@ -4,7 +4,7 @@
   "title": "Hello, world!",
   "summary": "This is the first post on astrophena.name.",
   "template": "layout",
-  "permalink": "/hello-world",
+  "permalink": "/hello/",
   "type": "post",
   "date": "2022-02-14"
 }

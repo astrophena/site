@@ -725,6 +725,9 @@ func (b *buildContext) buildFeed() error {
 
 		pu := *b.c.BaseURL
 		pu.Path = path.Join(pu.Path, p.Permalink)
+		if !strings.HasSuffix(pu.Path, ".html") {
+			pu.Path = pu.Path + "/"
+		}
 
 		item := &feeds.Item{
 			Title:       p.Title,
