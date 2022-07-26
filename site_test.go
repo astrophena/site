@@ -331,6 +331,13 @@ func TestURLTemplateFunc(t *testing.T) {
 			in:   "/lol/",
 			want: "/lol/",
 		},
+		"single slash": {
+			c: &Config{
+				Env: Dev,
+			},
+			in:   "/",
+			want: "/",
+		},
 	}
 	b := &buildContext{}
 	for name, tc := range cases {
