@@ -309,6 +309,28 @@ func TestURLTemplateFunc(t *testing.T) {
 			in:   "/hello",
 			want: "https://example.com/hello",
 		},
+		"env dev (base URL not set, trailing slash retained)": {
+			c: &Config{
+				Env: Dev,
+			},
+			in:   "/hello/",
+			want: "/hello/",
+		},
+		"env prod (base URL set, trailing slash retained": {
+			c: &Config{
+				Env:     Prod,
+				BaseURL: bu,
+			},
+			in:   "/hello/",
+			want: "https://example.com/hello/",
+		},
+		"env prod (base URL not set, trailing slash retained": {
+			c: &Config{
+				Env: Prod,
+			},
+			in:   "/lol/",
+			want: "/lol/",
+		},
 	}
 	b := &buildContext{}
 	for name, tc := range cases {

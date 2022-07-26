@@ -446,6 +446,9 @@ func (b *buildContext) url(base string) string {
 	}
 	u := *b.c.BaseURL
 	u.Path = path.Join(u.Path, base)
+	if strings.HasSuffix(base, "/") {
+		u.Path += "/"
+	}
 	return u.String()
 }
 
