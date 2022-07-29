@@ -6,18 +6,15 @@ package site
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"html/template"
 	"net"
 	"net/http"
 	"net/url"
-	"os"
-	"os/exec"
-	"os/signal"
 	"strings"
 	"sync"
-	"syscall"
 	"testing"
 )
 
@@ -45,54 +42,32 @@ func getFreePort() (port int, err error) {
 }
 
 func TestServe(t *testing.T) {
-	addr, runServer := os.LookupEnv("SITE_RUN_SERVER")
-	if runServer {
-		// Signalize to a parent process that we are ready.
-		serveReadyHook = func() {
-			ppid := os.Getppid()
-			proc, err := os.FindProcess(ppid)
-			if err != nil {
-				t.Fatalf("os.FindProcess(): %v", err)
-			}
-			if err := proc.Signal(syscall.SIGUSR1); err != nil {
-				t.Fatalf("Failed to send a signal: %v", err)
-			}
-		}
-		if err := Serve(&Config{
-			Dst: t.TempDir(),
-		}, addr); err != nil {
-			t.Fatal(err)
-		}
-		return
-	}
-
 	// Find a free port for us.
 	port, err := getFreePort()
 	if err != nil {
 		t.Fatalf("Failed to find a free port: %v", err)
 	}
-	addr = fmt.Sprintf("localhost:%d", port)
+	addr := fmt.Sprintf("localhost:%d", port)
 
-	var (
-		buf bytes.Buffer
-		wg  sync.WaitGroup
-	)
-	// Start the server in a subprocess.
-	server := exec.Command(os.Args[0], "-test.run=TestServe")
-	server.Stderr = &buf
-	server.Env = append(os.Environ(), "SITE_RUN_SERVER="+addr)
+	var wg sync.WaitGroup
+
+	ready := make(chan struct{})
+	serveReadyHook = func() {
+		ready <- struct{}{}
+	}
 	errCh := make(chan error, 1)
-	wg.Add(1)
+	ctx, cancel := context.WithCancel(context.Background())
+
 	go func() {
-		if err := server.Run(); err != nil {
+		if err := Serve(ctx, &Config{
+			Dst:  t.TempDir(),
+			Logf: t.Logf,
+		}, addr); err != nil {
 			errCh <- err
 		}
-		wg.Done()
 	}()
 
 	// Wait until the server is ready.
-	ready := make(chan os.Signal, 1)
-	signal.Notify(ready, syscall.SIGUSR1)
 	select {
 	case err := <-errCh:
 		t.Fatalf("Test server crashed during startup or runtime: %v", err)
@@ -112,12 +87,9 @@ func TestServe(t *testing.T) {
 	}
 
 	// Try to gracefully shutdown the server.
-	if err := server.Process.Signal(os.Interrupt); err != nil {
-		t.Fatalf("Failed to send a signal to a running test server: %v", err)
-	}
+	cancel()
 	// Wait until the server shuts down.
 	wg.Wait()
-	t.Logf("Test server output:\n%s", buf.String())
 	// See if the server failed to shutdown.
 	select {
 	case err := <-errCh:

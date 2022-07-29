@@ -6,10 +6,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 
 	"go.astrophena.name/site"
@@ -51,7 +53,10 @@ func main() {
 		Dst: dir,
 	}
 
-	if err := site.Serve(c, *listenFlag); err != nil {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	if err := site.Serve(ctx, c, *listenFlag); err != nil {
 		log.Fatal(err)
 	}
 }

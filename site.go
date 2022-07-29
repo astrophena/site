@@ -48,13 +48,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/signal"
 	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
-	"syscall"
 	ttemplate "text/template"
 	"time"
 
@@ -211,7 +209,7 @@ func Build(c *Config) error {
 var serveReadyHook func() // used in tests, called when Serve started serving the site
 
 // Serve builds the site and starts serving it on a provided host:port.
-func Serve(c *Config, addr string) error {
+func Serve(ctx context.Context, c *Config, addr string) error {
 	c.setDefaults()
 
 	c.Logf("Performing an initial build...")
@@ -270,20 +268,17 @@ func Serve(c *Config, addr string) error {
 		serveReadyHook()
 	}
 
-	exit := make(chan os.Signal, 1)
-	signal.Notify(exit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
 	select {
-	case sig := <-exit:
-		c.Logf("Received %s, gracefully shutting down...", sig)
+	case <-ctx.Done():
+		c.Logf("Gracefully shutting down...")
 	case <-errCh:
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	return httpSrv.Shutdown(ctx)
+	return httpSrv.Shutdown(shutdownCtx)
 }
 
 func watchRecursive(w *fsnotify.Watcher, dir string) error {
