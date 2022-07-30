@@ -43,8 +43,7 @@
   --sans-font: apple-system, BlinkMacSystemFont, avenir next, avenir,
     'Nimbus Sans L', roboto, noto, segoe ui, arial, helvetica, helvetica neue,
     sans-serif;
-  --mono-font: 'Fira Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono',
-    monospace;
+  --mono-font: monospace;
   --bg: #171a1f;
   --accent-bg: #2b2b2b;
   --text: #ababab;

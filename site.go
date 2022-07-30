@@ -237,7 +237,7 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 		return err
 	}
 	defer l.Close()
-	c.Logf("Listening on %s://%s...", l.Addr().Network(), l.Addr().String())
+	c.Logf("Listening on http://%s...", l.Addr().String())
 
 	httpSrv := &http.Server{Handler: http.FileServer(neuteredFileSystem{http.Dir(c.Dst)})}
 	errCh := make(chan error, 1)
