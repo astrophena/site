@@ -5,29 +5,29 @@
 /*
 Package site builds https://astrophena.name.
 
-Directory Structure
+# Directory Structure
 
 Site has the following directories:
 
- build      This is where the generated site will be placed by default.
- pages      All content for the site lives inside this directory. HTML and
-            Markdown formats can be used.
- static     Files in this directory will be copied verbatim to the
-            generated site.
- templates  These are the templates that wrap pages. Templates are
-            chosen on a page-by-page basis in the front matter.
-            They must have the '.html' extension.
+	build      This is where the generated site will be placed by default.
+	pages      All content for the site lives inside this directory. HTML and
+	           Markdown formats can be used.
+	static     Files in this directory will be copied verbatim to the
+	           generated site.
+	templates  These are the templates that wrap pages. Templates are
+	           chosen on a page-by-page basis in the front matter.
+	           They must have the '.html' extension.
 
-Page Layout
+# Page Layout
 
 Each page must be of the supported format (HTML or Markdown) and have JSON front
 matter in the beginning:
 
- {
-   "title": "Hello, world!",
-   "template": "layout",
-   "permalink": "/hello-world"
- }
+	{
+	  "title": "Hello, world!",
+	  "template": "layout",
+	  "permalink": "/hello-world"
+	}
 
 See Page for all available front matter fields.
 */
