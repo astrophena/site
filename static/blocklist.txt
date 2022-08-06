@@ -1,9 +1,9 @@
+! vim: foldmethod=marker
+
 ! Title: astrophena's website blocklist
 ! Expires: 4 days
 
-!
-! VK (desktop version)
-!
+! VK (desktop version) {{{
 
 ! Music banner
 vk.com##.audio_promo
@@ -72,9 +72,9 @@ vk.com##._emoji_btn
 ! Profile link
 vk.com##.ownerButton_contact_card
 
-!
-! VK (mobile version)
-!
+! }}}
+
+! VK (mobile version) {{{
 
 ! Main menu entries
 m.vk.com##.mmi_feed
@@ -97,9 +97,9 @@ m.vk.com##.mmi_help
 m.vk.com##[data-tabbar="feed"]
 m.vk.com##[data-tabbar="recommend"]
 
-!
-! DuckDuckGo
-!
+! }}}
+
+! DuckDuckGo {{{
 
 ! Header
 duckduckgo.com##.header__label.showcase
@@ -119,9 +119,9 @@ duckduckgo.com##.t-m.related-searches
 ! Site links
 duckduckgo.com##.js-sitelinks
 
-!
-! Reddit
-!
+! }}}
+
+! Reddit {{{
 
 ! Premium banner
 old.reddit.com##.premium-banner
@@ -154,9 +154,9 @@ old.reddit.com##.read-next
 ! Cookie banner
 old.reddit.com##.cookie-infobar
 
-!
-! 2ch.hk
-!
+! }}}
+
+! 2ch.hk {{{
 
 ! Header
 2ch.hk##.logo.header__logo
@@ -186,16 +186,16 @@ old.reddit.com##.cookie-infobar
 ! Heaven
 2ch.hk##.post:has(span.post__detailpart > .post__anon:has-text(/Heaven/))
 
-!
-! Arhivach
-!
+! }}}
+
+! Arhivach {{{
 
 ! Heaven
 arhivach.ng##.post:has(.post_head > .poster_name:has-text(/Heaven/))
 
-!
-! Yandex Music
-!
+! }}}
+
+! Yandex Music {{{
 
 ! Notification dot
 music.yandex.*##.playlist-notification
@@ -215,9 +215,9 @@ music.yandex.*##.page-line_chart
 ! Logo
 music.yandex.*##.head-kids__left
 
-!
-! Yandex
-!
+! }}}
+
+! Yandex {{{
 
 ! Plus points
 yandex.*##.plus-points
@@ -234,9 +234,9 @@ yandex.*##.widgets__item
 ! Voice search
 yandex.*##.input__voice-search
 
-!
-! Yandex Disk
-!
+! }}}
+
+! Yandex Disk {{{
 
 ! App install link
 disk.yandex.*##.AppLink
@@ -266,9 +266,11 @@ disk.yandex.*##.LeftColumnNavigation__Item_type_aux
 ! Recent
 disk.yandex.*##.LeftColumnNavigation__Item_type_recent
 
-!
-! Kinopoisk
-!
+! }}}
+
+! Kinopoisk {{{
 
 ! Tooltips
 hd.kinopoisk.ru##.Tooltip
+
+! }}}
