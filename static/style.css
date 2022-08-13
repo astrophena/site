@@ -434,8 +434,3 @@ nav a.current {
   list-style-type: none;
   padding-left: 0 !important;
 }
-
-/* Make intro text on home page look prettier. */
-.intro {
-  margin-bottom: -0.5rem;
-}
