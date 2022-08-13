@@ -1,2 +1,4 @@
 User-agent: *
+Disallow: /debug/pprof/
+Disallow: /ping
 Disallow: /update
