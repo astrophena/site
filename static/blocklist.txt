@@ -277,3 +277,10 @@ disk.yandex.*##.albums2_desktop.albums2 > .albums2__subheader
 hd.kinopoisk.ru##.Tooltip
 
 ! }}}
+
+! YouTube {{{
+
+! Recommendations
+www.youtube.com##ytd-watch-next-secondary-results-renderer
+
+! }}}
