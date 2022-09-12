@@ -108,9 +108,6 @@ header nav::-webkit-scrollbar {
   header {
     margin-left: 10px;
   }
-  .intro {
-    margin-bottom: -1rem !important;
-  }
 }
 
 /* Remove margins for header text. */
