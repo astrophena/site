@@ -269,6 +269,9 @@ disk.yandex.*##.LeftColumnNavigation__Item_type_recent
 ! Smart Albums header
 disk.yandex.*##.albums2_desktop.albums2 > .albums2__subheader
 
+! Photo type chooser
+disk.yandex.*##.photo-header-menu__photoslice-filter
+
 ! }}}
 
 ! Kinopoisk {{{
