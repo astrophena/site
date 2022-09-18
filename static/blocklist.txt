@@ -159,20 +159,20 @@ old.reddit.com##.cookie-infobar
 ! 2ch.hk {{{
 
 ! Header
-2ch.hk##.logo.header__logo
-2ch.hk##.header__adminbar
+2ch.hk##.header__logo
+2ch.hk##.header__menu
+2ch.hk##.header__opts
 
 ! Footer
 2ch.hk##hr
-2ch.hk##.adminbar-bottom.adminbar.desktop
-2ch.hk##.footer__info
+2ch.hk##.footer
 2ch.hk##.nb
 
 ! Left sidebar
-2ch.hk##.cntnt__left
+2ch.hk##.cntnt__aside
 
 ! Left sidebar opener
-2ch.hk##.hidefm.desktop
+2ch.hk###js-hidefm
 
 ! Favorites
 2ch.hk##.bb
