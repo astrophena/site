@@ -16,7 +16,7 @@ if [[ ! -z "${CI:-}" ]] || [[ ! -z "${GIT_HOOK:-}" ]]; then
 	goimports -d .
 	shfmt -d .
 	prettier --check --loglevel warn .
-	actionlint .github/workflows/*.yml
+	actionlint
 else
 	echo "==> Formatting..."
 	goimports -w .
