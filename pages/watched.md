@@ -21,6 +21,7 @@ liked.
 - [Hiroshima Mon Amour (1959)](https://www.imdb.com/title/tt0052893/)
 - [Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)](https://www.imdb.com/title/tt0057012/)
 - [A Man and a Woman (1966)](https://www.imdb.com/title/tt0061138/)
+- [Persona (1966)](https://www.imdb.com/title/tt0060827/)
 - [Solaris (1972)](https://www.imdb.com/title/tt0069293)
 - [The Princess Bride (1987)](https://www.imdb.com/title/tt0093779/)
 - [The Remains of the Day (1993)](https://www.imdb.com/title/tt0107943/)
