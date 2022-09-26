@@ -19,7 +19,7 @@ const noColor = "\033[0m"
 const yellowColor = "\033[0;33m"
 
 func logf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, yellowColor+format+noColor, args...)
+	fmt.Fprintf(os.Stderr, yellowColor+format+noColor+"\n", args...)
 }
 
 func main() {
