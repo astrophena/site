@@ -9,22 +9,29 @@ else
 	cd "$(dirname $0)/../.."
 fi
 
+no_color='\033[0m'
+yellow_color='\033[0;33m'
+
+info() {
+	echo -e "${yellow_color}"$@"${no_color}"
+}
+
 script/bootstrap
 
 if [[ ! -z "${CI:-}" ]] || [[ ! -z "${GIT_HOOK:-}" ]]; then
-	echo "==> Linting..."
+	info "==> Linting..."
 	goimports -d .
 	shfmt -d .
 	prettier --check --loglevel warn .
 	actionlint
 else
-	echo "==> Formatting..."
+	info "==> Formatting..."
 	goimports -w .
 	shfmt -w .
 	prettier --write --loglevel warn .
 fi
 
-echo "==> Running the tests..."
+info "==> Running the tests..."
 staticcheck ./...
 # Show 'go test' output only if it failed.
 set +e
