@@ -7,7 +7,7 @@
 }
 <!-- prettier-ignore-end -->
 
-<!-- Keep this list sorted. -->
+<!-- Keep this list sorted by date. -->
 
 # Watched
 

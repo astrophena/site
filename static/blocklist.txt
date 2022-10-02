@@ -3,102 +3,6 @@
 ! Title: astrophena's website blocklist
 ! Expires: 4 days
 
-! VK (desktop version) {{{
-
-! Music banner
-vk.com##.audio_promo
-
-! Stories in feed
-vk.com##.stories_feed_wrap
-
-! Feed tabs and buttons
-vk.com##.feed_section_live
-vk.com##.feed_section_recommended
-vk.com###feed_add_list_icon
-vk.com###feed_filters
-
-! Possible friends
-vk.com##.friends_possible_block
-
-! Music tabs and buttons
-vk.com##._audio_section_tab__recoms
-vk.com##._audio_section_tab__explore
-vk.com##._audio_section_tab__updates
-vk.com##.CatalogBlock__subscription
-vk.com##.CatalogBlock__audio_friends_separator
-vk.com##.CatalogMyAudiosHeader.CatalogBlock__title
-
-! Profile name in the header
-vk.com##.TopNavBtn__profileName
-
-! Messenger placeholder
-vk.com##.im-page--center-empty
-
-! Navigation
-vk.com###l_nwsf
-vk.com##.left_menu_nav_wrap
-vk.com##.left_settings
-vk.com###l_doc
-vk.com###l_ap
-vk.com###react_rootEcosystemServicesNavigationEntry
-vk.com###react_rootEcosystemAccountMenuEntry
-
-! Friends
-vk.com##.friends_section_find
-vk.com##._ui_rmenu_lists_toggle
-vk.com##.ui_rmenu_sep
-vk.com###invite_button
-
-! "People you may know"
-vk.com##.profile_friends_recomm
-
-! Profile actions
-vk.com##.PageActionsClosedProfile
-vk.com##._page_actions_container
-
-! Fast chat
-vk.com###fastchat-reforged
-
-! Hide audio icon
-vk.com###top_audio
-vk.com##.TopNavBtn__audio
-
-! "Find friends" in Messenger
-vk.com##.ConvoListFindFriendsStub
-
-! Emoji button in Messenger
-vk.com##._emoji_btn
-
-! Profile link
-vk.com##.ownerButton_contact_card
-
-! }}}
-
-! VK (mobile version) {{{
-
-! Main menu entries
-m.vk.com##.mmi_feed
-m.vk.com##.mmi_recommended
-m.vk.com##.mmi_groups
-m.vk.com##.mmi_apps
-m.vk.com##.mmi_ads
-m.vk.com##.mmi_likes
-m.vk.com##.mmi_fave
-m.vk.com##.mmi_docs
-m.vk.com##.mmi_search
-
-! Logo
-m.vk.com##.lmh_logo_wrap
-
-! Help link
-m.vk.com##.mmi_help
-
-! Bottom bar (on mobile)
-m.vk.com##[data-tabbar="feed"]
-m.vk.com##[data-tabbar="recommend"]
-
-! }}}
-
 ! DuckDuckGo {{{
 
 ! Header
@@ -217,25 +121,6 @@ music.yandex.*##.head-kids__left
 
 ! }}}
 
-! Yandex {{{
-
-! Plus points
-yandex.*##.plus-points
-
-! News widget
-yandex.*##.widget_name_topnews
-
-! Services list
-yandex.by##.services-new__content
-
-! Widgets
-yandex.*##.widgets__item
-
-! Voice search
-yandex.*##.input__voice-search
-
-! }}}
-
 ! Yandex Disk {{{
 
 ! App install link
@@ -278,12 +163,5 @@ disk.yandex.*##.photo-header-menu__photoslice-filter
 
 ! Tooltips
 hd.kinopoisk.ru##.Tooltip
-
-! }}}
-
-! YouTube {{{
-
-! Recommendations
-www.youtube.com##ytd-watch-next-secondary-results-renderer
 
 ! }}}

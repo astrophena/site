@@ -74,6 +74,17 @@ var (
 // Logf is a simple printf-like logging function.
 type Logf func(format string, args ...any)
 
+const (
+	noColor     = "\033[0m"
+	yellowColor = "\033[0;33m"
+)
+
+// ColoredLogf is a logging function that logs everything to stderr
+// yellow-colored.
+func ColoredLogf(format string, args ...any) {
+	fmt.Fprintf(os.Stderr, yellowColor+format+noColor+"\n", args...)
+}
+
 // Env is the environment for which site can be built.
 type Env string
 

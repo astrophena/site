@@ -17,13 +17,6 @@ import (
 	"go.astrophena.name/site"
 )
 
-const noColor = "\033[0m"
-const yellowColor = "\033[0;33m"
-
-func logf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, yellowColor+format+noColor+"\n", args...)
-}
-
 func main() {
 	log.SetFlags(0)
 
@@ -58,7 +51,7 @@ func main() {
 		Env:  site.Env(*envFlag),
 		Src:  ".",
 		Dst:  dir,
-		Logf: logf,
+		Logf: site.ColoredLogf,
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)

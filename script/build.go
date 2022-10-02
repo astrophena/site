@@ -55,7 +55,7 @@ func main() {
 		Env:  site.Env(*envFlag),
 		Src:  ".",
 		Dst:  dir,
-		Logf: logf,
+		Logf: site.ColoredLogf,
 	}
 
 	if err := site.Build(c); err != nil {
