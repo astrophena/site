@@ -2,26 +2,14 @@
 
 set -euo pipefail
 cd "$(dirname $0)/.."
-
-no_color='\033[0m'
-yellow_color='\033[0;33m'
-info() {
-	echo -e "${yellow_color}"$@"${no_color}"
-}
-
-goInstall() {
-	command -v "$1" &>/dev/null || {
-		info "==> Installing $1..."
-		go install -ldflags="-s -w -buildid=" -trimpath "$2@latest"
-	}
-}
+source script/.shared
 
 git config core.hooksPath script/hooks
 if ! command -v prettier &>/dev/null; then
 	info "==> Installing Prettier..."
 	npm install -g prettier prettier-plugin-go-template
 fi
-goInstall actionlint github.com/rhysd/actionlint/cmd/actionlint
-goInstall goimports golang.org/x/tools/cmd/goimports
-goInstall shfmt mvdan.cc/sh/v3/cmd/shfmt
-goInstall staticcheck honnef.co/go/tools/cmd/staticcheck
+go_install actionlint github.com/rhysd/actionlint/cmd/actionlint
+go_install goimports golang.org/x/tools/cmd/goimports
+go_install shfmt mvdan.cc/sh/v3/cmd/shfmt
+go_install staticcheck honnef.co/go/tools/cmd/staticcheck
