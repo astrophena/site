@@ -3,28 +3,6 @@
 ! Title: astrophena's website blocklist
 ! Expires: 4 days
 
-! DuckDuckGo {{{
-
-! Header
-duckduckgo.com##.header__label.showcase
-duckduckgo.com##.social
-duckduckgo.com##.tag-home
-
-! Feedback prompts
-duckduckgo.com##.js-feedback-prompt-generic
-duckduckgo.com##.js-feedback-btn-wrap
-
-! Footer
-duckduckgo.com##.footer
-
-! Related searches
-duckduckgo.com##.t-m.related-searches
-
-! Site links
-duckduckgo.com##.js-sitelinks
-
-! }}}
-
 ! Reddit {{{
 
 ! Premium banner
