@@ -1,4 +1,2 @@
 User-agent: *
-Disallow: /debug/
-Disallow: /ping
 Disallow: /update

@@ -3,41 +3,6 @@
 ! Title: astrophena's website blocklist
 ! Expires: 4 days
 
-! Reddit {{{
-
-! Premium banner
-old.reddit.com##.premium-banner
-
-! Redesign switch button
-old.reddit.com###redesign-beta-optin-btn
-
-! Chat
-||old.reddit.com/chat/minimize$subdocument
-
-! Online indicator
-old.reddit.com##.presence_circle
-
-! Sign up ads
-old.reddit.com##.listingsignupbar
-old.reddit.com##.commentsignupbar
-
-! Trending subreddits
-old.reddit.com##.trending-subreddits
-
-! Footer
-old.reddit.com##.footer-parent
-
-! Ads
-old.reddit.com##.ad-container
-
-! Read next
-old.reddit.com##.read-next
-
-! Cookie banner
-old.reddit.com##.cookie-infobar
-
-! }}}
-
 ! 2ch.hk {{{
 
 ! Header
