@@ -1,0 +1,15 @@
+<!-- vim: set ft=gotplhtml: -->
+<!-- prettier-ignore -->
+{
+  "title": "Blog",
+  "template": "layout",
+  "permalink": "/blog/"
+}
+
+{{ $pages := pages "post" }}
+{{ range $pages }}
+  <h2 class="post-link"><a href="{{ url .Permalink }}">{{ .Title }}</a></h2>
+  {{ if and .Date (not .Date.IsZero) }}
+    <p class="meta">{{ formatDate "January 2, 2006" .Date }}</p>
+  {{ end }}
+{{ end }}

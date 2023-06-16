@@ -17,9 +17,15 @@
   <body>
     {{ if not .ContentOnly }}
       <header>
-        <h1>Ilya Mateyko</h1>
+        <h1>
+          {{ if eq .Permalink "/" }}
+            Ilya Mateyko
+          {{ else }}
+            <a href="/">Ilya Mateyko</a>
+          {{ end }}
+        </h1>
         <nav>
-          {{ navLink . "Me" "me" "/" }}
+          {{ navLink . "Blog" "blog" "/blog/" }}
           {{ navLink . "Watched" "watched" "/watched/" }}
         </nav>
       </header>
@@ -35,9 +41,7 @@
     </main>
     {{ if not .ContentOnly }}
       <footer>
-        <a href="https://github.com/astrophena/site/edit/master/{{ path . }}">Edit</a>
-        this
-        <a href="https://github.com/astrophena/site/blob/master/{{ path . }}">page</a>. The content for this website is licensed under
+        The content for this website is licensed under
         <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY</a>, the code is
         <a href="https://github.com/astrophena/site/blob/master/LICENSE">ISC</a>
         licensed.
