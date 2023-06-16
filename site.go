@@ -402,7 +402,6 @@ func newBuildContext(c *Config) *buildContext {
 		"image":      b.image,
 		"navLink":    b.navLink,
 		"pages":      b.pagesByType,
-		"path":       func(p *Page) string { return p.path },
 		"url":        b.url,
 	}
 
