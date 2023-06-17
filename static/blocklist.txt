@@ -100,6 +100,9 @@ disk.yandex.*##.albums2_desktop.albums2 > .albums2__subheader
 ! Photo type chooser
 disk.yandex.*##.photo-header-menu__photoslice-filter
 
+! Family
+disk.yandex.*##.LeftColumnNavigation__Item_type_family
+
 ! }}}
 
 ! Kinopoisk {{{
