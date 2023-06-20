@@ -9,7 +9,7 @@ This is my personal website and a [Go] package that generates it.
 You need the latest [Go] installed.
 
 ```sh
-$ git clone https://github.com/astrophena/site
+$ git clone https://github.com/astrophena/astrophena.github.io site
 $ cd site
 $ script/server.go
 ```
