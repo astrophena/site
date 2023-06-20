@@ -341,9 +341,3 @@ nav a.current {
   color: var(--accent) !important;
   border-color: var(--accent);
 }
-
-/* Hide bullets on Elsewhere list. */
-.elsewhere {
-  list-style-type: none;
-  padding-left: 0 !important;
-}

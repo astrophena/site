@@ -82,7 +82,7 @@ const (
 // ColoredLogf is a logging function that logs everything to stderr
 // yellow-colored.
 func ColoredLogf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, yellowColor+format+noColor+"\n", args...)
+	fmt.Fprintf(os.Stderr, "==> "+yellowColor+format+noColor+"\n", args...)
 }
 
 // Env is the environment for which site can be built.

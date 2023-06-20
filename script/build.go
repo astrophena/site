@@ -2,7 +2,6 @@
 
 //go:build ignore
 
-// This program builds the site.
 package main
 
 import (
@@ -23,7 +22,7 @@ func main() {
 	)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: script/build.go [flags] [dir]\n")
-		fmt.Fprintf(os.Stderr, "Available flags:\n\n")
+		fmt.Fprintf(os.Stderr, "Available flags:\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()

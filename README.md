@@ -11,6 +11,7 @@ You need the latest [Go] installed.
 ```sh
 $ git clone https://github.com/astrophena/astrophena.github.io site
 $ cd site
+$ script/setup
 $ script/server.go
 ```
 

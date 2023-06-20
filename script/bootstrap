@@ -4,7 +4,6 @@ set -euo pipefail
 cd "$(dirname $0)/.."
 source script/.shared
 
-git config core.hooksPath script/hooks
 if ! command -v prettier &>/dev/null; then
 	info "==> Installing Prettier..."
 	npm install -g prettier prettier-plugin-go-template
