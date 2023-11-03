@@ -18,7 +18,7 @@ func main() {
 	log.SetFlags(0)
 
 	var (
-		envFlag = flag.String("env", "dev", "Environment to build for.")
+		prodFlag = flag.Bool("prod", false, "Build in a production mode.")
 	)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: ./build.go [flags] [dir]\n")
@@ -44,10 +44,9 @@ func main() {
 	}
 
 	c := &site.Config{
-		Env:  site.Env(*envFlag),
 		Src:  ".",
 		Dst:  dir,
-		Logf: site.ColoredLogf,
+		Prod: *prodFlag,
 	}
 
 	if err := site.Build(c); err != nil {

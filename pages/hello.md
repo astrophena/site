@@ -1,5 +1,3 @@
-<!-- prettier-ignore-start -->
-
 {
   "title": "Hello, world!",
   "summary": "This is the first post on astrophena.name.",
@@ -8,7 +6,6 @@
   "type": "post",
   "date": "2022-02-14"
 }
-<!-- prettier-ignore-end -->
 
 This is the first post on [astrophena.name](https://astrophena.name).
 

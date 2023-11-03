@@ -27,7 +27,7 @@ jobs:
             ~/.cache/go-build
           key: "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}"
       - name: 'Build'
-        run: './build.go -env prod'
+        run: './build.go -prod'
       - name: 'Setup GitHub Pages'
         uses: 'actions/configure-pages@v3'
       - name: 'Upload built site'

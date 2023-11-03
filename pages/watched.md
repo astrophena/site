@@ -1,13 +1,8 @@
-<!-- prettier-ignore-start -->
-
 {
   "title": "Watched",
   "template": "layout",
   "permalink": "/watched/"
 }
-<!-- prettier-ignore-end -->
-
-<!-- Keep this list sorted by date. -->
 
 # Watched
 
@@ -37,7 +32,9 @@ liked.
 - [Before Midnight (2013)](https://www.imdb.com/title/tt2209418/)
 - [Her (2013)](https://www.imdb.com/title/tt1798709/)
 - [The Grand Budapest Hotel (2014)](https://www.imdb.com/title/tt2278388/)
+- [Penguin Highway (2018)](https://www.imdb.com/title/tt8076344/)
 - [The Social Dilemma (2020)](https://www.imdb.com/title/tt11464826/)
+- [Dungeons & Dragons: Honour Among Thieves (2023)](https://www.imdb.com/title/tt2906216/)
 
 ## Shows {#shows}
 

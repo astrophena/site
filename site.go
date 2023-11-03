@@ -74,37 +74,12 @@ var (
 // Logf is a simple printf-like logging function.
 type Logf func(format string, args ...any)
 
-const (
-	noColor     = "\033[0m"
-	yellowColor = "\033[0;33m"
-)
-
-// ColoredLogf is a logging function that logs everything to stderr
-// yellow-colored.
-func ColoredLogf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, "==> "+yellowColor+format+noColor+"\n", args...)
-}
-
-// Env is the environment for which site can be built.
-type Env string
-
-// Available environments.
-const (
-	// Everything is included.
-	Dev = Env("dev")
-	// Drafts are excluded. Also the base URL is used to derive absolute URLs from
-	// relative ones.
-	Prod = Env("prod")
-)
-
 // Config represents a build configuration.
 type Config struct {
 	// Title is the title of the site.
 	Title string
 	// Author is the name of the author of the site.
 	Author string
-	// Env is the environment to use when building.
-	Env Env
 	// BaseURL is the base URL of the site.
 	BaseURL *url.URL
 	// Src is the directory where to read files from. If empty, uses the current
@@ -115,6 +90,10 @@ type Config struct {
 	Dst string
 	// Logf specifies a logger to use. If nil, log.Printf is used.
 	Logf Logf
+	// Prod determines if the site should be built in a production mode. This
+	// means that drafts are excluded and the base URL is used to derive absolute
+	// URLs from relative ones.
+	Prod bool
 }
 
 func (c *Config) setDefaults() {
@@ -132,10 +111,6 @@ func (c *Config) setDefaults() {
 
 	if c.Author == "" {
 		c.Author = "Ilya Mateyko"
-	}
-
-	if c.Env == "" {
-		c.Env = Dev
 	}
 
 	if c.BaseURL == nil {
@@ -262,7 +237,6 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 
 	go func() {
 		c.Logf("Started watching for new changes.")
-		c.Logf("If you have created new directories, please restart the server.")
 		for event := range watcher.Events {
 			if !shouldRebuild(event.Name, event.Op) {
 				continue
@@ -446,7 +420,7 @@ func (b *buildContext) pagesByType(typ string) []*Page {
 }
 
 func (b *buildContext) url(base string) string {
-	if b.c.Env == Dev || b.c.BaseURL == nil {
+	if !b.c.Prod || b.c.BaseURL == nil {
 		return base
 	}
 	u := *b.c.BaseURL
@@ -519,7 +493,7 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 	if err := p.parse(f); err != nil {
 		return err
 	}
-	if !p.Draft || b.c.Env != Prod {
+	if !p.Draft || !b.c.Prod {
 		b.pages = append(b.pages, p)
 	}
 
@@ -727,7 +701,7 @@ func (b *buildContext) buildFeed() error {
 			continue
 		}
 
-		if p.Draft && b.c.Env == Prod {
+		if p.Draft && b.c.Prod {
 			continue
 		}
 

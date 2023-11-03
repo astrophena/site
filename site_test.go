@@ -260,7 +260,6 @@ func TestURLTemplateFunc(t *testing.T) {
 	}{
 		"env dev (base URL set)": {
 			c: &Config{
-				Env:     Dev,
 				BaseURL: bu,
 			},
 			in:   "/test",
@@ -268,45 +267,41 @@ func TestURLTemplateFunc(t *testing.T) {
 		},
 		"env prod (base URL not set)": {
 			c: &Config{
-				Env: Prod,
+				Prod: true,
 			},
 			in:   "/lol",
 			want: "/lol",
 		},
 		"env prod (base URL set)": {
 			c: &Config{
-				Env:     Prod,
 				BaseURL: bu,
+				Prod:    true,
 			},
 			in:   "/hello",
 			want: "https://example.com/hello",
 		},
 		"env dev (base URL not set, trailing slash retained)": {
-			c: &Config{
-				Env: Dev,
-			},
+			c:    &Config{},
 			in:   "/hello/",
 			want: "/hello/",
 		},
 		"env prod (base URL set, trailing slash retained": {
 			c: &Config{
-				Env:     Prod,
 				BaseURL: bu,
+				Prod:    true,
 			},
 			in:   "/hello/",
 			want: "https://example.com/hello/",
 		},
 		"env prod (base URL not set, trailing slash retained": {
 			c: &Config{
-				Env: Prod,
+				Prod: true,
 			},
 			in:   "/lol/",
 			want: "/lol/",
 		},
 		"single slash": {
-			c: &Config{
-				Env: Dev,
-			},
+			c:    &Config{},
 			in:   "/",
 			want: "/",
 		},

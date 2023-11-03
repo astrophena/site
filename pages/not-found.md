@@ -1,12 +1,9 @@
-<!-- prettier-ignore-start -->
-
 {
   "title": "Four-oh-four",
   "template": "layout",
   "permalink": "/404.html",
   "content_only": true
 }
-<!-- prettier-ignore-end -->
 
 # Four-oh-four
 
