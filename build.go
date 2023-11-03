@@ -21,7 +21,7 @@ func main() {
 		envFlag = flag.String("env", "dev", "Environment to build for.")
 	)
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: script/build.go [flags] [dir]\n")
+		fmt.Fprintf(os.Stderr, "Usage: ./build.go [flags] [dir]\n")
 		fmt.Fprintf(os.Stderr, "Available flags:\n")
 		flag.PrintDefaults()
 	}

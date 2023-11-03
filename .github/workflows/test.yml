@@ -19,7 +19,5 @@ jobs:
             ~/go/pkg/mod
             ~/.cache/go-build
           key: "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}"
-      - name: 'Set up Node.js'
-        uses: 'actions/setup-node@v3'
       - name: 'Test'
-        run: 'script/test'
+        run: 'go test'

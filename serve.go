@@ -24,7 +24,7 @@ func main() {
 		listenFlag = flag.String("listen", "localhost:3000", "Listen on `host:port`.")
 	)
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: script/server.go [flags] [dir]\n")
+		fmt.Fprintf(os.Stderr, "Usage: ./serve.go [flags] [dir]\n")
 		fmt.Fprintf(os.Stderr, "Available flags:\n")
 		flag.PrintDefaults()
 	}
