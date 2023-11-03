@@ -425,9 +425,6 @@ func (b *buildContext) url(base string) string {
 	}
 	u := *b.c.BaseURL
 	u.Path = path.Join(u.Path, base)
-	if strings.HasSuffix(base, "/") && base != "/" {
-		u.Path += "/"
-	}
 	return u.String()
 }
 
@@ -614,7 +611,10 @@ func (p *Page) parse(r io.Reader) error {
 	}
 	p.dstPath = p.Permalink
 	if !strings.HasSuffix(p.dstPath, ".html") {
-		p.dstPath = p.dstPath + "/index.html"
+		if p.dstPath == "/" {
+			p.dstPath = p.dstPath + "index"
+		}
+		p.dstPath = p.dstPath + ".html"
 	}
 	p.dstPath = path.Clean(p.dstPath)
 

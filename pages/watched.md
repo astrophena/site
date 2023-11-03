@@ -1,7 +1,7 @@
 {
   "title": "Watched",
   "template": "layout",
-  "permalink": "/watched/"
+  "permalink": "/watched"
 }
 
 # Watched
