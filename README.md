@@ -16,19 +16,6 @@ $ ./serve.go
 
 Open http://localhost:3000 in your browser.
 
-## Style
-
-All code in this repository are formatted by:
-
-- [gofmt](https://godocs.io/cmd/gofmt) ([Go])
-- [shfmt](https://godocs.io/mvdan.cc/sh/v3/cmd/shfmt) (shell scripts)
-- [Prettier] (Markdown, HTML and CSS)
-
-Run `script/test` to format everything. [Node.js](https://nodejs.org) is needed
-for running [Prettier].
-
-CI verifies if the code is correctly formatted.
-
 ## License
 
 The content for this website is
@@ -36,4 +23,3 @@ The content for this website is
 [ISC](https://opensource.org/licenses/ISC).
 
 [go]: https://go.dev
-[prettier]: https://prettier.io
