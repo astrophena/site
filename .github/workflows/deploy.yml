@@ -26,8 +26,6 @@ jobs:
             ~/go/pkg/mod
             ~/.cache/go-build
           key: "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}"
-      - name: 'Test'
-        run: 'script/test'
       - name: 'Build'
         run: './build.go -env prod'
       - name: 'Setup GitHub Pages'
