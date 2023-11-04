@@ -225,7 +225,7 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 	defer l.Close()
 	c.Logf("Listening on http://%s...", l.Addr().String())
 
-	httpSrv := &http.Server{Handler: http.FileServer(neuteredFileSystem{http.Dir(c.Dst)})}
+	httpSrv := &http.Server{Handler: &staticHandler{fs: os.DirFS(c.Dst)}}
 	errCh := make(chan error, 1)
 	go func() {
 		if err := httpSrv.Serve(l); err != nil {
@@ -324,36 +324,56 @@ func shouldRebuild(path string, op fsnotify.Op) bool {
 	return false
 }
 
-// neuteredFileSystem is an implementation of http.FileSystem which prevents
-// showing directory listings when using http.FileServer.
-type neuteredFileSystem struct {
-	fs http.FileSystem
+type staticHandler struct {
+	fs fs.FS
 }
 
-// Open implements the http.FileSystem interface.
-func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
-	f, err := nfs.fs.Open(path)
+func (h *staticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	p := r.URL.Path
+	if p == "/" {
+		p += "/index.html"
+	}
+	p = strings.TrimPrefix(path.Clean(p), "/")
+
+	// Special case: /foo will serve content from foo.html, if it exists.
+	if _, err := fs.Stat(h.fs, p+".html"); err == nil {
+		p += ".html"
+	}
+
+	d, err := fs.Stat(h.fs, p)
+	if errors.Is(err, fs.ErrNotExist) {
+		h.serveNotFound(w, r)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if d.IsDir() {
+		h.serveNotFound(w, r)
+		return
+	}
+
+	b, err := fs.ReadFile(h.fs, p)
 	if err != nil {
-		return nil, err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	s, err := f.Stat()
-	if err != nil {
-		return nil, err
-	}
-	if s.IsDir() {
-		index := filepath.Join(path, "index.html")
-		if _, err := nfs.fs.Open(index); err != nil {
-			closeErr := f.Close()
-			if closeErr != nil {
-				return nil, closeErr
-			}
+	http.ServeContent(w, r, d.Name(), d.ModTime(), bytes.NewReader(b))
+}
 
-			return nil, err
-		}
+func (h *staticHandler) serveNotFound(w http.ResponseWriter, r *http.Request) {
+	f, err := h.fs.Open("404.html")
+	if errors.Is(err, fs.ErrNotExist) {
+		http.NotFound(w, r)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	return f, nil
+	defer f.Close()
+	w.WriteHeader(http.StatusNotFound)
+	io.Copy(w, f)
 }
 
 type buildContext struct {

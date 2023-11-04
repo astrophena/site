@@ -42,8 +42,6 @@ func getFreePort() (port int, err error) {
 }
 
 func TestServe(t *testing.T) {
-	t.Skip("until fixed")
-
 	// Find a free port for us.
 	port, err := getFreePort()
 	if err != nil {
