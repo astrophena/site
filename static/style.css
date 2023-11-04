@@ -326,7 +326,6 @@ li {
   margin-top: -1rem;
 }
 
-/* Icons. */
 .icon {
   width: 24px;
   height: 24px;
@@ -340,4 +339,11 @@ li {
 nav a.current {
   color: var(--accent) !important;
   border-color: var(--accent);
+}
+
+.avatar {
+  vertical-align: middle;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
 }
