@@ -341,6 +341,11 @@ nav a.current {
   border-color: var(--accent);
 }
 
+/* Don't underline header links. */
+header a {
+  text-decoration: none;
+}
+
 .avatar {
   vertical-align: middle;
   width: 50px;
