@@ -28,17 +28,30 @@ Source: https://github.com/tabler/tabler-icons
 <svg xmlns="http://www.w3.org/2000/svg">
   <!-- Header -->
   <symbol id="icon-blog" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-    <rect x="3" y="4" width="18" height="16" rx="3"></rect>
-    <circle cx="9" cy="10" r="2"></circle>
-    <line x1="15" y1="8" x2="17" y2="8"></line>
-    <line x1="15" y1="12" x2="17" y2="12"></line>
-    <line x1="7" y1="16" x2="17" y2="16"></line>
+   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+   <path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"></path>
+   <path d="M8 8l4 0"></path>
+   <path d="M8 12l4 0"></path>
+   <path d="M8 16l4 0"></path>
   </symbol>
   <symbol id="icon-watched" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-    <rect x="3" y="7" width="18" height="13" rx="2"></rect>
-    <polyline points="16 3 12 7 8 3"></polyline>
+   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+   <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
+   <path d="M8 4l0 16"></path>
+   <path d="M16 4l0 16"></path>
+   <path d="M4 8l4 0"></path>
+   <path d="M4 16l4 0"></path>
+   <path d="M4 12l16 0"></path>
+   <path d="M16 8l4 0"></path>
+   <path d="M16 16l4 0"></path>
+  </symbol>
+  <symbol id="icon-packages" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+   <path d="M15.695 14.305c1.061 1.06 2.953 .888 4.226 -.384c1.272 -1.273 1.444 -3.165 .384 -4.226c-1.061 -1.06 -2.953 -.888 -4.226 .384c-1.272 1.273 -1.444 3.165 -.384 4.226z"></path>
+   <path d="M12.68 9.233c-1.084 -.497 -2.545 -.191 -3.591 .846c-1.284 1.273 -1.457 3.165 -.388 4.226c1.07 1.06 2.978 .888 4.261 -.384a3.669 3.669 0 0 0 1.038 -1.921h-2.427"></path>
+   <path d="M5.5 15h-1.5"></path>
+   <path d="M6 9h-2"></path>
+   <path d="M5 12h-3"></path>
   </symbol>
   <symbol id="icon-github" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
