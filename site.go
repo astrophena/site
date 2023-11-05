@@ -439,8 +439,12 @@ func (b *buildContext) pagesByType(typ string) []*Page {
 	return pages
 }
 
+func isFullURL(url string) bool {
+	return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
+}
+
 func (b *buildContext) url(base string) string {
-	if !b.c.Prod || b.c.BaseURL == nil {
+	if isFullURL(base) || !b.c.Prod || b.c.BaseURL == nil {
 		return base
 	}
 	u := *b.c.BaseURL

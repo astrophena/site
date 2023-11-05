@@ -285,6 +285,11 @@ func TestURLTemplateFunc(t *testing.T) {
 			in:   "/",
 			want: "/",
 		},
+		"full url": {
+			c:    &Config{},
+			in:   "https://go.astrophena.name",
+			want: "https://go.astrophena.name",
+		},
 	}
 	b := &buildContext{}
 	for name, tc := range cases {
