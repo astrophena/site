@@ -75,7 +75,7 @@ func TestServe(t *testing.T) {
 	}
 
 	// Make some HTTP requests.
-	urls := []string{"/", "/blocklist.txt", "/watched"}
+	urls := []string{"/", "/manifest.json", "/watched"}
 	for _, u := range urls {
 		req, err := http.Get("http://" + addr + u)
 		if err != nil {
