@@ -27,7 +27,6 @@ func main() {
 	}
 	flag.Parse()
 
-	// Check if we are executed from the script directory.
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
