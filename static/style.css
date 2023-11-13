@@ -345,9 +345,28 @@ header a {
   text-decoration: none;
 }
 
+/* Avatar in a header. */
 .avatar {
   vertical-align: middle;
   width: 50px;
   height: 50px;
   border-radius: 50%;
+}
+
+/* Flash messages. */
+.flash {
+  padding: 10px 0;
+  margin: 10px 0;
+  text-align: center;
+  color: #fff;
+  display: block;
+  border-radius: 5px;
+}
+
+.flash a {
+  color: #fff;
+}
+
+.flash--alert {
+  background-color: #871f22;
 }
