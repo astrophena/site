@@ -48,6 +48,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -133,6 +134,12 @@ func (c *Config) setDefaults() {
 func Build(c *Config) error {
 	c.setDefaults()
 	b := newBuildContext(c)
+
+	b.rev = "master"
+	rev, err := exec.Command("git", "rev-parse", "--short", "HEAD").CombinedOutput()
+	if err == nil {
+		b.rev = strings.TrimSpace(string(rev))
+	}
 
 	// Parse templates and pages.
 	if err := filepath.WalkDir(filepath.Join(b.c.Src, "templates"), b.parseTemplates); err != nil {
@@ -381,6 +388,7 @@ type buildContext struct {
 	funcs     template.FuncMap
 	pages     []*Page
 	templates map[string]*template.Template
+	rev       string
 }
 
 func newBuildContext(c *Config) *buildContext {
@@ -396,6 +404,7 @@ func newBuildContext(c *Config) *buildContext {
 		"image":      b.image,
 		"navLink":    b.navLink,
 		"pages":      b.pagesByType,
+		"rev":        func() string { return b.rev },
 		"url":        b.url,
 	}
 
