@@ -5,6 +5,11 @@
 /*
 Package site builds https://astrophena.name.
 
+# Disclaimer
+
+Here be dragons: this package is intended only for building
+https://astrophena.name and has no backward compatibility.
+
 # Directory Structure
 
 Site has the following directories:
