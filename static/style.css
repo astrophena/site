@@ -51,7 +51,7 @@
   --border: #666;
   --accent: #b2c6e6;
   --accent-light: #ffecb3;
-  --code: #f06292;
+  --code: #ababab;
 }
 
 img {
@@ -293,7 +293,7 @@ pre {
   padding: 1rem 1.4rem;
   max-width: 100%;
   overflow: auto;
-  background: var(--accent-bg);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 5px;
 }
@@ -364,4 +364,9 @@ header a {
 
 .alert a {
   color: #fff;
+}
+
+/* Make headings overflow. */
+h1 {
+  overflow: auto;
 }
