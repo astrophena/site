@@ -1,0 +1,35 @@
+pages by type template function
+-- pages/index.html --
+{
+  "title": "image",
+  "template": "layout",
+  "permalink": "/"
+}
+
+<h1>hello, world!</h1>
+
+{{ $pages := pages "" }}
+<ul>
+{{ range $pages }}
+  <li>{{ .Title }}</li>
+{{ end }}
+</ul>
+
+-- pages/example.html --
+{
+  "title": "another page",
+  "template": "layout",
+  "permalink": "/another"
+}
+
+another page
+
+-- static/test --
+test
+
+-- templates/layout.html --
+<html>
+  <body>
+    {{ content . }}
+  </body>
+</html>

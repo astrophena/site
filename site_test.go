@@ -13,14 +13,57 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
+
+	"golang.org/x/tools/txtar"
 )
 
 func TestBuild(t *testing.T) {
-	if err := Build(&Config{Dst: t.TempDir()}); err != nil {
+	cases, err := filepath.Glob("testdata/*.txtar")
+	if err != nil {
 		t.Fatal(err)
+	}
+
+	for _, tc := range cases {
+		tca, err := txtar.ParseFile(tc)
+		if err != nil {
+			t.Fatalf("%s: %v", tc, err)
+		}
+
+		t.Run(string(tca.Comment), func(t *testing.T) {
+			srcDir, err := os.MkdirTemp("", "site-test-src")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(srcDir)
+
+			dstDir, err := os.MkdirTemp("", "site-test-dst")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dstDir)
+
+			for _, file := range tca.Files {
+				if err := os.MkdirAll(filepath.Join(srcDir, filepath.Dir(file.Name)), 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(srcDir, file.Name), file.Data, 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			if err := Build(&Config{
+				Src:  srcDir,
+				Dst:  dstDir,
+				Logf: t.Logf,
+			}); err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 }
 
@@ -75,14 +118,25 @@ func TestServe(t *testing.T) {
 	}
 
 	// Make some HTTP requests.
-	urls := []string{"/", "/manifest.json", "/watched"}
+	urls := []struct {
+		url        string
+		wantStatus int
+	}{
+		{url: "/", wantStatus: http.StatusOK},
+		{url: "/manifest.json", wantStatus: http.StatusOK},
+		{url: "/watched", wantStatus: http.StatusOK},
+		{url: "/404", wantStatus: http.StatusOK},
+		{url: "/does-not-exist", wantStatus: http.StatusNotFound},
+		{url: "/icons/", wantStatus: http.StatusNotFound},
+	}
+
 	for _, u := range urls {
-		req, err := http.Get("http://" + addr + u)
+		req, err := http.Get("http://" + addr + u.url)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if req.StatusCode != http.StatusOK {
-			t.Fatalf("GET %s: want status code 200, got %d", u, req.StatusCode)
+		if req.StatusCode != u.wantStatus {
+			t.Fatalf("GET %s: want status code %d, got %d", u.url, u.wantStatus, req.StatusCode)
 		}
 	}
 

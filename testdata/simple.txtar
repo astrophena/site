@@ -1,0 +1,19 @@
+simple site
+-- pages/index.html --
+{
+  "title": "hello, world!",
+  "template": "layout",
+  "permalink": "/"
+}
+
+<h1>hello, world!</h1>
+
+-- static/test --
+test
+
+-- templates/layout.html --
+<html>
+  <body>
+    {{ content . }}
+  </body>
+</html>

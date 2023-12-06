@@ -1,0 +1,21 @@
+image
+-- pages/index.html --
+{
+  "title": "image",
+  "template": "layout",
+  "permalink": "/"
+}
+
+<h1>hello, world!</h1>
+
+<p>{{ image "/test.jpg" "Test" }}</p>
+
+-- static/test --
+test
+
+-- templates/layout.html --
+<html>
+  <body>
+    {{ content . }}
+  </body>
+</html>
