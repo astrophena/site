@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/tools/txtar"
 )
@@ -208,6 +209,32 @@ func getFreePort() (port int, err error) {
 	}
 	defer l.Close()
 	return l.Addr().(*net.TCPAddr).Port, nil
+}
+
+func TestShouldRebuild(t *testing.T) {
+	cases := map[string]struct {
+		path string
+		op   fsnotify.Op
+		want bool
+	}{
+		"macOS garbage":   {".DS_Store", fsnotify.Create, false},
+		"vim temp file":   {"lololol/4913", fsnotify.Write, false},
+		"vim backup file": {"pages/hello.md~", fsnotify.Create, false},
+		"file creation":   {"pages/hello.md", fsnotify.Create, true},
+		"file removal":    {"pages/hello.md", fsnotify.Remove, true},
+		"file write":      {"pages/hello.md", fsnotify.Write, true},
+		"ignore chmod":    {"pages/hello.md", fsnotify.Chmod, false},
+		"ignore rename":   {"pages/hello.md", fsnotify.Rename, false},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			got := shouldRebuild(tc.path, tc.op)
+			if got != tc.want {
+				t.Fatalf("shouldRebuild(%q, %+v): want %v, got %v", tc.path, tc.op, tc.want, got)
+			}
+		})
+	}
 }
 
 func TestStripComments(t *testing.T) {
