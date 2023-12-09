@@ -100,6 +100,8 @@ type Config struct {
 	// means that drafts are excluded and the base URL is used to derive absolute
 	// URLs from relative ones.
 	Prod bool
+
+	feedCreated time.Time // Feed creation time, used in tests
 }
 
 func (c *Config) setDefaults() {
@@ -732,6 +734,10 @@ func (b *buildContext) buildFeed() error {
 		Link:    &feeds.Link{Href: b.c.BaseURL.String() + "/"},
 		Author:  &feeds.Author{Name: b.c.Author},
 		Created: time.Now(),
+	}
+
+	if !b.c.feedCreated.IsZero() {
+		feed.Created = b.c.feedCreated
 	}
 
 	for _, p := range b.pages {

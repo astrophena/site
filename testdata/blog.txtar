@@ -1,13 +1,13 @@
 -- pages/index.html --
 {
-  "title": "image",
+  "title": "Blog",
   "template": "layout",
   "permalink": "/"
 }
 
-<h1>hello, world!</h1>
+<h1>Blog</h1>
 
-{{ $pages := pages "" }}
+{{ $pages := pages "post" }}
 <ul>
 {{ range $pages }}
   <li>{{ .Title }}</li>
@@ -16,12 +16,14 @@
 
 -- pages/example.html --
 {
-  "title": "another page",
+  "title": "Hello, world!",
   "template": "layout",
-  "permalink": "/another"
+  "date": "2023-12-09",
+  "permalink": "/hello",
+  "type": "post"
 }
 
-another page
+Hello, world!
 
 -- static/test --
 test

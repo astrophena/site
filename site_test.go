@@ -8,8 +8,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"net"
 	"net/http"
 	"net/url"
@@ -18,9 +20,18 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/tools/txtar"
 )
+
+var update = flag.Bool("update", false, "update golden files in testdata")
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	os.Exit(m.Run())
+}
 
 func TestBuild(t *testing.T) {
 	cases, err := filepath.Glob("testdata/*.txtar")
@@ -29,59 +40,88 @@ func TestBuild(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tca, err := txtar.ParseFile(tc)
-		if err != nil {
-			t.Fatalf("%s: %v", tc, err)
-		}
+		tcName := strings.TrimSuffix(tc, filepath.Ext(tc))
 
-		t.Run(string(tca.Comment), func(t *testing.T) {
-			srcDir, err := os.MkdirTemp("", "site-test-src")
+		t.Run(tcName, func(t *testing.T) {
+			tca, err := txtar.ParseFile(tc)
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.RemoveAll(srcDir)
 
-			dstDir, err := os.MkdirTemp("", "site-test-dst")
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer os.RemoveAll(dstDir)
-
-			for _, file := range tca.Files {
-				if err := os.MkdirAll(filepath.Join(srcDir, filepath.Dir(file.Name)), 0o755); err != nil {
-					t.Fatal(err)
-				}
-				if err := os.WriteFile(filepath.Join(srcDir, file.Name), file.Data, 0o644); err != nil {
-					t.Fatal(err)
-				}
-			}
+			srcDir, dstDir := t.TempDir(), t.TempDir()
+			extractTxtar(t, tca, srcDir)
 
 			if err := Build(&Config{
-				Src:  srcDir,
-				Dst:  dstDir,
-				Logf: t.Logf,
+				Src:         srcDir,
+				Dst:         dstDir,
+				Logf:        t.Logf,
+				feedCreated: time.Date(2023, time.December, 8, 0, 0, 0, 0, time.UTC),
 			}); err != nil {
 				t.Fatal(err)
+			}
+
+			got := buildTxtar(t, dstDir)
+
+			golden := tcName + ".golden"
+			if *update {
+				if err := os.WriteFile(golden, got, 0o644); err != nil {
+					t.Fatalf("unable to write golden file %q: %v", golden, err)
+				}
+				return
+			}
+			want, err := os.ReadFile(golden)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Fatalf("(-want +got): \n%s", diff)
 			}
 		})
 	}
 }
 
-// getFreePort asks the kernel for a free open port that is ready to use.
-// Copied from
-// https://github.com/phayes/freeport/blob/74d24b5ae9f58fbe4057614465b11352f71cdbea/freeport.go.
-func getFreePort() (port int, err error) {
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		return 0, err
+// extractTxtar extracts a txtar archive to dir.
+func extractTxtar(t *testing.T, ar *txtar.Archive, dir string) {
+	for _, file := range ar.Files {
+		if err := os.MkdirAll(filepath.Join(dir, filepath.Dir(file.Name)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, file.Name), file.Data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// buildTxtar constructs a txtar archive from contents of dir.
+func buildTxtar(t *testing.T, dir string) []byte {
+	ar := new(txtar.Archive)
+
+	if err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		ar.Files = append(ar.Files, txtar.File{
+			Name: d.Name(),
+			Data: b,
+		})
+
+		return nil
+	}); err != nil {
+		t.Fatal(err)
 	}
 
-	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		return 0, err
-	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port, nil
+	return txtar.Format(ar)
 }
 
 func TestServe(t *testing.T) {
@@ -150,6 +190,23 @@ func TestServe(t *testing.T) {
 		t.Fatalf("Test server crashed during shutdown: %v", err)
 	default:
 	}
+}
+
+// getFreePort asks the kernel for a free open port that is ready to use.
+// Copied from
+// https://github.com/phayes/freeport/blob/74d24b5ae9f58fbe4057614465b11352f71cdbea/freeport.go.
+func getFreePort() (port int, err error) {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		return 0, err
+	}
+
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return 0, err
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
 func TestStripComments(t *testing.T) {
@@ -275,6 +332,16 @@ Test
 
 <p>Test!</p>
 `,
+		},
+		"invalid frontmatter (JSON)": {
+			name: "invalid-frontmatter.html",
+			content: `{
+	"title": 0
+}
+
+<p>test</p>
+`,
+			wantErr: errFrontmatterParse,
 		},
 	}
 
