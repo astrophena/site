@@ -41,6 +41,7 @@ func TestBuild(t *testing.T) {
 
 	for _, tc := range cases {
 		tcName := strings.TrimSuffix(tc, filepath.Ext(tc))
+		tcName = strings.TrimPrefix(tcName, "testdata"+string(filepath.Separator))
 
 		t.Run(tcName, func(t *testing.T) {
 			tca, err := txtar.ParseFile(tc)
@@ -62,7 +63,7 @@ func TestBuild(t *testing.T) {
 
 			got := buildTxtar(t, dstDir)
 
-			golden := tcName + ".golden"
+			golden := filepath.Join("testdata", tcName+".golden")
 			if *update {
 				if err := os.WriteFile(golden, got, 0o644); err != nil {
 					t.Fatalf("unable to write golden file %q: %v", golden, err)
