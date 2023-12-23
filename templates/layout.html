@@ -15,6 +15,11 @@
     <link rel="alternate" type="application/atom+xml" href="{{ url "/feed.xml" }}" />
     <link rel="manifest" href="{{ url "/manifest.json" }}" />
     <link rel="stylesheet" href="{{ url "/style.css" }}" />
+    {{ if .Schema }}
+    <script type="application/ld+json">
+      {{ .Schema }}
+    </script>
+    {{ end }}
     <title>{{ .Title }}</title>
   </head>
   <body>
