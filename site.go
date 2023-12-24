@@ -539,15 +539,14 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 
 // Page represents a site page. The exported fields is the front matter fields.
 type Page struct {
-	Title       string          `json:"title"`        // title: Page title, required.
-	Summary     string          `json:"summary"`      // summary: Page summary, used in RSS feed, optional.
-	Type        string          `json:"type"`         // type: Used to distinguish different kinds of pages, page by default.
-	Permalink   string          `json:"permalink"`    // permalink: Output path for the page, required.
-	Date        *date           `json:"date"`         // date: Publication date in the 'year-month-day' format, e.g. 2006-01-02, optional.
-	Draft       bool            `json:"draft"`        // draft: Determines whether this page should be not included in production builds, false by default.
-	Template    string          `json:"template"`     // template: Template that should be used for rendering this page, required.
-	ContentOnly bool            `json:"content_only"` // content_only: Determines whether this page should be rendered without header and footer, false by default.
-	Schema      json.RawMessage `json:"schema"`       // schema: JSON-LD structured data, see https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data.
+	Title       string `json:"title"`        // title: Page title, required.
+	Summary     string `json:"summary"`      // summary: Page summary, used in RSS feed, optional.
+	Type        string `json:"type"`         // type: Used to distinguish different kinds of pages, page by default.
+	Permalink   string `json:"permalink"`    // permalink: Output path for the page, required.
+	Date        *date  `json:"date"`         // date: Publication date in the 'year-month-day' format, e.g. 2006-01-02, optional.
+	Draft       bool   `json:"draft"`        // draft: Determines whether this page should be not included in production builds, false by default.
+	Template    string `json:"template"`     // template: Template that should be used for rendering this page, required.
+	ContentOnly bool   `json:"content_only"` // content_only: Determines whether this page should be rendered without header and footer, false by default.
 
 	path     string // path to the page source
 	dstPath  string // where to write the built page
