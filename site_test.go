@@ -234,6 +234,7 @@ func TestShouldRebuild(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -386,6 +387,7 @@ Test
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -458,6 +460,7 @@ func TestURLTemplateFunc(t *testing.T) {
 	}
 	b := &buildContext{}
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
