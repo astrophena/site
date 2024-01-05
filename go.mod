@@ -10,4 +10,4 @@ require (
 	golang.org/x/tools v0.16.1
 )
 
-require golang.org/x/sys v0.4.0 // indirect
+require golang.org/x/sys v0.16.0 // indirect
