@@ -35,8 +35,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestBuild(t *testing.T) {
-	t.Parallel()
-
 	cases, err := filepath.Glob("testdata/*.txtar")
 	if err != nil {
 		t.Fatal(err)
@@ -129,8 +127,6 @@ func buildTxtar(t *testing.T, dir string) []byte {
 }
 
 func TestServe(t *testing.T) {
-	t.Parallel()
-
 	// Find a free port for us.
 	port, err := getFreePort()
 	if err != nil {
@@ -216,8 +212,6 @@ func getFreePort() (port int, err error) {
 }
 
 func TestShouldRebuild(t *testing.T) {
-	t.Parallel()
-
 	cases := map[string]struct {
 		path string
 		op   fsnotify.Op
@@ -236,8 +230,6 @@ func TestShouldRebuild(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			got := shouldRebuild(tc.path, tc.op)
 			if got != tc.want {
 				t.Fatalf("shouldRebuild(%q, %+v): want %v, got %v", tc.path, tc.op, tc.want, got)
@@ -247,8 +239,6 @@ func TestShouldRebuild(t *testing.T) {
 }
 
 func TestStripComments(t *testing.T) {
-	t.Parallel()
-
 	b := newBuildContext(&Config{})
 	tpl := template.Must(template.New("test").Funcs(b.funcs).Parse(`{{ content . }}`))
 
@@ -286,8 +276,6 @@ Foo.
 }
 
 func TestPage(t *testing.T) {
-	t.Parallel()
-
 	cases := map[string]struct {
 		name, content string
 		wantErr       error
@@ -389,8 +377,6 @@ Test
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			p := &Page{path: tc.name}
 			err := p.parse(strings.NewReader(tc.content))
 
@@ -414,8 +400,6 @@ Test
 }
 
 func TestURLTemplateFunc(t *testing.T) {
-	t.Parallel()
-
 	bu := &url.URL{
 		Scheme: "https",
 		Host:   "example.com",
@@ -462,8 +446,6 @@ func TestURLTemplateFunc(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			b.c = tc.c
 			got := b.url(tc.in)
 
