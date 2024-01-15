@@ -1,0 +1,3 @@
+GET /
+code == 200
+body contains Hi.

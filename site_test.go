@@ -24,6 +24,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/google/go-cmp/cmp"
+	"go.astrophena.name/tools/webtest"
 	"golang.org/x/tools/txtar"
 )
 
@@ -34,8 +35,19 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func TestWeb(t *testing.T) {
+	dir := t.TempDir()
+	if err := Build(&Config{
+		Dst:  dir,
+		Logf: t.Logf,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	webtest.TestHandler(t, "testdata/*.txt", &staticHandler{fs: os.DirFS(dir)})
+}
+
 func TestBuild(t *testing.T) {
-	cases, err := filepath.Glob("testdata/*.txtar")
+	cases, err := filepath.Glob("testdata/build/*.txtar")
 	if err != nil {
 		t.Fatal(err)
 	}

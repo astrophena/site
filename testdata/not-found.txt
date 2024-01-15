@@ -1,0 +1,3 @@
+GET /should-be-not-there
+code == 404
+body contains The page you were looking for doesn&rsquo;t exist.
