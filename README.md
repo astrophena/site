@@ -1,7 +1,5 @@
 # [astrophena.name](https://astrophena.name)
 
-[![Go Documentation](https://godocs.io/go.astrophena.name/site?status.svg)](https://godocs.io/go.astrophena.name/site)
-
 This is my personal site and a [Go] package that generates it.
 
 ## Serving locally
