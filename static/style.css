@@ -305,6 +305,9 @@ pre code {
   margin: 0;
   padding: 0;
 }
+pre span {
+  font-family: var(--mono-font);
+}
 
 /* Make tap targets larger. */
 li {
