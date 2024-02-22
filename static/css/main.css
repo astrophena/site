@@ -344,10 +344,9 @@ header a {
 
 /* Avatar in a header. */
 .avatar {
-  vertical-align: sub;
+  vertical-align: text-bottom;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
 }
 
 /* Alert box. */
