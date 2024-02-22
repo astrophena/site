@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#12161a" />
     <meta name="format-detection" content="telephone=no" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
     {{ if .Summary }}
     <meta name="description" content="{{ .Summary }}" />
     {{ end }}
@@ -14,7 +14,9 @@
     <link rel="apple-touch-icon" href="{{ url "/icons/180x180.webp" }}" />
     <link rel="alternate" type="application/atom+xml" href="{{ url "/feed.xml" }}" />
     <link rel="manifest" href="{{ url "/manifest.json" }}" />
-    <link rel="stylesheet" href="{{ url "/style.css" }}" />
+    <link rel="stylesheet" href="{{ url "/css/main.css" }}" />
+    <script defer src="{{ url "/js/lightense.min.js" }}"></script>
+    <script defer src="{{ url "/js/main.js"}}"></script>
     <title>{{ .Title }}</title>
   </head>
   <body>
