@@ -12,8 +12,8 @@ github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZV
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
 github.com/russross/blackfriday/v2 v2.1.0 h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf35Ld67mk=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
-go.astrophena.name/tools v0.1.0 h1:VJ5fgd0Ik5KRABu0qQn1u6AVZ15jVdOdnj68afu44Tc=
-go.astrophena.name/tools v0.1.0/go.mod h1:WUD+cjcaCMPbTyBfk+XwvpqKCWEsMx8BIlhu85SAkzQ=
+go.astrophena.name/tools v0.2.0 h1:3cLNd4714L141+EQ05HRf6czlkrADIZpHlreFatmtW0=
+go.astrophena.name/tools v0.2.0/go.mod h1:WUD+cjcaCMPbTyBfk+XwvpqKCWEsMx8BIlhu85SAkzQ=
 golang.org/x/sys v0.17.0 h1:25cE3gD+tdBA7lp7QfhuV+rJiE9YXTcS3VG1SqssI/Y=
 golang.org/x/sys v0.17.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 golang.org/x/tools v0.18.0 h1:k8NLag8AGHnn+PHbl7g43CtqZAwG60vZkLqgyZgIHgQ=
