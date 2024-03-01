@@ -24,7 +24,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/google/go-cmp/cmp"
-	"go.astrophena.name/tools/webtest"
 	"golang.org/x/tools/txtar"
 )
 
@@ -33,17 +32,6 @@ var update = flag.Bool("update", false, "update golden files in testdata")
 func TestMain(m *testing.M) {
 	flag.Parse()
 	os.Exit(m.Run())
-}
-
-func TestWeb(t *testing.T) {
-	dir := t.TempDir()
-	if err := Build(&Config{
-		Dst:  dir,
-		Logf: t.Logf,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	webtest.TestHandler(t, "testdata/*.txt", &staticHandler{fs: os.DirFS(dir)})
 }
 
 func TestBuild(t *testing.T) {

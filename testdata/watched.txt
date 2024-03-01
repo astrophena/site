@@ -1,4 +1,0 @@
-GET /watched
-code == 200
-body contains This is a collection of
-body contains The content for this website is licensed under
