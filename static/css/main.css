@@ -98,9 +98,6 @@ header nav::-webkit-scrollbar {
   header {
     padding: 1rem 0rem 0rem 0rem;
     margin-bottom: -1rem;
-  }
-  main,
-  header {
     margin-left: 10px;
   }
 }
