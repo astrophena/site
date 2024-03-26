@@ -397,13 +397,13 @@ func newBuildContext(c *Config) *buildContext {
 	}
 
 	b.funcs = template.FuncMap{
-		"content":    func(p *Page) template.HTML { return template.HTML(p.contents) },
-		"formatDate": func(format string, d *date) string { return d.Time.Format(format) },
-		"icon":       b.icon,
-		"image":      b.image,
-		"navLink":    b.navLink,
-		"pages":      b.pagesByType,
-		"url":        b.url,
+		"content": func(p *Page) template.HTML { return template.HTML(p.contents) },
+		"time":    b.time,
+		"icon":    b.icon,
+		"image":   b.image,
+		"navLink": b.navLink,
+		"pages":   b.pagesByType,
+		"url":     b.url,
 	}
 
 	return b
@@ -444,6 +444,13 @@ func (b *buildContext) pagesByType(typ string) []*Page {
 		}
 	}
 	return pages
+}
+
+func (b *buildContext) time(format string, d *date) template.HTML {
+	return template.HTML(fmt.Sprintf(`<date datetime="%s">%s>`,
+		d.Format(time.RFC3339),
+		d.Format(format),
+	))
 }
 
 func isFullURL(url string) bool {

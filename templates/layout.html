@@ -41,7 +41,7 @@
       {{ if eq .Type "post" }}
         <h1>{{ .Title }}</h1>
         {{ if and .Date (not .Date.IsZero) }}
-          <p class="meta"><em>Posted on {{ formatDate "January 2, 2006" .Date }}.</em></p>
+          <p class="meta"><em>Posted on {{ time "January 2, 2006" .Date }}.</em></p>
         {{ end }}
       {{ end }}
       {{ content . }}
