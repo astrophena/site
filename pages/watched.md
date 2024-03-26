@@ -1,6 +1,7 @@
 {
   "title": "Watched",
-  "template": "layout",
+  "summary": "Collection of movies and shows I watched and liked.",
+  "template": "main",
   "permalink": "/watched"
 }
 

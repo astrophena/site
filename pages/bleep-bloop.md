@@ -1,6 +1,6 @@
 {
   "title": "Bleep, bloop",
-  "template": "layout",
+  "template": "main",
   "permalink": "/bleep-bloop",
   "content_only": true
 }

@@ -1,6 +1,6 @@
 {
   "title": "Four-oh-four",
-  "template": "layout",
+  "template": "main",
   "permalink": "/404.html",
   "content_only": true
 }
