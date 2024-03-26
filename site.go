@@ -447,7 +447,7 @@ func (b *buildContext) pagesByType(typ string) []*Page {
 }
 
 func (b *buildContext) time(format string, d *date) template.HTML {
-	return template.HTML(fmt.Sprintf(`<date datetime="%s">%s>`,
+	return template.HTML(fmt.Sprintf(`<date datetime="%s">%s</date>`,
 		d.Format(time.RFC3339),
 		d.Format(format),
 	))
