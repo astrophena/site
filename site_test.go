@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestBuild(t *testing.T) {
-	cases, err := filepath.Glob("testdata/build/*.txtar")
+	cases, err := filepath.Glob("testdata/*.txtar")
 	if err != nil {
 		t.Fatal(err)
 	}
