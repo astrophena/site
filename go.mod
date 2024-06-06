@@ -1,6 +1,6 @@
 module go.astrophena.name/site
 
-go 1.22.4
+go 1.22
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
