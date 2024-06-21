@@ -143,7 +143,9 @@ func TestServe(t *testing.T) {
 	errCh := make(chan error, 1)
 	ctx, cancel := context.WithCancel(context.Background())
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		if err := Serve(ctx, &Config{
 			Dst:  t.TempDir(),
 			Logf: t.Logf,
