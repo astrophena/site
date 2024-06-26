@@ -64,6 +64,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/feeds"
 	"github.com/russross/blackfriday/v2"
+	"github.com/yosssi/gohtml"
 )
 
 // Possible errors, used in tests.
@@ -685,7 +686,7 @@ func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error
 		return fmt.Errorf("%s: failed to execute template %q: %w", p.path, p.Template, err)
 	}
 
-	_, err = buf.WriteTo(w)
+	_, err = w.Write(gohtml.FormatBytes(buf.Bytes()))
 	return err
 }
 

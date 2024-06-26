@@ -21,26 +21,20 @@
 -- hello.html --
 <html>
   <body>
-    
-Hello, world!
-
-
+    Hello, world!
   </body>
 </html>
 -- index.html --
 <html>
   <body>
-    
-<h1>Blog</h1>
-
-
-<ul>
-
-  <li>Hello, world!</li>
-
-</ul>
-
-
+    <h1>
+      Blog
+    </h1>
+    <ul>
+      <li>
+        Hello, world!
+      </li>
+    </ul>
   </body>
 </html>
 -- test --

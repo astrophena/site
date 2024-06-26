@@ -1,10 +1,7 @@
 -- another.html --
 <html>
   <body>
-    
-another page
-
-
+    another page
   </body>
 </html>
 -- feed.xml --
@@ -20,19 +17,17 @@ another page
 -- index.html --
 <html>
   <body>
-    
-<h1>hello, world!</h1>
-
-
-<ul>
-
-  <li>image</li>
-
-  <li>another page</li>
-
-</ul>
-
-
+    <h1>
+      hello, world!
+    </h1>
+    <ul>
+      <li>
+        image
+      </li>
+      <li>
+        another page
+      </li>
+    </ul>
   </body>
 </html>
 -- test --

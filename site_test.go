@@ -258,7 +258,7 @@ Foo.
 <!-- LOL. -->
 `
 
-	const strippedContent = "<p>Foo.</p>"
+	const strippedContent = "<p>\n  Foo.\n</p>"
 
 	p := &Page{path: "foo.md"}
 	if err := p.parse(strings.NewReader(content)); err != nil {
