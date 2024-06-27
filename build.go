@@ -9,20 +9,24 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 
 	"go.astrophena.name/site"
+	"go.astrophena.name/site/vanity"
 )
 
 func main() {
 	log.SetFlags(0)
 
 	var (
-		prodFlag = flag.Bool("prod", false, "Build in a production mode.")
+		prodFlag   = flag.Bool("prod", false, "Build in a production mode.")
+		vanityFlag = flag.Bool("vanity", false, "Build vanity import site instead of main one.")
 	)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: ./build.go [flags] [dir]\n")
@@ -44,6 +48,21 @@ func main() {
 	dir := filepath.Join(".", "build")
 	if len(flag.Args()) > 0 {
 		dir = flag.Args()[0]
+	}
+
+	if *vanityFlag {
+		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer cancel()
+
+		if err := vanity.Build(ctx, &vanity.Config{
+			Dir:         dir,
+			GitHubToken: os.Getenv("GITHUB_TOKEN"),
+			ImportRoot:  "go.astrophena.name",
+		}); err != nil {
+			log.Fatal(err)
+		}
+
+		return
 	}
 
 	c := &site.Config{

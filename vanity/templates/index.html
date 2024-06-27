@@ -1,0 +1,22 @@
+<!-- vim: set ft=gotplhtml: -->
+{{ define "index" }}
+  <h1>Go Packages</h1>
+  <p><a href="https://go.dev">Go</a> packages and tools that I wrote.</p>
+  {{ range . }}
+    {{ if not .Archived }}
+      {{ if not .Private }}
+        {{ template "repo" . }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+  <details>
+    <summary>No longer maintained</summary>
+    {{ range . }}
+      {{ if .Archived }}
+        {{ if not .Private }}
+          {{ template "repo" . }}
+        {{ end }}
+      {{ end }}
+    {{ end }}
+  </details>
+{{ end }}

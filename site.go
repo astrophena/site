@@ -99,6 +99,8 @@ type Config struct {
 	// means that drafts are excluded and the base URL is used to derive absolute
 	// URLs from relative ones.
 	Prod bool
+	// SkipFeed determines if the feed for site shouldn't be built.
+	SkipFeed bool
 
 	feedCreated time.Time // used in tests
 }
@@ -187,8 +189,10 @@ func Build(c *Config) error {
 			return err
 		}
 	}
-	if err := b.buildFeed(); err != nil {
-		return err
+	if !b.c.SkipFeed {
+		if err := b.buildFeed(); err != nil {
+			return err
+		}
 	}
 
 	// Copy static files.
@@ -537,14 +541,15 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 
 // Page represents a site page. The exported fields is the front matter fields.
 type Page struct {
-	Title       string `json:"title"`        // title: Page title, required.
-	Summary     string `json:"summary"`      // summary: Page summary, used in RSS feed, optional.
-	Type        string `json:"type"`         // type: Used to distinguish different kinds of pages, page by default.
-	Permalink   string `json:"permalink"`    // permalink: Output path for the page, required.
-	Date        *date  `json:"date"`         // date: Publication date in the 'year-month-day' format, e.g. 2006-01-02, optional.
-	Draft       bool   `json:"draft"`        // draft: Determines whether this page should be not included in production builds, false by default.
-	Template    string `json:"template"`     // template: Template that should be used for rendering this page, required.
-	ContentOnly bool   `json:"content_only"` // content_only: Determines whether this page should be rendered without header and footer, false by default.
+	Title       string            `json:"title"`                  // title: Page title, required.
+	Permalink   string            `json:"permalink"`              // permalink: Output path for the page, required.
+	Template    string            `json:"template"`               // template: Template that should be used for rendering this page, required.
+	ContentOnly bool              `json:"content_only,omitempty"` // content_only: Determines whether this page should be rendered without header and footer, false by default.
+	Date        *date             `json:"date,omitempty"`         // date: Publication date in the 'year-month-day' format, e.g. 2006-01-02, optional.
+	Draft       bool              `json:"draft,omitempty"`        // draft: Determines whether this page should be not included in production builds, false by default.
+	MetaTags    map[string]string `json:"meta_tags,omitempty"`    // meta_tags: Determines additional HTML meta tags that will be added to this page, optional.
+	Summary     string            `json:"summary,omitempty"`      // summary: Page summary, used in RSS feed, optional.
+	Type        string            `json:"type,omitempty"`         // type: Used to distinguish different kinds of pages, page by default.
 
 	path     string // path to the page source
 	dstPath  string // where to write the built page

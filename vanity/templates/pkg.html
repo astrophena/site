@@ -1,0 +1,13 @@
+<!-- vim: set ft=gotplhtml: -->
+{{ define "pkg" }}
+  {{ if .Repo.Archived }}
+    <div class="alert">
+      {{ if eq .Name "main" }}
+        This program is unmaintained.
+      {{ else }}
+        This package is unmaintained.
+      {{ end }}
+    </div>
+  {{ end }}
+  {{ .FullDoc }}
+{{ end }}

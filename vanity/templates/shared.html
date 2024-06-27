@@ -1,0 +1,10 @@
+<!-- vim: set ft=gotplhtml: -->
+
+{{ define "repo" }}
+<h2>
+  go.astrophena.name/<a href="/{{ .Name }}">{{ .Name }}</a>
+  <span class="module">Module</span>
+</h2>
+<p class="meta"><a href="https://github.com/astrophena/{{ .Name }}">GitHub repository</a></p>
+<p>{{ .Description }}</p>
+{{ end }}
