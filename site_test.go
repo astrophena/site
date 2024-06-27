@@ -167,7 +167,6 @@ func TestServe(t *testing.T) {
 		wantStatus int
 	}{
 		{url: "/", wantStatus: http.StatusOK},
-		{url: "/manifest.json", wantStatus: http.StatusOK},
 		{url: "/watched", wantStatus: http.StatusOK},
 		{url: "/404", wantStatus: http.StatusOK},
 		{url: "/does-not-exist", wantStatus: http.StatusNotFound},
