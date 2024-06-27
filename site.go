@@ -420,6 +420,7 @@ func newBuildContext(c *Config) *buildContext {
 		"navLink": b.navLink,
 		"pages":   b.pagesByType,
 		"url":     b.url,
+		"vanity":  func() bool { return b.c.Vanity },
 	}
 
 	return b
@@ -443,7 +444,8 @@ func (b *buildContext) image(path, caption string) template.HTML {
 
 func (b *buildContext) navLink(p *Page, title, iconName, path string) template.HTML {
 	var add string
-	if p.Permalink == path {
+	// On vanity site always highlight packages link.
+	if p.Permalink == path || b.c.Vanity {
 		add = ` class="current"`
 	}
 	var u string

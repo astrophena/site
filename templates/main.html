@@ -28,7 +28,7 @@
       <header>
         <h1>
           <img src="{{ url "/icons/179x179.webp" }}" alt="Avatar" class="avatar">
-          {{ if eq .Permalink "/" }}
+          {{ if and (eq .Permalink "/") (not vanity) }}
             Ilya Mateyko
           {{ else }}
             <a href="{{ url "/" }}">Ilya Mateyko</a>
