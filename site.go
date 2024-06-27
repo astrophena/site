@@ -445,7 +445,7 @@ func (b *buildContext) image(path, caption string) template.HTML {
 func (b *buildContext) navLink(p *Page, title, iconName, path string) template.HTML {
 	var add string
 	// On vanity site always highlight packages link.
-	if p.Permalink == path || b.c.Vanity {
+	if p.Permalink == path || (b.c.Vanity && p.Permalink == "/") {
 		add = ` class="current"`
 	}
 	var u string
