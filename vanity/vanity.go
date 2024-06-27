@@ -248,9 +248,11 @@ func Build(ctx context.Context, c *Config) error {
 			Scheme: "https",
 			Host:   "go.astrophena.name",
 		},
-		Src:  siteDir,
-		Dst:  c.Dir,
-		Prod: true,
+		Src:      siteDir,
+		Dst:      c.Dir,
+		Prod:     true,
+		SkipFeed: true,
+		Vanity:   true,
 	})
 }
 

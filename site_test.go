@@ -230,7 +230,6 @@ func TestShouldRebuild(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			got := shouldRebuild(tc.path, tc.op)
 			if got != tc.want {
@@ -377,7 +376,6 @@ Test
 	}
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			p := &Page{path: tc.name}
 			err := p.parse(strings.NewReader(tc.content))
@@ -446,12 +444,50 @@ func TestURLTemplateFunc(t *testing.T) {
 	}
 	b := &buildContext{}
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			b.c = tc.c
 			got := b.url(tc.in)
 
 			if got != tc.want {
+				t.Fatalf("got %q, but want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestNavLinkTemplateFunc(t *testing.T) {
+	cases := map[string]struct {
+		c        *Config
+		p        *Page
+		title    string
+		iconName string
+		path     string
+		want     string
+	}{
+		"Vanity is true": {
+			c: &Config{
+				BaseURL: &url.URL{
+					Scheme: "https",
+					Host:   "go.astrophena.name",
+				},
+				Vanity: true,
+			},
+			p:        &Page{Permalink: "/hello"},
+			title:    "Hello, world!",
+			iconName: "hello",
+			path:     "/hello",
+			want:     "<a href=\"https://astrophena.name/hello\" class=\"current\">\n<svg class=\"icon\" aria-hidden=\"true\">\n  <use xlink:href=\"/icons/sprite.svg#icon-hello\"/>\n</svg>Hello, world!</a>",
+		},
+	}
+
+	b := &buildContext{}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			b.c = tc.c
+			b.c.setDefaults()
+
+			got := b.navLink(tc.p, tc.title, tc.iconName, tc.path)
+			if string(got) != tc.want {
 				t.Fatalf("got %q, but want %q", got, tc.want)
 			}
 		})

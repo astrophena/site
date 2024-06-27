@@ -101,6 +101,12 @@ type Config struct {
 	Prod bool
 	// SkipFeed determines if the feed for site shouldn't be built.
 	SkipFeed bool
+	// Vanity determines if the site is vanity import domain built with vanity
+	// package. If so, navigation links created with navLink will point to URLs
+	// derived from PrimaryURL instead of BaseURL.
+	Vanity bool
+	// PrimaryURL is the base URL for navigation links when Vanity set to true.
+	PrimaryURL *url.URL
 
 	feedCreated time.Time // used in tests
 }
@@ -124,6 +130,12 @@ func (c *Config) setDefaults() {
 
 	if c.BaseURL == nil {
 		c.BaseURL = &url.URL{
+			Scheme: "https",
+			Host:   "astrophena.name",
+		}
+	}
+	if c.PrimaryURL == nil {
+		c.PrimaryURL = &url.URL{
 			Scheme: "https",
 			Host:   "astrophena.name",
 		}
@@ -434,7 +446,13 @@ func (b *buildContext) navLink(p *Page, title, iconName, path string) template.H
 	if p.Permalink == path {
 		add = ` class="current"`
 	}
-	return template.HTML(fmt.Sprintf(`<a href="%s"%s>%s%s</a>`, b.url(path), add, b.icon(iconName), title))
+	var u string
+	if b.c.Vanity && b.c.PrimaryURL != nil {
+		u = b.vanityURL(path)
+	} else {
+		u = b.url(path)
+	}
+	return template.HTML(fmt.Sprintf(`<a href="%s"%s>%s%s</a>`, u, add, b.icon(iconName), title))
 }
 
 func (b *buildContext) pagesByType(typ string) []*Page {
@@ -466,6 +484,15 @@ func (b *buildContext) url(base string) string {
 		return base
 	}
 	u := *b.c.BaseURL
+	u.Path = path.Join(u.Path, base)
+	return u.String()
+}
+
+func (b *buildContext) vanityURL(base string) string {
+	if isFullURL(base) {
+		return base
+	}
+	u := *b.c.PrimaryURL
 	u.Path = path.Join(u.Path, base)
 	return u.String()
 }
