@@ -30,6 +30,8 @@
           <img src="{{ url "/icons/179x179.webp" }}" alt="Avatar" class="avatar">
           {{ if and (eq .Permalink "/") (not vanity) }}
             Ilya Mateyko
+          {{ else if vanity }}
+            <a href="{{ vanityURL "/" }}">Ilya Mateyko</a>
           {{ else }}
             <a href="{{ url "/" }}">Ilya Mateyko</a>
           {{ end }}

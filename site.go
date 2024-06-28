@@ -413,14 +413,15 @@ func newBuildContext(c *Config) *buildContext {
 	}
 
 	b.funcs = template.FuncMap{
-		"content": func(p *Page) template.HTML { return template.HTML(p.contents) },
-		"time":    b.time,
-		"icon":    b.icon,
-		"image":   b.image,
-		"navLink": b.navLink,
-		"pages":   b.pagesByType,
-		"url":     b.url,
-		"vanity":  func() bool { return b.c.Vanity },
+		"content":   func(p *Page) template.HTML { return template.HTML(p.contents) },
+		"time":      b.time,
+		"icon":      b.icon,
+		"image":     b.image,
+		"navLink":   b.navLink,
+		"pages":     b.pagesByType,
+		"url":       b.url,
+		"vanity":    func() bool { return b.c.Vanity },
+		"vanityURL": b.vanityURL,
 	}
 
 	return b
@@ -445,7 +446,7 @@ func (b *buildContext) image(path, caption string) template.HTML {
 func (b *buildContext) navLink(p *Page, title, iconName, path string) template.HTML {
 	var add string
 	// On vanity site always highlight packages link.
-	if p.Permalink == path || (b.c.Vanity && path == "/") {
+	if p.Permalink == path || (b.c.Vanity && path == "https://go.astrophena.name") {
 		add = ` class="current"`
 	}
 	var u string
