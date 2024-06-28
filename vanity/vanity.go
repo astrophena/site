@@ -202,11 +202,12 @@ func Build(ctx context.Context, c *Config) error {
 		}
 
 		if err := buildPage(filepath.Join(siteDir, "pages", repo.Name+".html"), &site.Page{
-			Title:     c.ImportRoot + "/" + repo.Name,
-			Template:  "main",
-			Type:      "page",
-			Permalink: "/" + repo.Name,
-			MetaTags:  metaTagsForRepo(c, repo),
+			Title:       c.ImportRoot + "/" + repo.Name,
+			Template:    "main",
+			Type:        "page",
+			Permalink:   "/" + repo.Name,
+			MetaTags:    metaTagsForRepo(c, repo),
+			ContentOnly: repo.Private,
 		}, "import", repo); err != nil {
 			return err
 		}
