@@ -17,7 +17,11 @@
     {{ end }}
     <link rel="icon" href="{{ url "/icons/35x35.webp" }}" />
     <link rel="apple-touch-icon" href="{{ url "/icons/179x179.webp" }}" />
-    <link rel="alternate" type="application/atom+xml" href="{{ url "/feed.xml" }}" />
+    {{ if not vanity }}
+      <link rel="alternate" type="application/atom+xml" href="{{ url "/feed.xml" }}" />
+    {{ else }}
+      <link rel="stylesheet" href="{{ url "/css/godoc.css" }}" />
+    {{ end }}
     <link rel="stylesheet" href="{{ url "/css/main.css" }}" />
     <script defer src="{{ url "/js/lightense.min.js" }}"></script>
     <script defer src="{{ url "/js/main.js"}}"></script>
