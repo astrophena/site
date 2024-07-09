@@ -1,6 +1,6 @@
 // © 2023 Ilya Mateyko. All rights reserved.
 // Use of this source code is governed by the ISC
-// license that can be found in the LICENSE.md file.
+// license that can be found in the LICENSE file.
 
 // Package vanity provides functionality for building a static site that lists
 // Go packages from GitHub repositories. The package handles fetching repository
