@@ -215,7 +215,7 @@ func Build(ctx context.Context, c *Config) error {
 
 	// Copy templates and static files from site.
 	for _, dir := range []string{
-		"pages/not-found.md",
+		"pages/shared/",
 		"static/css/",
 		"static/icons/",
 		"static/js/",
