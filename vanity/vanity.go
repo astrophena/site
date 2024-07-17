@@ -189,7 +189,7 @@ func Build(ctx context.Context, c *Config) error {
 			commitn := string(commitb)
 			repo.Commit = strings.TrimSuffix(commitn, "\n")
 
-			if err := repo.generateDoc(doc2go); err != nil {
+			if err := repo.generateDoc(c, doc2go); err != nil {
 				return err
 			}
 		}
@@ -444,7 +444,7 @@ func doJSONRequest[R any](ctx context.Context, c *Config, method, url string) (R
 	return resp, nil
 }
 
-func (r *repo) generateDoc(doc2goBin string) error {
+func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 	tmpdir, err := os.MkdirTemp("", "vanity-doc2go")
 	if err != nil {
 		return err
@@ -454,6 +454,7 @@ func (r *repo) generateDoc(doc2goBin string) error {
 	doc2go := exec.Command(
 		doc2goBin,
 		"-highlight",
+		"-pkg-doc", c.ImportRoot+"="+"https://{{.ImportPath}}",
 		"classes:"+highlightTheme,
 		"-embed", "-out", tmpdir,
 		"./...",
