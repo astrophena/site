@@ -454,7 +454,6 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 	doc2go := exec.Command(
 		doc2goBin,
 		"-highlight",
-		"-pkg-doc", c.ImportRoot+"="+"https://{{.ImportPath}}",
 		"classes:"+highlightTheme,
 		"-embed", "-out", tmpdir,
 		"./...",

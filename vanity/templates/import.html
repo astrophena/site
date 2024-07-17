@@ -18,11 +18,10 @@
           {{ if not (contains .ImportPath "internal") }}
             {{ if eq .BasePath .Repo.Name }}
               <h3>{{ .ImportPath }}</h3>
-              <p>{{ .FullDoc }}</p>
             {{ else }}
               <h3><a href="/{{ .BasePath }}">{{ .ImportPath }}</a></h3>
-              <p>{{ .Doc }}</p>
             {{ end }}
+            <p>{{ .Doc }}</p>
             {{ if eq .Name "main" }}
               <pre>$ go install {{ .ImportPath }}@latest</pre>
             {{ else }}
