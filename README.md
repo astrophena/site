@@ -14,6 +14,16 @@ $ ./serve.go
 
 Open http://localhost:3000 in your browser.
 
+## Deploying
+
+[GitHub Actions](https://github.com/actions) automatically deploys each commit
+in master branch. To deploy [go.astrophena.name](https://go.astrophena.name),
+run:
+
+```sh
+$ gh workflow run deploy.yml -R astrophena/vanity
+```
+
 ## License
 
 The content for this website is
