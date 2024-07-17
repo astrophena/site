@@ -1,5 +1,6 @@
 <!-- vim: set ft=gotplhtml: -->
 {{ define "pkg" }}
+  {{ template "repo" .Repo }}
   {{ if .Repo.Archived }}
     <div class="alert">
       {{ if eq .Name "main" }}

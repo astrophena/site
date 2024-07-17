@@ -1,19 +1,12 @@
 <!-- vim: set ft=gotplhtml: -->
 {{ define "import" }}
   {{ if not .Private }}
-    <h1>
-      <a href="/">go.astrophena.name</a>/{{ .Name }}
-      <span class="module">Module</span>
-    </h1>
-    <p class="meta">
-      <a href="https://github.com/astrophena/{{ .Name }}">GitHub repository</a>
-    </p>
+    {{ template "repo" . }}
     {{ if .Archived }}
       <div class="alert">
         This module is unmaintained.
       </div>
     {{ end }}
-    <p>{{ .Description }}</p>
     {{ if .Pkgs }}
       <!-- If we have a single package rooted at module path, put the full docs on a page.-->
       {{ if hasOnePkg . }}
@@ -25,10 +18,11 @@
           {{ if not (contains .ImportPath "internal") }}
             {{ if eq .BasePath .Repo.Name }}
               <h3>{{ .ImportPath }}</h3>
+              <p>{{ .FullDoc }}</p>
             {{ else }}
               <h3><a href="/{{ .BasePath }}">{{ .ImportPath }}</a></h3>
+              <p>{{ .Doc }}</p>
             {{ end }}
-            <p>{{ .Doc }}</p>
             {{ if eq .Name "main" }}
               <pre>$ go install {{ .ImportPath }}@latest</pre>
             {{ else }}
