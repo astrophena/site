@@ -166,16 +166,6 @@ func Build(ctx context.Context, c *Config) error {
 		}
 	}
 
-	// Build index page.
-	if err := b.buildPage(filepath.Join(siteDir, "pages", "index.html"), &site.Page{
-		Title:     "Go Packages",
-		Template:  "main",
-		Type:      "page",
-		Permalink: "/",
-	}, "index", repos); err != nil {
-		return err
-	}
-
 	// Build repo and package pages.
 	for _, repo := range repos {
 		if repo.Dir != "" {
@@ -221,6 +211,16 @@ func Build(ctx context.Context, c *Config) error {
 		}, "import", repo); err != nil {
 			return err
 		}
+	}
+
+	// Build index page.
+	if err := b.buildPage(filepath.Join(siteDir, "pages", "index.html"), &site.Page{
+		Title:     "Go Packages",
+		Template:  "main",
+		Type:      "page",
+		Permalink: "/",
+	}, "index", repos); err != nil {
+		return err
 	}
 
 	// Copy templates and static files from site.
