@@ -37,21 +37,31 @@ type Config struct {
 	ImportRoot  string // Root import path for the Go packages.
 }
 
-var (
-	//go:embed templates/*.html
-	tplFS    embed.FS
-	tplFuncs = template.FuncMap{
-		"contains":  strings.Contains,
-		"hasOnePkg": hasOnePkg,
-	}
-	tpl = template.Must(template.New("vanity").Funcs(tplFuncs).ParseFS(tplFS, "templates/*.html"))
-)
+type buildContext struct {
+	c   *Config
+	tpl *template.Template
+}
+
+//go:embed templates/*.html
+var tplFS embed.FS
 
 const highlightTheme = "native" // doc2go syntax highlighting theme
 
 // Build constructs the static site by fetching repository data from GitHub,
 // generating documentation, and building the site using templates.
 func Build(ctx context.Context, c *Config) error {
+	b := &buildContext{c: c}
+
+	// Initialize templates.
+	var err error
+	b.tpl, err = template.New("vanity").Funcs(template.FuncMap{
+		"contains":  strings.Contains,
+		"hasOnePkg": b.hasOnePkg,
+	}).ParseFS(tplFS, "templates/*.html")
+	if err != nil {
+		return err
+	}
+
 	// Obtain needed repositories from GitHub API.
 	allRepos, err := doJSONRequest[[]*repo](ctx, c, http.MethodGet, "https://api.github.com/user/repos")
 	if err != nil {
@@ -157,7 +167,7 @@ func Build(ctx context.Context, c *Config) error {
 	}
 
 	// Build index page.
-	if err := buildPage(filepath.Join(siteDir, "pages", "index.html"), &site.Page{
+	if err := b.buildPage(filepath.Join(siteDir, "pages", "index.html"), &site.Page{
 		Title:     "Go Packages",
 		Template:  "main",
 		Type:      "page",
@@ -190,7 +200,7 @@ func Build(ctx context.Context, c *Config) error {
 				continue
 			}
 
-			if err := buildPage(filepath.Join(siteDir, "pages", pkg.BasePath+".html"), &site.Page{
+			if err := b.buildPage(filepath.Join(siteDir, "pages", pkg.BasePath+".html"), &site.Page{
 				Title:     pkg.ImportPath,
 				Template:  "main",
 				Type:      "page",
@@ -201,7 +211,7 @@ func Build(ctx context.Context, c *Config) error {
 			}
 		}
 
-		if err := buildPage(filepath.Join(siteDir, "pages", repo.Name+".html"), &site.Page{
+		if err := b.buildPage(filepath.Join(siteDir, "pages", repo.Name+".html"), &site.Page{
 			Title:       c.ImportRoot + "/" + repo.Name,
 			Template:    "main",
 			Type:        "page",
@@ -258,7 +268,7 @@ func Build(ctx context.Context, c *Config) error {
 	})
 }
 
-func buildPage(path string, page *site.Page, tmpl string, data any) error {
+func (b *buildContext) buildPage(path string, page *site.Page, tmpl string, data any) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
@@ -272,7 +282,7 @@ func buildPage(path string, page *site.Page, tmpl string, data any) error {
 	buf.Write(frontmatter)
 	buf.WriteString("\n\n")
 
-	if err := tpl.ExecuteTemplate(&buf, tmpl, data); err != nil {
+	if err := b.tpl.ExecuteTemplate(&buf, tmpl, data); err != nil {
 		return err
 	}
 
@@ -479,12 +489,10 @@ func metaTagsForRepo(c *Config, r *repo) map[string]string {
 	}
 }
 
-func hasOnePkg(r *repo) bool {
-	const importRoot = "go.astrophena.name" // TODO: unhardcode
-
+func (b *buildContext) hasOnePkg(r *repo) bool {
 	if len(r.Pkgs) != 1 {
 		return false
 	}
 
-	return r.Pkgs[0].ImportPath == importRoot+"/"+r.Name
+	return r.Pkgs[0].ImportPath == b.c.ImportRoot+"/"+r.Name
 }
