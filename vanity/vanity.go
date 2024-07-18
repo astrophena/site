@@ -32,9 +32,11 @@ import (
 
 // Config holds the configuration for building the static site.
 type Config struct {
-	Dir         string // Directory where the generated site will be stored.
-	GitHubToken string // GitHub token for accessing the GitHub API.
-	ImportRoot  string // Root import path for the Go packages.
+	Dir         string       // Directory where the generated site will be stored.
+	GitHubToken string       // GitHub token for accessing the GitHub API.
+	ImportRoot  string       // Root import path for the Go packages.
+	Logf        site.Logf    // Logger to use. If nil, log.Printf is used.
+	HTTPClient  *http.Client // HTTP client for making requests.
 }
 
 type buildContext struct {
@@ -50,6 +52,10 @@ const highlightTheme = "native" // doc2go syntax highlighting theme
 // Build constructs the static site by fetching repository data from GitHub,
 // generating documentation, and building the site using templates.
 func Build(ctx context.Context, c *Config) error {
+	// Initialize internal state.
+	if c.Logf == nil {
+		c.Logf = log.Printf
+	}
 	b := &buildContext{c: c}
 
 	// Initialize templates.
@@ -116,12 +122,11 @@ func Build(ctx context.Context, c *Config) error {
 	}
 
 	// Compile the doc2go binary.
-	log.Println("Building doc2go.")
+	c.Logf("Building doc2go.")
 	doc2go := filepath.Join(tmpdir, "doc2go")
 	install := exec.Command("go", "install", "go.abhg.dev/doc2go")
 	install.Env = append(os.Environ(), "GOBIN="+filepath.Join(tmpdir))
-	install.Stdout = os.Stdout
-	install.Stderr = os.Stderr
+	install.Stderr = &funcWriter{f: c.Logf}
 	if err := install.Run(); err != nil {
 		return err
 	}
@@ -136,16 +141,15 @@ func Build(ctx context.Context, c *Config) error {
 			repo.Description += "."
 		}
 
-		log.Printf("Cloning repository %s.", repo.Name)
+		c.Logf("Cloning repository %s.", repo.Name)
 		repo.Dir = filepath.Join(reposDir, repo.Name)
 		clone := exec.Command("git", "clone", "--depth=1", repo.CloneURL, repo.Dir)
-		clone.Stdout = os.Stdout
-		clone.Stderr = os.Stderr
+		clone.Stderr = &funcWriter{f: c.Logf}
 		if err := clone.Run(); err != nil {
 			return err
 		}
 
-		log.Printf("Running \"go list\" for %s.", repo.Name)
+		c.Logf("Running \"go list\" for %s.", repo.Name)
 		var obuf, errbuf bytes.Buffer
 		list := exec.Command("go", "list", "-json", "./...")
 		list.Dir = repo.Dir
@@ -169,7 +173,7 @@ func Build(ctx context.Context, c *Config) error {
 	// Build repo and package pages.
 	for _, repo := range repos {
 		if repo.Dir != "" {
-			log.Printf("Generating docs for %s.", repo.Name)
+			c.Logf("Generating docs for %s.", repo.Name)
 			git := exec.Command("git", "rev-parse", "--short", "HEAD")
 			git.Dir = repo.Dir
 			commitb, err := git.Output()
@@ -378,15 +382,17 @@ type repo struct {
 	Archived    bool   `json:"archived"`
 	CloneURL    string `json:"clone_url"`
 	Fork        bool   `json:"fork"`
-	Owner       struct {
-		Login string `json:"login"`
-	} `json:"owner"`
+	Owner       *owner `json:"owner"`
 	// Obtained by 'git rev-parse --short HEAD'
-	Commit string
+	Commit string `json:"-"`
 	// For use with doc2go
-	Dir string
+	Dir string `json:"-"`
 	// Go packages that this repo contains
-	Pkgs []*pkg
+	Pkgs []*pkg `json:"-"`
+}
+
+type owner struct {
+	Login string `json:"login"`
 }
 
 type pkg struct {
@@ -408,7 +414,7 @@ type file struct {
 	Path string `json:"path"`
 }
 
-var httpc = &http.Client{
+var defaultHTTPClient = &http.Client{
 	Timeout: 10 * time.Second,
 }
 
@@ -421,6 +427,11 @@ func doJSONRequest[R any](ctx context.Context, c *Config, method, url string) (R
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.GitHubToken)
+
+	httpc := defaultHTTPClient
+	if c.HTTPClient != nil {
+		httpc = c.HTTPClient
+	}
 
 	res, err := httpc.Do(req)
 	if err != nil {
@@ -458,8 +469,7 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 		"-embed", "-out", tmpdir,
 		"./...",
 	)
-	doc2go.Stdout = os.Stdout
-	doc2go.Stderr = os.Stderr
+	doc2go.Stderr = &funcWriter{f: c.Logf}
 	doc2go.Dir = r.Dir
 	if err := doc2go.Run(); err != nil {
 		return err
@@ -495,4 +505,11 @@ func (b *buildContext) hasOnePkg(r *repo) bool {
 	}
 
 	return r.Pkgs[0].ImportPath == b.c.ImportRoot+"/"+r.Name
+}
+
+type funcWriter struct{ f site.Logf }
+
+func (w funcWriter) Write(p []byte) (n int, err error) {
+	w.f("%s", p)
+	return len(p), nil
 }

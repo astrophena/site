@@ -1,8 +1,6 @@
 module go.astrophena.name/site
 
-go 1.22.0
-
-toolchain go1.22.3
+go 1.22.3
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
@@ -19,6 +17,7 @@ require (
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/fluhus/godoc-tricks v1.5.0 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
+	go.astrophena.name/base v0.0.0-20240713142933-9da7f970e89e // indirect
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
