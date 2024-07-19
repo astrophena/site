@@ -3,6 +3,8 @@ package vanity
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -34,6 +36,15 @@ var repos = []repo{
 		CloneURL:    filepath.Join("vanity", "testdata", "nothing.bundle"),
 		Owner:       &owner{Login: "example"},
 	},
+	{
+		Name:        "base",
+		URL:         "https://api.github.com/repos/example/base",
+		Private:     false,
+		Description: "Package base does base.",
+		Archived:    false,
+		CloneURL:    filepath.Join("vanity", "testdata", "base.bundle"),
+		Owner:       &owner{Login: "example"},
+	},
 }
 
 // TODO: maybe generate this from Git bundle?
@@ -45,6 +56,13 @@ var filesForRepo = map[string][]file{
 		{Path: "go.mod"},
 		{Path: "nothing.go"},
 	},
+	"base": []file{
+		{Path: "LICENSE.md"},
+		{Path: "README.md"},
+		{Path: "go.mod"},
+		{Path: "testutil/testutil.go"},
+		{Path: "txtar/txtar.go"},
+	},
 }
 
 func TestMain(m *testing.M) {
@@ -55,8 +73,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestBuild(t *testing.T) {
+	dir := t.TempDir()
 	c := &Config{
-		Dir:         t.TempDir(),
+		Dir:         dir,
 		GitHubToken: githubToken,
 		Logf:        t.Logf,
 		ImportRoot:  "example.com",
@@ -64,6 +83,24 @@ func TestBuild(t *testing.T) {
 	}
 	if err := Build(context.Background(), c); err != nil {
 		t.Fatal(err)
+	}
+
+	// Check some required files.
+	for _, f := range []string{
+		"404.html",
+		"index.html",
+		"css/godoc.css",
+		"css/main.css",
+	} {
+		wantFile(t, filepath.Join(dir, f))
+	}
+}
+
+func wantFile(t *testing.T, path string) {
+	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("file %q doesn't exist", path)
+	} else if err != nil {
+		t.Errorf("checking existence of file %q failed: %v", path, err)
 	}
 }
 

@@ -330,15 +330,6 @@ func copyDir(source string, dest string) error {
 			if err := copyDir(sourcePath, destPath); err != nil {
 				return err
 			}
-		case os.ModeSymlink:
-			linkTarget, err := os.Readlink(sourcePath)
-			if err != nil {
-				return err
-			}
-			err = os.Symlink(linkTarget, destPath)
-			if err != nil {
-				return err
-			}
 		default:
 			if err := copyFile(sourcePath, destPath, fileInfo.Mode().Perm()|0o400); err != nil {
 				return err
