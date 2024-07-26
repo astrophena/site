@@ -30,12 +30,21 @@ import (
 	"go.astrophena.name/site"
 )
 
+// Logf is a simple printf-like logging function.
+type Logf func(format string, args ...any)
+
+// Write implments the [io.Writer] interface.
+func (f Logf) Write(p []byte) (n int, err error) {
+	f("%s", p)
+	return len(p), nil
+}
+
 // Config holds the configuration for building the static site.
 type Config struct {
 	Dir         string       // Directory where the generated site will be stored.
 	GitHubToken string       // GitHub token for accessing the GitHub API.
 	ImportRoot  string       // Root import path for the Go packages.
-	Logf        site.Logf    // Logger to use. If nil, log.Printf is used.
+	Logf        Logf         // Logger to use. If nil, log.Printf is used.
 	HTTPClient  *http.Client // HTTP client for making requests.
 }
 
@@ -54,7 +63,7 @@ const highlightTheme = "native" // doc2go syntax highlighting theme
 func Build(ctx context.Context, c *Config) error {
 	// Initialize internal state.
 	if c.Logf == nil {
-		c.Logf = log.Printf
+		c.Logf = Logf(log.Printf)
 	}
 	b := &buildContext{c: c}
 
@@ -126,7 +135,7 @@ func Build(ctx context.Context, c *Config) error {
 	doc2go := filepath.Join(tmpdir, "doc2go")
 	install := exec.Command("go", "install", "go.abhg.dev/doc2go")
 	install.Env = append(os.Environ(), "GOBIN="+filepath.Join(tmpdir))
-	install.Stderr = &funcWriter{f: c.Logf}
+	install.Stderr = c.Logf
 	if err := install.Run(); err != nil {
 		return err
 	}
@@ -144,7 +153,7 @@ func Build(ctx context.Context, c *Config) error {
 		c.Logf("Cloning repository %s.", repo.Name)
 		repo.Dir = filepath.Join(reposDir, repo.Name)
 		clone := exec.Command("git", "clone", "--depth=1", repo.CloneURL, repo.Dir)
-		clone.Stderr = &funcWriter{f: c.Logf}
+		clone.Stderr = c.Logf
 		if err := clone.Run(); err != nil {
 			return err
 		}
@@ -460,7 +469,7 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 		"-embed", "-out", tmpdir,
 		"./...",
 	)
-	doc2go.Stderr = &funcWriter{f: c.Logf}
+	doc2go.Stderr = c.Logf
 	doc2go.Dir = r.Dir
 	if err := doc2go.Run(); err != nil {
 		return err
@@ -496,11 +505,4 @@ func (b *buildContext) hasOnePkg(r *repo) bool {
 	}
 
 	return r.Pkgs[0].ImportPath == b.c.ImportRoot+"/"+r.Name
-}
-
-type funcWriter struct{ f site.Logf }
-
-func (w funcWriter) Write(p []byte) (n int, err error) {
-	w.f("%s", p)
-	return len(p), nil
 }
