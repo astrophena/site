@@ -33,7 +33,7 @@ import (
 // Logf is a simple printf-like logging function.
 type Logf func(format string, args ...any)
 
-// Write implments the [io.Writer] interface.
+// Write implements the [io.Writer] interface.
 func (f Logf) Write(p []byte) (n int, err error) {
 	f("%s", p)
 	return len(p), nil
