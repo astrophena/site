@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
@@ -65,15 +67,29 @@ var filesForRepo = map[string][]file{
 	},
 }
 
+var inspect = flag.Bool("inspect", false, "print location of test site for inspection")
+
 func TestMain(m *testing.M) {
 	if err := os.Chdir(".."); err != nil {
 		log.Fatalf("Changing working directory failed: %v", err)
 	}
+	flag.Parse()
 	os.Exit(m.Run())
 }
 
 func TestBuild(t *testing.T) {
-	dir := t.TempDir()
+	var dir string
+
+	if *inspect {
+		var err error
+		dir, err = os.MkdirTemp("", "vanity-test-build")
+		if err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		dir = t.TempDir()
+	}
+
 	c := &Config{
 		Dir:         dir,
 		GitHubToken: githubToken,
@@ -93,6 +109,10 @@ func TestBuild(t *testing.T) {
 		"css/main.css",
 	} {
 		wantFile(t, filepath.Join(dir, f))
+	}
+
+	if *inspect {
+		fmt.Fprintf(os.Stderr, "%s\n", dir)
 	}
 }
 

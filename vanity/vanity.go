@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -466,6 +467,7 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 		doc2goBin,
 		"-highlight",
 		"classes:"+highlightTheme,
+		"-pkg-doc", path.Join(c.ImportRoot, r.Name)+"=https://{{ .ImportPath }}",
 		"-embed", "-out", tmpdir,
 		"./...",
 	)
