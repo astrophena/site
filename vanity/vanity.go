@@ -521,10 +521,15 @@ func (p *pkg) replaceRelLinks(c *Config) {
 			absPath = filepath.Clean(absPath)
 			return absPath
 		}
-		// If the link doesn't contain a slash, it's a relative link to the package root
+		// If the link doesn't contain a slash, it's a relative link to the package
+		// root.
 		if !strings.Contains(link, "/") {
 			absPath := filepath.Join(basePath, link)
 			return absPath
+		}
+		// Strip leading slashes from anchor links.
+		if strings.Contains(link, "/#") {
+			return strings.Replace(link, "/#", "#", 1)
 		}
 		// If it's not a relative link within the module, return it unchanged.
 		return link
