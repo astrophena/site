@@ -1,14 +1,27 @@
 <!-- vim: set ft=gotplhtml: -->
 {{ define "pkg" }}
-  {{ template "repo" .Repo }}
-  {{ if .Repo.Archived }}
-    <div class="alert">
-      {{ if eq .Name "main" }}
-        This program is unmaintained.
-      {{ else }}
-        This package is unmaintained.
-      {{ end }}
-    </div>
+  {{ if not .Repo.Private }}
+    {{ template "repo" .Repo }}
+    {{ if .Repo.Archived }}
+      <div class="alert">
+        {{ if eq .Name "main" }}
+          This program is unmaintained.
+        {{ else }}
+          This package is unmaintained.
+        {{ end }}
+      </div>
+    {{ end }}
+    {{ .FullDoc }}
+  {{ else }}
+    <h1>Whoa there!</h1>
+    <p>This module is private.</p>
+    <p>
+      To fetch it, ensure that your <code>GOPRIVATE</code> environment variable includes
+      <code>{{ .ImportPath }}</code> and you have access to <code>{{ .Repo.Name }}</code> repository.
+    </p>
+    <p>
+      See <a href="https://go.dev/ref/mod#private-module-privacy">Go documentation</a> for reference.
+    </p>
+    <p>If you are get here by mistake, go to the <a href="https://astrophena.name">home page</a>.</p>
   {{ end }}
-  {{ .FullDoc }}
 {{ end }}

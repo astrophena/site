@@ -79,6 +79,12 @@ var (
 // Logf is a simple printf-like logging function.
 type Logf func(format string, args ...any)
 
+// Write implements the [io.Writer] interface.
+func (f Logf) Write(p []byte) (n int, err error) {
+	f("%s", p)
+	return len(p), nil
+}
+
 // Config represents a build configuration.
 type Config struct {
 	// Title is the title of the site.

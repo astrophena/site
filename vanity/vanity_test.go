@@ -30,6 +30,15 @@ var repos = []repo{
 		Owner:       &owner{Login: "example"},
 	},
 	{
+		Name:        "noroot",
+		URL:         "https://api.github.com/repos/example/noroot",
+		Private:     false,
+		Description: "Doesn't have root package.",
+		Archived:    false,
+		CloneURL:    filepath.Join("vanity", "testdata", "noroot.bundle"),
+		Owner:       &owner{Login: "example"},
+	},
+	{
 		Name:        "nothing",
 		URL:         "https://api.github.com/repos/example/nothing",
 		Private:     false,
@@ -54,6 +63,10 @@ var filesForRepo = map[string][]file{
 	"nogomod": []file{
 		{Path: "README.md"},
 	},
+	"noroot": []file{
+		{Path: "go.mod"},
+		{Path: "hello/hello.go"},
+	},
 	"nothing": []file{
 		{Path: "go.mod"},
 		{Path: "nothing.go"},
@@ -61,6 +74,7 @@ var filesForRepo = map[string][]file{
 	"base": []file{
 		{Path: "LICENSE.md"},
 		{Path: "README.md"},
+		{Path: "base.go"},
 		{Path: "go.mod"},
 		{Path: "testutil/testutil.go"},
 		{Path: "txtar/txtar.go"},

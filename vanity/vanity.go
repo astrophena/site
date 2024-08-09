@@ -32,21 +32,12 @@ import (
 	"go.astrophena.name/site"
 )
 
-// Logf is a simple printf-like logging function.
-type Logf func(format string, args ...any)
-
-// Write implements the [io.Writer] interface.
-func (f Logf) Write(p []byte) (n int, err error) {
-	f("%s", p)
-	return len(p), nil
-}
-
 // Config holds the configuration for building the static site.
 type Config struct {
 	Dir         string       // Directory where the generated site will be stored.
 	GitHubToken string       // GitHub token for accessing the GitHub API.
 	ImportRoot  string       // Root import path for the Go packages.
-	Logf        Logf         // Logger to use. If nil, log.Printf is used.
+	Logf        site.Logf    // Logger to use. If nil, log.Printf is used.
 	HTTPClient  *http.Client // HTTP client for making requests.
 }
 
@@ -65,7 +56,7 @@ const highlightTheme = "native" // doc2go syntax highlighting theme
 func Build(ctx context.Context, c *Config) error {
 	// Initialize internal state.
 	if c.Logf == nil {
-		c.Logf = Logf(log.Printf)
+		c.Logf = site.Logf(log.Printf)
 	}
 	b := &buildContext{c: c}
 
@@ -143,9 +134,14 @@ func Build(ctx context.Context, c *Config) error {
 	}
 
 	for _, repo := range repos {
-		// We don't list packages for private repos.
 		if repo.Private {
-			continue
+			// For private repos, we create a single virtual package.
+			repo.Pkgs = []*pkg{
+				&pkg{
+					ImportPath: c.ImportRoot + "/" + repo.Name,
+					Repo:       repo,
+				},
+			}
 		}
 
 		if !strings.HasSuffix(repo.Description, ".") {
@@ -200,30 +196,20 @@ func Build(ctx context.Context, c *Config) error {
 		}
 
 		for _, pkg := range repo.Pkgs {
-			if pkg.BasePath == repo.Name || strings.Contains(pkg.BasePath, "internal") {
+			if strings.Contains(pkg.BasePath, "internal") {
 				continue
 			}
 
 			if err := b.buildPage(filepath.Join(siteDir, "pages", pkg.BasePath+".html"), &site.Page{
-				Title:     pkg.ImportPath,
-				Template:  "main",
-				Type:      "page",
-				Permalink: "/" + pkg.BasePath,
-				MetaTags:  metaTagsForRepo(c, repo),
+				Title:       pkg.ImportPath,
+				Template:    "main",
+				Type:        "page",
+				Permalink:   "/" + pkg.BasePath,
+				MetaTags:    metaTagsForRepo(c, repo),
+				ContentOnly: repo.Private,
 			}, "pkg", pkg); err != nil {
 				return err
 			}
-		}
-
-		if err := b.buildPage(filepath.Join(siteDir, "pages", repo.Name+".html"), &site.Page{
-			Title:       c.ImportRoot + "/" + repo.Name,
-			Template:    "main",
-			Type:        "page",
-			Permalink:   "/" + repo.Name,
-			MetaTags:    metaTagsForRepo(c, repo),
-			ContentOnly: repo.Private,
-		}, "import", repo); err != nil {
-			return err
 		}
 	}
 
@@ -477,6 +463,25 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 		return err
 	}
 
+	// If we don't have a package which import path equals the module path
+	// (e.g. for github.com/astrophena/go-testrepo module there's no package
+	// "github.com/astrophena/go-testrepo", only subpackages like
+	// "github.com/astrophena/go-testrepo/http"), then we create such a
+	// package manually.
+	haveRootPkg := false
+	for _, pkg := range r.Pkgs {
+		if pkg.ImportPath == c.ImportRoot+"/"+r.Name {
+			haveRootPkg = true
+			break
+		}
+	}
+	if !haveRootPkg {
+		r.Pkgs = append(r.Pkgs, &pkg{
+			ImportPath: c.ImportRoot + "/" + r.Name,
+			Repo:       r,
+		})
+	}
+
 	for _, pkg := range r.Pkgs {
 		pkg.BasePath = strings.TrimPrefix(pkg.ImportPath, c.ImportRoot+"/")
 
@@ -512,6 +517,11 @@ func (p *pkg) replaceRelLinks(c *Config) {
 			absPath := filepath.Join(basePath, link)
 			// Clean the path to remove any unnecessary "./" or "../" segments.
 			absPath = filepath.Clean(absPath)
+			return absPath
+		}
+		// If the link doesn't contain a slash, it's a relative link to the package root
+		if !strings.Contains(link, "/") {
+			absPath := filepath.Join(basePath, link)
 			return absPath
 		}
 		// If it's not a relative link within the module, return it unchanged.
