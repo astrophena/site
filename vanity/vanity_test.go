@@ -151,3 +151,101 @@ func respondJSON(t *testing.T, w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(j)
 }
+
+func TestReplaceRelLinks(t *testing.T) {
+	c := &Config{
+		ImportRoot: "go.astrophena.name",
+	}
+
+	cases := map[string]struct {
+		in   string
+		want string
+		pkg  *pkg
+	}{
+		"no links": {
+			in: `
+<h1>Package docs</h1>
+<p>This is a package.</p>
+`,
+			want: `
+<h1>Package docs</h1>
+<p>This is a package.</p>
+`,
+			pkg: &pkg{
+				ImportPath: "go.astrophena.name/base/testutil",
+			},
+		},
+		"relative link within module": {
+			in: `
+<h1>Package docs</h1>
+<p>This package uses <a href="../txtar">txtar</a>.</p>
+`,
+			want: `
+<h1>Package docs</h1>
+<p>This package uses <a href="/base/txtar">txtar</a>.</p>
+`,
+			pkg: &pkg{
+				ImportPath: "go.astrophena.name/base/testutil",
+			},
+		},
+		"multiple relative links within module": {
+			in: `
+<h1>Package docs</h1>
+<p>This package uses <a href="../txtar">txtar</a> and <a href="../foo/bar">foo/bar</a>.</p>
+`,
+			want: `
+<h1>Package docs</h1>
+<p>This package uses <a href="/base/txtar">txtar</a> and <a href="/base/foo/bar">foo/bar</a>.</p>
+`,
+			pkg: &pkg{
+				ImportPath: "go.astrophena.name/base/testutil",
+			},
+		},
+		"external link": {
+			in: `
+<h1>Package docs</h1>
+<p>This package uses <a href="https://example.com">example.com</a>.</p>
+`,
+			want: `
+<h1>Package docs</h1>
+<p>This package uses <a href="https://example.com">example.com</a>.</p>
+`,
+			pkg: &pkg{
+				ImportPath: "go.astrophena.name/base/testutil",
+			},
+		},
+		"mixed links": {
+			in: `
+<h1>Package docs</h1>
+<p>
+	This package uses
+	<a href="../txtar">txtar</a>,
+	<a href="../foo/bar">foo/bar</a>, and
+	<a href="https://example.com">example.com</a>.
+</p>
+`,
+			want: `
+<h1>Package docs</h1>
+<p>
+	This package uses
+	<a href="/base/txtar">txtar</a>,
+	<a href="/base/foo/bar">foo/bar</a>, and
+	<a href="https://example.com">example.com</a>.
+</p>
+`,
+			pkg: &pkg{
+				ImportPath: "go.astrophena.name/base/testutil",
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			tc.pkg.FullDoc = tc.in
+			tc.pkg.replaceRelLinks(c)
+			if tc.pkg.FullDoc != tc.want {
+				t.Errorf("Expected:\n%s\nGot:\n%s", tc.want, tc.pkg.FullDoc)
+			}
+		})
+	}
+}

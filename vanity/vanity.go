@@ -24,6 +24,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 	"time"
@@ -199,7 +200,6 @@ func Build(ctx context.Context, c *Config) error {
 		}
 
 		for _, pkg := range repo.Pkgs {
-			pkg.BasePath = strings.TrimPrefix(pkg.ImportPath, c.ImportRoot+"/")
 			if pkg.BasePath == repo.Name || strings.Contains(pkg.BasePath, "internal") {
 				continue
 			}
@@ -478,6 +478,8 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 	}
 
 	for _, pkg := range r.Pkgs {
+		pkg.BasePath = strings.TrimPrefix(pkg.ImportPath, c.ImportRoot+"/")
+
 		docfile := filepath.Join(tmpdir, pkg.ImportPath, "index.html")
 		if _, err := os.Stat(docfile); errors.Is(err, fs.ErrNotExist) {
 			return nil
@@ -490,9 +492,45 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 			return err
 		}
 		pkg.FullDoc = string(fullDoc)
+		pkg.replaceRelLinks(c)
 	}
 
 	return nil
+}
+
+func (p *pkg) replaceRelLinks(c *Config) {
+	// Calculate the correct base path for relative links.
+	// For example, if the package is "go.astrophena.name/base/testutil",
+	// the base path will be "/base/testutil".
+	basePath := "/" + strings.TrimPrefix(p.ImportPath, c.ImportRoot+"/")
+
+	// Define a function to handle link replacements.
+	replaceLink := func(link string) string {
+		// If the link starts with "../", it's a relative link within the module.
+		if strings.HasPrefix(link, "../") {
+			// Calculate the absolute path by navigating up the directory structure.
+			absPath := filepath.Join(basePath, link)
+			// Clean the path to remove any unnecessary "./" or "../" segments.
+			absPath = filepath.Clean(absPath)
+			return absPath
+		}
+		// If it's not a relative link within the module, return it unchanged.
+		return link
+	}
+
+	// Use a regular expression to find all links in the documentation.
+	re := regexp.MustCompile(`href="(.*?)"`)
+	p.FullDoc = re.ReplaceAllStringFunc(p.FullDoc, func(match string) string {
+		// Extract the actual link from the matched string.
+		parts := strings.Split(match, `"`)
+		link := parts[1]
+
+		// Replace the link if necessary.
+		newLink := replaceLink(link)
+
+		// Return the modified match with the updated link.
+		return fmt.Sprintf(`href="%s"`, newLink)
+	})
 }
 
 func metaTagsForRepo(c *Config, r *repo) map[string]string {
