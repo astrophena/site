@@ -138,6 +138,7 @@ func Build(ctx context.Context, c *Config) error {
 			// For private repos, we create a single virtual package.
 			repo.Pkgs = []*pkg{
 				&pkg{
+					BasePath:   repo.Name,
 					ImportPath: c.ImportRoot + "/" + repo.Name,
 					Repo:       repo,
 				},
