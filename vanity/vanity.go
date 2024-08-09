@@ -505,6 +505,10 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 	return nil
 }
 
+func isFullURL(u string) bool {
+	return strings.HasPrefix(u, "http://") || strings.HasPrefix(u, "https://")
+}
+
 func (p *pkg) replaceRelLinks(c *Config) {
 	// Calculate the correct base path for relative links.
 	// For example, if the package is "go.astrophena.name/base/testutil",
@@ -527,8 +531,12 @@ func (p *pkg) replaceRelLinks(c *Config) {
 			absPath := filepath.Join(basePath, link)
 			return absPath
 		}
-		// If it's not a relative link within the module, return it unchanged.
-		return link
+		// If it's not a relative link within the module, return it cleaned, at
+		// least.
+		if isFullURL(link) {
+			return link
+		}
+		return filepath.Clean(link)
 	}
 
 	// Use a regular expression to find all links in the documentation.
@@ -540,11 +548,6 @@ func (p *pkg) replaceRelLinks(c *Config) {
 
 		// Replace the link if necessary.
 		newLink := replaceLink(link)
-
-		// Strip leading slashes from anchor links.
-		if strings.Contains(newLink, "/#") {
-			return strings.Replace(newLink, "/#", "#", 1)
-		}
 
 		// Return the modified match with the updated link.
 		return fmt.Sprintf(`href="%s"`, newLink)
