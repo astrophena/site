@@ -142,6 +142,7 @@ func Build(ctx context.Context, c *Config) error {
 					Repo:       repo,
 				},
 			}
+			continue
 		}
 
 		if !strings.HasSuffix(repo.Description, ".") {
