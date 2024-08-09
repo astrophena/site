@@ -527,10 +527,6 @@ func (p *pkg) replaceRelLinks(c *Config) {
 			absPath := filepath.Join(basePath, link)
 			return absPath
 		}
-		// Strip leading slashes from anchor links.
-		if strings.Contains(link, "/#") {
-			return strings.Replace(link, "/#", "#", 1)
-		}
 		// If it's not a relative link within the module, return it unchanged.
 		return link
 	}
@@ -544,6 +540,11 @@ func (p *pkg) replaceRelLinks(c *Config) {
 
 		// Replace the link if necessary.
 		newLink := replaceLink(link)
+
+		// Strip leading slashes from anchor links.
+		if strings.Contains(newLink, "/#") {
+			return strings.Replace(newLink, "/#", "#", 1)
+		}
 
 		// Return the modified match with the updated link.
 		return fmt.Sprintf(`href="%s"`, newLink)
