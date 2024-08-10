@@ -554,7 +554,7 @@ func (p *pkg) replaceRelLinks(c *Config) {
 		newLink := replaceLink(link)
 
 		// Handle links with fragments.
-		if path, frag := linkFragment(newLink); frag != "" {
+		if path, frag := linkFragment(newLink); frag != "" && !isFullURL(newLink) {
 			newLink = filepath.Clean(path) + "#" + frag
 		}
 
