@@ -509,6 +509,11 @@ func isFullURL(u string) bool {
 	return strings.HasPrefix(u, "http://") || strings.HasPrefix(u, "https://")
 }
 
+var (
+	hrefRe     = regexp.MustCompile(`href="(.*?)"`)
+	fragmentRe = regexp.MustCompile(`^(.*?)(#(.*))?$`)
+)
+
 func (p *pkg) replaceRelLinks(c *Config) {
 	// Calculate the correct base path for relative links.
 	// For example, if the package is "go.astrophena.name/base/testutil",
@@ -536,12 +541,15 @@ func (p *pkg) replaceRelLinks(c *Config) {
 		if isFullURL(link) {
 			return link
 		}
+		// Handle links with fragments.
+		if path, frag := linkFragment(link); frag != "" {
+			return filepath.Clean(path) + "#" + frag
+		}
 		return filepath.Clean(link)
 	}
 
 	// Use a regular expression to find all links in the documentation.
-	re := regexp.MustCompile(`href="(.*?)"`)
-	p.FullDoc = re.ReplaceAllStringFunc(p.FullDoc, func(match string) string {
+	p.FullDoc = hrefRe.ReplaceAllStringFunc(p.FullDoc, func(match string) string {
 		// Extract the actual link from the matched string.
 		parts := strings.Split(match, `"`)
 		link := parts[1]
@@ -552,6 +560,14 @@ func (p *pkg) replaceRelLinks(c *Config) {
 		// Return the modified match with the updated link.
 		return fmt.Sprintf(`href="%s"`, newLink)
 	})
+}
+
+func linkFragment(link string) (path string, fragment string) {
+	matches := fragmentRe.FindStringSubmatch(link)
+	if len(matches) == 4 {
+		return matches[1], matches[3]
+	}
+	return link, ""
 }
 
 func metaTagsForRepo(c *Config, r *repo) map[string]string {
