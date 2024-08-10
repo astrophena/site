@@ -234,7 +234,7 @@ func TestReplaceRelLinks(t *testing.T) {
 <p>
 	This package uses
 	<a href="../txtar">txtar</a>,
-	<a href="../foo/bar">foo/bar</a>, and
+	<a href="../foo/bar/..#Logf">foo/bar</a>, and
 	<a href="https://example.com">example.com</a>.
 </p>
 `,
@@ -243,7 +243,7 @@ func TestReplaceRelLinks(t *testing.T) {
 <p>
 	This package uses
 	<a href="/base/txtar">txtar</a>,
-	<a href="/base/foo/bar">foo/bar</a>, and
+	<a href="/base/foo#Logf">foo/bar</a>, and
 	<a href="https://example.com">example.com</a>.
 </p>
 `,

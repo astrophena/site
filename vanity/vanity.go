@@ -541,10 +541,6 @@ func (p *pkg) replaceRelLinks(c *Config) {
 		if isFullURL(link) {
 			return link
 		}
-		// Handle links with fragments.
-		if path, frag := linkFragment(link); frag != "" {
-			return filepath.Clean(path) + "#" + frag
-		}
 		return filepath.Clean(link)
 	}
 
@@ -556,6 +552,11 @@ func (p *pkg) replaceRelLinks(c *Config) {
 
 		// Replace the link if necessary.
 		newLink := replaceLink(link)
+
+		// Handle links with fragments.
+		if path, frag := linkFragment(newLink); frag != "" {
+			newLink = filepath.Clean(path) + "#" + frag
+		}
 
 		// Return the modified match with the updated link.
 		return fmt.Sprintf(`href="%s"`, newLink)
