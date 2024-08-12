@@ -34,11 +34,16 @@ import (
 
 // Config holds the configuration for building the static site.
 type Config struct {
-	Dir         string       // Directory where the generated site will be stored.
-	GitHubToken string       // GitHub token for accessing the GitHub API.
-	ImportRoot  string       // Root import path for the Go packages.
-	Logf        site.Logf    // Logger to use. If nil, log.Printf is used.
-	HTTPClient  *http.Client // HTTP client for making requests.
+	// Dir is a directory where the generated site will be stored.
+	Dir string
+	// GitHubToken is a token for accessing the GitHub API.
+	GitHubToken string
+	// ImportRoot is a root import path for the Go packages.
+	ImportRoot string
+	// Logf is a logger to use. If nil, log.Printf is used.
+	Logf site.Logf
+	// HTTPClient is a HTTP client for making requests.
+	HTTPClient *http.Client
 }
 
 type buildContext struct {
@@ -63,8 +68,9 @@ func Build(ctx context.Context, c *Config) error {
 	// Initialize templates.
 	var err error
 	b.tpl, err = template.New("vanity").Funcs(template.FuncMap{
-		"contains":  strings.Contains,
-		"hasOnePkg": b.hasOnePkg,
+		"contains":   strings.Contains,
+		"hasOnePkg":  b.hasOnePkg,
+		"importRoot": func() string { return c.ImportRoot },
 	}).ParseFS(tplFS, "templates/*.html")
 	if err != nil {
 		return err
@@ -260,7 +266,7 @@ func Build(ctx context.Context, c *Config) error {
 		Title: "Go Packages",
 		BaseURL: &url.URL{
 			Scheme: "https",
-			Host:   "go.astrophena.name",
+			Host:   c.ImportRoot,
 		},
 		Src:      siteDir,
 		Dst:      c.Dir,

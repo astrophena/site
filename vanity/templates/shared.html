@@ -2,12 +2,13 @@
 
 {{ define "repo" }}
 <h2>
-  go.astrophena.name/<a href="/{{ .Name }}">{{ .Name }}</a>
+  {{ importRoot }}/<a href="/{{ .Name }}">{{ .Name }}</a>
   <span class="module">Module</span>
 </h2>
 <p class="meta">
-  <a href="https://github.com/astrophena/{{ .Name }}">GitHub repository</a> |
-  <a href="https://github.com/astrophena/{{ .Name }}/commit/{{ .Commit }}">Commit ({{ .Commit }})</a>
+  {{ $repoURL := printf "https://github.com/%s/%s" .Owner.Login .Name }}
+  <a href="{{ $repoURL }}">GitHub repository</a> |
+  <a href="{{ $repoURL }}/commit/{{ .Commit }}">Commit ({{ .Commit }})</a>
 </p>
 <p>{{ .Description }}</p>
 {{ end }}
