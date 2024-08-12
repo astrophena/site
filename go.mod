@@ -9,7 +9,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95
 	go.astrophena.name/base v0.0.0-20240713142933-9da7f970e89e
-	golang.org/x/tools v0.23.0
+	golang.org/x/tools v0.24.0
 )
 
 require (
@@ -18,8 +18,8 @@ require (
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/fluhus/godoc-tricks v1.5.0 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
-	golang.org/x/mod v0.19.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/mod v0.20.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 )
