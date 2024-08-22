@@ -11,119 +11,42 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"io/fs"
 	"net"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/txtar"
+	"go.astrophena.name/base/testutil"
+	"go.astrophena.name/base/txtar"
 )
 
 var update = flag.Bool("update", false, "update golden files in testdata")
 
-func TestMain(m *testing.M) {
-	flag.Parse()
-	os.Exit(m.Run())
-}
-
 func TestBuild(t *testing.T) {
-	cases, err := filepath.Glob("testdata/*.txtar")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, tc := range cases {
-		tcName := strings.TrimSuffix(tc, filepath.Ext(tc))
-		tcName = strings.TrimPrefix(tcName, "testdata"+string(filepath.Separator))
-
-		t.Run(tcName, func(t *testing.T) {
-			tca, err := txtar.ParseFile(tc)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			srcDir, dstDir := t.TempDir(), t.TempDir()
-			extractTxtar(t, tca, srcDir)
-
-			if err := Build(&Config{
-				Src:         srcDir,
-				Dst:         dstDir,
-				Logf:        t.Logf,
-				feedCreated: time.Date(2023, time.December, 8, 0, 0, 0, 0, time.UTC),
-			}); err != nil {
-				t.Fatal(err)
-			}
-
-			got := buildTxtar(t, dstDir)
-
-			golden := filepath.Join("testdata", tcName+".golden")
-			if *update {
-				if err := os.WriteFile(golden, got, 0o644); err != nil {
-					t.Fatalf("unable to write golden file %q: %v", golden, err)
-				}
-				return
-			}
-			want, err := os.ReadFile(golden)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Fatalf("(-want +got): \n%s", diff)
-			}
-		})
-	}
-}
-
-// extractTxtar extracts a txtar archive to dir.
-func extractTxtar(t *testing.T, ar *txtar.Archive, dir string) {
-	for _, file := range ar.Files {
-		if err := os.MkdirAll(filepath.Join(dir, filepath.Dir(file.Name)), 0o755); err != nil {
+	testutil.RunGolden(t, "testdata/*.txtar", func(t *testing.T, match string) []byte {
+		tca, err := txtar.ParseFile(match)
+		if err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, file.Name), file.Data, 0o644); err != nil {
+
+		srcDir, dstDir := t.TempDir(), t.TempDir()
+		testutil.ExtractTxtar(t, tca, srcDir)
+
+		if err := Build(&Config{
+			Src:         srcDir,
+			Dst:         dstDir,
+			Logf:        t.Logf,
+			feedCreated: time.Date(2023, time.December, 8, 0, 0, 0, 0, time.UTC),
+		}); err != nil {
 			t.Fatal(err)
 		}
-	}
-}
 
-// buildTxtar constructs a txtar archive from contents of dir.
-func buildTxtar(t *testing.T, dir string) []byte {
-	ar := new(txtar.Archive)
-
-	if err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		b, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
-		ar.Files = append(ar.Files, txtar.File{
-			Name: d.Name(),
-			Data: b,
-		})
-
-		return nil
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	return txtar.Format(ar)
+		return testutil.BuildTxtar(t, dstDir)
+	}, *update)
 }
 
 func TestServe(t *testing.T) {
@@ -270,9 +193,7 @@ Foo.
 
 	// Don't care about whitespace.
 	got := strings.TrimSpace(buf.String())
-	if got != strippedContent {
-		t.Fatalf("want %q, got %q", strippedContent, got)
-	}
+	testutil.AssertEqual(t, got, strippedContent)
 }
 
 func TestPage(t *testing.T) {
@@ -446,10 +367,7 @@ func TestURLTemplateFunc(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			b.c = tc.c
 			got := b.url(tc.in)
-
-			if got != tc.want {
-				t.Fatalf("got %q, but want %q", got, tc.want)
-			}
+			testutil.AssertEqual(t, got, tc.want)
 		})
 	}
 }
@@ -486,9 +404,7 @@ func TestNavLinkTemplateFunc(t *testing.T) {
 			b.c.setDefaults()
 
 			got := b.navLink(tc.p, tc.title, tc.iconName, tc.path)
-			if string(got) != tc.want {
-				t.Fatalf("got %q, but want %q", got, tc.want)
-			}
+			testutil.AssertEqual(t, string(got), tc.want)
 		})
 	}
 }
