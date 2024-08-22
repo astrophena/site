@@ -40,6 +40,8 @@ go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 h1:c/mNP/74TDA+jWloI2YoG
 go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95/go.mod h1:KSriGzVYwsd/XscoV1L7WJTDq8O4P9DxCn0teyYp+e0=
 go.astrophena.name/base v0.0.0-20240713142933-9da7f970e89e h1:3TEhfA4WGijmuwFZ5hYwcw+2LGUsoaawBTkzAmR+fn8=
 go.astrophena.name/base v0.0.0-20240713142933-9da7f970e89e/go.mod h1:RiyB7kjsq+5av/oQ92lc96IWbl9Byl+CG4tEaKP1v7w=
+go.astrophena.name/base v0.0.0-20240822172301-ec1046543e80 h1:zuhy37l59SCGEJHtXSeEN2WEH/0dMM7UIwxDfy2Y2MM=
+go.astrophena.name/base v0.0.0-20240822172301-ec1046543e80/go.mod h1:RiyB7kjsq+5av/oQ92lc96IWbl9Byl+CG4tEaKP1v7w=
 golang.org/x/mod v0.20.0 h1:utOm6MM3R3dnawAiJgn0y+xvuYRsm1RKM/4giyfDgV0=
 golang.org/x/mod v0.20.0/go.mod h1:hTbmBsO62+eylJbnUtE2MGJUyE7QWk4xUqPFrRgJ+7c=
 golang.org/x/net v0.28.0 h1:a9JDOJc5GMUJ0+UDqmLT86WiEy7iWyIhz8gz8E4e5hE=

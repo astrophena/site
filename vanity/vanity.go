@@ -27,8 +27,8 @@ import (
 	"regexp"
 	"strings"
 	"text/template"
-	"time"
 
+	"go.astrophena.name/base/request"
 	"go.astrophena.name/site"
 )
 
@@ -77,7 +77,7 @@ func Build(ctx context.Context, c *Config) error {
 	}
 
 	// Obtain needed repositories from GitHub API.
-	allRepos, err := doJSONRequest[[]*repo](ctx, c, http.MethodGet, "https://api.github.com/user/repos")
+	allRepos, err := makeRequest[[]*repo](ctx, c, "https://api.github.com/user/repos")
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func Build(ctx context.Context, c *Config) error {
 			continue
 		}
 
-		files, err := doJSONRequest[[]file](ctx, c, http.MethodGet, repo.URL+"/contents")
+		files, err := makeRequest[[]file](ctx, c, repo.URL+"/contents")
 		if err != nil {
 			return err
 		}
@@ -405,49 +405,19 @@ type pkg struct {
 	Repo *repo
 }
 
+func makeRequest[Response any](ctx context.Context, c *Config, url string) (Response, error) {
+	return request.Make[Response](ctx, request.Params{
+		Method: http.MethodGet,
+		URL:    url,
+		Headers: map[string]string{
+			"Authorization": "Bearer " + c.GitHubToken,
+		},
+		HTTPClient: c.HTTPClient,
+	})
+}
+
 type file struct {
 	Path string `json:"path"`
-}
-
-var defaultHTTPClient = &http.Client{
-	Timeout: 10 * time.Second,
-}
-
-func doJSONRequest[R any](ctx context.Context, c *Config, method, url string) (R, error) {
-	var resp R
-
-	req, err := http.NewRequestWithContext(ctx, method, url, nil)
-	if err != nil {
-		return resp, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.GitHubToken)
-
-	httpc := defaultHTTPClient
-	if c.HTTPClient != nil {
-		httpc = c.HTTPClient
-	}
-
-	res, err := httpc.Do(req)
-	if err != nil {
-		return resp, err
-	}
-	defer res.Body.Close()
-
-	b, err := io.ReadAll(res.Body)
-	if err != nil {
-		return resp, err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return resp, fmt.Errorf("%s %s: want %d, got %d: %s", method, url, http.StatusOK, res.StatusCode, b)
-	}
-
-	if err := json.Unmarshal(b, &resp); err != nil {
-		return resp, err
-	}
-
-	return resp, nil
 }
 
 func (r *repo) generateDoc(c *Config, doc2goBin string) error {

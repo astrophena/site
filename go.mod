@@ -8,7 +8,7 @@ require (
 	github.com/gorilla/feeds v1.2.0
 	github.com/russross/blackfriday/v2 v2.1.0
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95
-	go.astrophena.name/base v0.0.0-20240713142933-9da7f970e89e
+	go.astrophena.name/base v0.0.0-20240822172301-ec1046543e80
 	golang.org/x/tools v0.24.0
 )
 
