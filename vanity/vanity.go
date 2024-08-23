@@ -28,6 +28,7 @@ import (
 	"strings"
 	"text/template"
 
+	"go.astrophena.name/base/logger"
 	"go.astrophena.name/base/request"
 	"go.astrophena.name/site"
 )
@@ -41,7 +42,7 @@ type Config struct {
 	// ImportRoot is a root import path for the Go packages.
 	ImportRoot string
 	// Logf is a logger to use. If nil, log.Printf is used.
-	Logf site.Logf
+	Logf logger.Logf
 	// HTTPClient is a HTTP client for making requests.
 	HTTPClient *http.Client
 }
@@ -61,7 +62,7 @@ const highlightTheme = "native" // doc2go syntax highlighting theme
 func Build(ctx context.Context, c *Config) error {
 	// Initialize internal state.
 	if c.Logf == nil {
-		c.Logf = site.Logf(log.Printf)
+		c.Logf = logger.Logf(log.Printf)
 	}
 	b := &buildContext{c: c}
 

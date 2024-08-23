@@ -61,6 +61,8 @@ import (
 	ttemplate "text/template"
 	"time"
 
+	"go.astrophena.name/base/logger"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/feeds"
 	"github.com/russross/blackfriday/v2"
@@ -75,15 +77,6 @@ var (
 	errFormatUnsupported       = errors.New("format unsupported")
 	errPermalinkInvalid        = errors.New("invalid permalink")
 )
-
-// Logf is a simple printf-like logging function.
-type Logf func(format string, args ...any)
-
-// Write implements the [io.Writer] interface.
-func (f Logf) Write(p []byte) (n int, err error) {
-	f("%s", p)
-	return len(p), nil
-}
 
 // Config represents a build configuration.
 type Config struct {
@@ -100,7 +93,7 @@ type Config struct {
 	// directory.
 	Dst string
 	// Logf specifies a logger to use. If nil, log.Printf is used.
-	Logf Logf
+	Logf logger.Logf
 	// Prod determines if the site should be built in a production mode. This
 	// means that drafts are excluded and the base URL is used to derive absolute
 	// URLs from relative ones.
