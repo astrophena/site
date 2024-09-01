@@ -113,7 +113,7 @@ func TestBuild(t *testing.T) {
 		GitHubToken: githubToken,
 		Logf:        t.Logf,
 		ImportRoot:  "example.com",
-		HTTPClient:  testutil.MockHTTPClient(t, testHandler(t)),
+		HTTPClient:  testutil.MockHTTPClient(testHandler(t)),
 	}
 	if err := Build(context.Background(), c); err != nil {
 		t.Fatal(err)

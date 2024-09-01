@@ -432,6 +432,7 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 		doc2goBin,
 		"-highlight",
 		"classes:"+highlightTheme,
+		"-internal",
 		"-pkg-doc", path.Join(c.ImportRoot, r.Name)+"=https://{{ .ImportPath }}",
 		"-embed", "-out", tmpdir,
 		"./...",
