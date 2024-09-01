@@ -238,6 +238,7 @@ func TestReplaceRelLinks(t *testing.T) {
 <p>
 	This package uses
 	<a href="../txtar">txtar</a>,
+	<a href="internal/workshop">internal/workshop</a>,
 	<a href="../foo/bar/..#Logf">foo/bar</a>, and
 	<a href="https://pkg.go.dev/builtin#string">example.com</a>.
 </p>
@@ -247,6 +248,7 @@ func TestReplaceRelLinks(t *testing.T) {
 <p>
 	This package uses
 	<a href="/base/txtar">txtar</a>,
+	<a href="/base/testutil/internal/workshop">internal/workshop</a>,
 	<a href="/base/foo#Logf">foo/bar</a>, and
 	<a href="https://pkg.go.dev/builtin#string">example.com</a>.
 </p>

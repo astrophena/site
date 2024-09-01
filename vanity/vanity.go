@@ -509,8 +509,8 @@ func (p *pkg) replaceRelLinks(c *Config) {
 			return absPath
 		}
 		// If the link doesn't contain a slash, it's a relative link to the package
-		// root.
-		if !strings.Contains(link, "/") {
+		// root. The same case for missing slash in the beginning.
+		if !strings.Contains(link, "/") || (!strings.HasPrefix(link, "/") && !isFullURL(link)) {
 			absPath := filepath.Join(basePath, link)
 			return absPath
 		}
