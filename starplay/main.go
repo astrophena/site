@@ -24,7 +24,11 @@ func run() js.Func {
 		}
 
 		if _, err := starlark.ExecFileOptions(
-			&syntax.FileOptions{},
+			&syntax.FileOptions{
+				While:           true,
+				TopLevelControl: true,
+				GlobalReassign:  true,
+			},
 			thread,
 			"code.star",
 			script,
