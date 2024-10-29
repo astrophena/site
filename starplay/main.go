@@ -13,20 +13,10 @@ import (
 
 func run() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
-		if len(args) != 1 {
-			return "no arguments passed"
-		}
+		input := js.Global().Get("document").Call("getElementById", "input")
+		output := js.Global().Get("document").Call("getElementById", "output")
 
-		doc := js.Global().Get("document")
-		if !doc.Truthy() {
-			return "unable to get document object"
-		}
-		outputArea := doc.Call("getElementById", "output")
-		if !outputArea.Truthy() {
-			return "unable to get output text area"
-		}
-
-		script := args[0].String()
+		script := input.Get("value").String()
 
 		var buf bytes.Buffer
 		thread := &starlark.Thread{
@@ -40,11 +30,12 @@ func run() js.Func {
 			script,
 			nil,
 		); err != nil {
-			outputArea.Set("value", err.Error())
+			js.Global().Call("alert", err.Error())
+			output.Set("value", "")
 			return nil
 		}
 
-		outputArea.Set("value", buf.String())
+		output.Set("value", buf.String())
 		return nil
 	})
 }

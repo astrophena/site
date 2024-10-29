@@ -14,15 +14,17 @@
 
 <h1>Starlark Playground</h1>
 
+<p>This interactive playground allows you to experiment with the <a href="https://github.com/google/starlark-go/blob/master/doc/spec.md">Starlark programming language</a> directly in the browser, using WebAssembly.</p>
+
 <div class="playground">
-  <textarea id="input" name="input" cols="80" rows="20">
+  <textarea id="input" name="input">
 # You can edit this code!
 
 def hello(name):
-    print(&quot;Hello, %s!&quot; % name)
+    print("Hello, %s!" % name)
 
-hello(&quot;World&quot;)
+hello("world")
 </textarea>
-  <textarea id="output" name="output" cols="80" rows="20" disabled></textarea>
-  <input id="run" type="submit" name="button" value="Run" onclick="run(input.value)"/>
+  <textarea id="output" name="output" disabled></textarea>
+  <button id="run" onclick="run()">Run</button>
 </div>
