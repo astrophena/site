@@ -14,8 +14,15 @@
 
 <h1>Starlark Playground</h1>
 
-<div class="container">
-  <textarea id="input" name="input" cols="80" rows="20"></textarea>
+<div class="playground">
+  <textarea id="input" name="input" cols="80" rows="20">
+# You can edit this code!
+
+def hello(name):
+    print(&quot;Hello, %s!&quot; % name)
+
+hello(&quot;World&quot;)
+</textarea>
   <textarea id="output" name="output" cols="80" rows="20" disabled></textarea>
+  <input id="run" type="submit" name="button" value="Run" onclick="run(input.value)"/>
 </div>
-<input id="button" type="submit" name="button" value="Run" onclick="run(input.value)"/>
