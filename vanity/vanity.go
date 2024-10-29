@@ -54,7 +54,7 @@ var tplFS embed.FS
 
 const highlightTheme = "native" // doc2go syntax highlighting theme
 
-// Build builds a site based on the provided Config.
+// Build builds a site based on the provided [Config].
 func Build(ctx context.Context, c *Config) error {
 	// Initialize internal state.
 	if c.Logf == nil {
