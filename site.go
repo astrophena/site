@@ -207,7 +207,7 @@ func Build(c *Config) error {
 	}
 
 	// Copy static files.
-	if err := filepath.WalkDir(filepath.Join(b.c.Src, "static"), b.copyStatic); err != nil {
+	if err := os.CopyFS(b.c.Dst, os.DirFS(filepath.Join(b.c.Src, "static"))); err != nil {
 		return err
 	}
 
@@ -723,43 +723,6 @@ func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error
 
 	_, err = buf.WriteTo(w)
 	return err
-}
-
-func (b *buildContext) copyStatic(path string, d fs.DirEntry, err error) error {
-	if err != nil {
-		return err
-	}
-
-	if d.IsDir() {
-		return nil
-	}
-
-	from, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer from.Close()
-
-	toPath, err := filepath.Rel(filepath.Join(b.c.Src, "static"), path)
-	if err != nil {
-		return err
-	}
-	toPath = filepath.Join(b.c.Dst, toPath)
-
-	if err := os.MkdirAll(filepath.Dir(toPath), 0o755); err != nil {
-		return err
-	}
-	to, err := os.Create(toPath)
-	if err != nil {
-		return err
-	}
-	defer to.Close()
-
-	if _, err := io.Copy(to, from); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (b *buildContext) buildFeed() error {

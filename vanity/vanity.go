@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -237,7 +236,7 @@ func Build(ctx context.Context, c *Config) error {
 		"static/js/",
 		"templates/",
 	} {
-		if err := copyDir(dir, filepath.Join(siteDir, dir)); err != nil {
+		if err := os.CopyFS(filepath.Join(siteDir, dir), os.DirFS(dir)); err != nil {
 			return err
 		}
 	}
@@ -293,77 +292,6 @@ func (b *buildContext) buildPage(path string, page *site.Page, tmpl string, data
 	}
 
 	return os.WriteFile(path, buf.Bytes(), 0o644)
-}
-
-// copyDir copies a directory from source to destination, recursively.
-// It sets permissions to 0o644 for files and 0o755 for directories.
-func copyDir(source string, dest string) error {
-	sourceInfo, err := os.Stat(source)
-	if err != nil {
-		return err
-	}
-
-	if !sourceInfo.IsDir() {
-		return fmt.Errorf("source is not a directory: %s", source)
-	}
-
-	// Create destination dir with same permission bits.
-	err = os.MkdirAll(dest, sourceInfo.Mode().Perm()|os.ModeDir)
-	if err != nil {
-		return err
-	}
-
-	files, err := os.ReadDir(source)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		sourcePath := filepath.Join(source, file.Name())
-		destPath := filepath.Join(dest, file.Name())
-
-		fileInfo, err := os.Stat(sourcePath)
-		if err != nil {
-			return err
-		}
-
-		switch fileInfo.Mode() & os.ModeType {
-		case os.ModeDir:
-			if err := copyDir(sourcePath, destPath); err != nil {
-				return err
-			}
-		default:
-			if err := copyFile(sourcePath, destPath, fileInfo.Mode().Perm()|0o400); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// copyFile copies a file from source to destination with specific permissions.
-func copyFile(source, dest string, perm os.FileMode) error {
-	in, err := os.Open(source)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	out, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	if err := out.Chmod(perm); err != nil {
-		return err
-	}
-
-	_, err = io.Copy(out, in)
-	if err != nil {
-		return err
-	}
-	return out.Sync()
 }
 
 type repo struct {
