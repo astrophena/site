@@ -2,9 +2,7 @@
 // Use of this source code is governed by the ISC
 // license that can be found in the LICENSE file.
 
-// Package vanity provides functionality for building a static site that lists
-// Go packages from GitHub repositories. The package handles fetching repository
-// data, generating documentation, and building the site using templates.
+// Package vanity builds https://go.astrophena.name.
 package vanity
 
 import (
@@ -33,7 +31,7 @@ import (
 	"go.astrophena.name/site"
 )
 
-// Config holds the configuration for building the static site.
+// Config represents a build configuration.
 type Config struct {
 	// Dir is a directory where the generated site will be stored.
 	Dir string
@@ -57,8 +55,7 @@ var tplFS embed.FS
 
 const highlightTheme = "native" // doc2go syntax highlighting theme
 
-// Build constructs the static site by fetching repository data from GitHub,
-// generating documentation, and building the site using templates.
+// Build builds a site based on the provided Config.
 func Build(ctx context.Context, c *Config) error {
 	// Initialize internal state.
 	if c.Logf == nil {

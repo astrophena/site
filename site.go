@@ -149,7 +149,7 @@ func (c *Config) setDefaults() {
 	}
 }
 
-// Build builds a site based on the provided Config.
+// Build builds a site based on the provided [Config].
 func Build(c *Config) error {
 	c.setDefaults()
 	b := newBuildContext(c)
