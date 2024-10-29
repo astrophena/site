@@ -263,9 +263,7 @@ func TestReplaceRelLinks(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tc.pkg.FullDoc = tc.in
 			tc.pkg.replaceRelLinks(c)
-			if tc.pkg.FullDoc != tc.want {
-				t.Errorf("Expected:\n%s\nGot:\n%s", tc.want, tc.pkg.FullDoc)
-			}
+			testutil.AssertEqual(t, tc.pkg.FullDoc, tc.want)
 		})
 	}
 }
