@@ -1,5 +1,6 @@
 //go:build js
 
+// Starplay implements the WebAssembly module that powers https://astrophena.name/starplay.
 package main
 
 import (
