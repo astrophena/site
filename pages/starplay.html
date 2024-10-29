@@ -1,0 +1,21 @@
+<!-- vim: set ft=gotplhtml: -->
+{
+  "title": "Starlark Playground",
+  "template": "main",
+  "permalink": "/starplay",
+  "css": [
+    "/css/starplay.css"
+  ],
+  "js": [
+    "/js/go_wasm_exec.js",
+    "/js/starplay.js"
+  ]
+}
+
+<h1>Starlark Playground</h1>
+
+<div class="container">
+  <textarea id="input" name="input" cols="80" rows="20"></textarea>
+  <textarea id="output" name="output" cols="80" rows="20" disabled></textarea>
+</div>
+<input id="button" type="submit" name="button" value="Run" onclick="run(input.value)"/>

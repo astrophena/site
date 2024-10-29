@@ -22,9 +22,7 @@ jobs:
       - name: 'Test'
         run: 'go test -race ./...'
       - name: 'Build'
-        run: |
-          make -C static/starplay
-          ./build.go -prod
+        run: './build.go -prod'
       - name: 'Setup GitHub Pages'
         uses: 'actions/configure-pages@v5'
       - name: 'Upload built site'

@@ -579,6 +579,8 @@ type Page struct {
 	MetaTags    map[string]string `json:"meta_tags,omitempty"`    // meta_tags: Determines additional HTML meta tags that will be added to this page, optional.
 	Summary     string            `json:"summary,omitempty"`      // summary: Page summary, used in RSS feed, optional.
 	Type        string            `json:"type,omitempty"`         // type: Used to distinguish different kinds of pages, page by default.
+	CSS         []string          `json:"css,omitempty"`          // css: Additional CSS files that should be loaded, optional.
+	JS          []string          `json:"js,omitempty"`           // js: Additional JavaScript files that should be loaded, optional.
 
 	path     string // path to the page source
 	dstPath  string // where to write the built page

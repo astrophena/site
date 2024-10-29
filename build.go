@@ -10,10 +10,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 
@@ -25,8 +28,9 @@ func main() {
 	log.SetFlags(0)
 
 	var (
-		prodFlag   = flag.Bool("prod", false, "Build in a production mode.")
-		vanityFlag = flag.Bool("vanity", false, "Build vanity import site instead of main one.")
+		prodFlag     = flag.Bool("prod", false, "Build in a production mode.")
+		skipStarplay = flag.Bool("skip-starplay", false, "Skip building Starlark playground WASM module.")
+		vanityFlag   = flag.Bool("vanity", false, "Build vanity import site instead of main one.")
 	)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: ./build.go [flags] [dir]\n")
@@ -35,11 +39,8 @@ func main() {
 	}
 	flag.Parse()
 
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err := os.Stat(filepath.Join(wd, "go.mod")); os.IsNotExist(err) {
+	wd := try(os.Getwd())
+	if _, err := os.Stat(filepath.Join(wd, "go.mod")); errors.Is(err, fs.ErrNotExist) {
 		log.Fatal("Are you at repo root?")
 	} else if err != nil {
 		log.Fatal(err)
@@ -54,15 +55,20 @@ func main() {
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 		defer cancel()
 
-		if err := vanity.Build(ctx, &vanity.Config{
+		must(vanity.Build(ctx, &vanity.Config{
 			Dir:         dir,
 			GitHubToken: os.Getenv("GITHUB_TOKEN"),
 			ImportRoot:  "go.astrophena.name",
-		}); err != nil {
-			log.Fatal(err)
-		}
+		}))
 
 		return
+	}
+
+	if !*skipStarplay {
+		build := exec.Command("go", "build", "-o", filepath.Join("static", "wasm", "starplay.wasm"), "./starplay")
+		build.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
+		build.Stderr = os.Stderr
+		must(build.Run())
 	}
 
 	c := &site.Config{
@@ -70,8 +76,16 @@ func main() {
 		Dst:  dir,
 		Prod: *prodFlag,
 	}
+	must(site.Build(c))
+}
 
-	if err := site.Build(c); err != nil {
+func try[T any](val T, err error) T {
+	must(err)
+	return val
+}
+
+func must(err error) {
+	if err != nil {
 		log.Fatal(err)
 	}
 }

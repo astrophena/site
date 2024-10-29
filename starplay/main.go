@@ -1,7 +1,5 @@
 //go:build js
 
-//go:generate cp "$GOROOT/misc/wasm/wasm_exec.js" .
-
 package main
 
 import (

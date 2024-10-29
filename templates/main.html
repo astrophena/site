@@ -15,6 +15,16 @@
         <meta name="{{ $key }}" content="{{ $value }}">
       {{ end }}
     {{ end }}
+    {{ if .CSS }}
+      {{ range .CSS }}
+        <link rel="stylesheet" href="{{ url . }}" />
+      {{ end }}
+    {{ end }}
+    {{ if .JS }}
+      {{ range .JS }}
+        <script src="{{ url . }}"></script>
+      {{ end }}
+    {{ end }}
     <link rel="icon" href="{{ url "/icons/35x35.webp" }}" />
     <link rel="apple-touch-icon" href="{{ url "/icons/179x179.webp" }}" />
     {{ if not vanity }}
