@@ -3,7 +3,7 @@ module go.astrophena.name/site
 go 1.23
 
 require (
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/russross/blackfriday/v2 v2.1.0
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95
