@@ -65,7 +65,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/feeds"
-	"github.com/russross/blackfriday/v2"
+	"rsc.io/markdown"
 )
 
 // Possible errors, used in tests.
@@ -400,6 +400,7 @@ func (h *staticHandler) serveNotFound(w http.ResponseWriter, r *http.Request) {
 
 type buildContext struct {
 	c         *Config
+	md        *markdown.Parser
 	funcs     template.FuncMap
 	pages     []*Page
 	templates map[string]*template.Template
@@ -407,7 +408,20 @@ type buildContext struct {
 
 func newBuildContext(c *Config) *buildContext {
 	b := &buildContext{
-		c:         c,
+		c: c,
+		md: &markdown.Parser{
+			HeadingID:          true,
+			Strikethrough:      true,
+			TaskList:           true,
+			AutoLinkText:       true,
+			AutoLinkAssumeHTTP: true,
+			Table:              true,
+			Emoji:              true,
+			SmartDot:           true,
+			SmartDash:          true,
+			SmartQuote:         true,
+			Footnote:           true,
+		},
 		templates: make(map[string]*template.Template),
 	}
 
@@ -711,7 +725,8 @@ func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error
 	p.contents = pbuf.Bytes()
 
 	if filepath.Ext(p.path) == ".md" {
-		p.contents = blackfriday.Run(p.contents)
+		doc := b.md.Parse(string(p.contents))
+		p.contents = []byte(markdown.ToHTML(doc))
 	}
 
 	p.contents = htmlCommentRe.ReplaceAll(p.contents, []byte{})
