@@ -259,16 +259,64 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 
 	go func() {
 		c.Logf("Started watching for new changes.")
-		for event := range watcher.Events {
-			if !shouldRebuild(event.Name, event.Op) {
-				continue
-			}
 
-			c.Logf("Changed %s (%v), rebuilding the site.", event.Name, event.Op)
-			if err := Build(c); err != nil {
-				c.Logf("Failed to rebuild the site: %v", err)
+		// FIXME: Debounce closer changes.
+
+		var (
+			changes   = make(chan struct{}, 1) // buffered to avoid blocking
+			buildDone = make(chan struct{})    // signals when a build is done
+		)
+
+		go func() {
+			defer close(changes)
+
+			var pending bool
+
+			for {
+				select {
+				case event := <-watcher.Events:
+					if !shouldRebuild(event.Name, event.Op) {
+						continue
+					}
+
+					if pending {
+						c.Logf("Detected change %s (%v), but build is in progress.", event.Name, event.Op)
+						continue
+					}
+
+					c.Logf("Detected change %s (%v), triggering build.", event.Name, event.Op)
+					pending = true
+					changes <- struct{}{}
+				case <-buildDone:
+					if pending {
+						c.Logf("Accumulated changes detected, triggering new build.")
+						changes <- struct{}{}
+						pending = false
+						continue
+					}
+
+					c.Logf("Build completed with no further changes.")
+					pending = false
+				case <-ctx.Done():
+					return
+				}
 			}
-		}
+		}()
+
+		go func() {
+			defer close(buildDone)
+			for {
+				select {
+				case <-changes:
+					if err := Build(c); err != nil {
+						c.Logf("Failed to rebuild the site: %v", err)
+					}
+					buildDone <- struct{}{}
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
 	}()
 
 	if serveReadyHook != nil {
