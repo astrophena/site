@@ -278,10 +278,6 @@ func (b *buildContext) buildPage(path string, page *site.Page, tmpl string, data
 		return err
 	}
 
-	if len(page.CSS) == 0 {
-		page.CSS = append(page.CSS, "/static/css/vanity.css")
-	}
-
 	frontmatter, err := json.MarshalIndent(page, "", "  ")
 	if err != nil {
 		return err
