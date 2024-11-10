@@ -365,13 +365,3 @@ header a {
 h1 {
   overflow: auto;
 }
-
-/* Vanity import styles. */
-
-span.module {
-  border: .0625rem solid var(--border);
-  color: var(--text);
-  font-size: .75rem;
-  padding: .125rem .625rem;
-  vertical-align: middle;
-}
