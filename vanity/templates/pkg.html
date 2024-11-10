@@ -1,6 +1,7 @@
 <!-- vim: set ft=gotplhtml: -->
 {{ define "pkg" }}
   {{ if not .Repo.Private }}
+    {{ template "repo" .Repo }}
     {{ if .Repo.Archived }}
       <div class="alert">
         {{ if eq .Name "main" }}
@@ -11,10 +12,6 @@
       </div>
     {{ end }}
     {{ .FullDoc }}
-    <details>
-      <summary>Module information</summary>
-      {{ template "repo" .Repo }}
-    </details>
   {{ else }}
     <h1>Whoa there!</h1>
     <p>This module is private.</p>
