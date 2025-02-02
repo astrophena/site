@@ -28,6 +28,8 @@ import (
 	"go.astrophena.name/base/logger"
 	"go.astrophena.name/base/request"
 	"go.astrophena.name/site"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 // Config represents a build configuration.
@@ -401,7 +403,9 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 			return err
 		}
 		pkg.FullDoc = string(fullDoc)
-		pkg.replaceRelLinks(c)
+		if err := pkg.modifyHTML(c); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -409,6 +413,52 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 
 func isFullURL(u string) bool {
 	return strings.HasPrefix(u, "http://") || strings.HasPrefix(u, "https://")
+}
+
+func (p *pkg) modifyHTML(c *Config) error {
+	p.replaceRelLinks(c)
+
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(p.FullDoc))
+	if err != nil {
+		return err
+	}
+
+	if p.Name == "main" {
+		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre id\"command\"##code>$ go install %s</code></pre>", p.ImportPath))
+	}
+
+	var (
+		needTOC bool
+		toc     strings.Builder
+	)
+	toc.WriteString("<h2>Table of Contents</h2><ul>\n")
+
+	doc.Find("[id^=hdr-]").Each(func(i int, s *goquery.Selection) {
+		id, exists := s.Attr("id")
+		if !exists {
+			return
+		}
+		text := s.Text()
+		toc.WriteString(fmt.Sprintf("<li><a href=\"#%s\">%s</a></li>\n", id, text))
+		needTOC = true
+	})
+	toc.WriteString("</ul>\n")
+
+	tocTarget := "h2#pkg-overview"
+	if p.Name == "main" {
+		tocTarget = "pre#command"
+	}
+	if needTOC {
+		doc.Find(tocTarget).AfterHtml(toc.String())
+	}
+
+	html, err := doc.Html()
+	if err != nil {
+		return err
+	}
+	p.FullDoc = html
+
+	return nil
 }
 
 var (
