@@ -424,7 +424,7 @@ func (p *pkg) modifyHTML(c *Config) error {
 	}
 
 	if p.Name == "main" {
-		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre id\"command\"##code>$ go install %s</code></pre>", p.ImportPath))
+		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre><code>$ go install %s</code></pre>", p.ImportPath))
 	}
 
 	var (
@@ -432,7 +432,6 @@ func (p *pkg) modifyHTML(c *Config) error {
 		toc     strings.Builder
 	)
 	toc.WriteString("<h2>Table of Contents</h2><ul>\n")
-
 	doc.Find("[id^=hdr-]").Each(func(i int, s *goquery.Selection) {
 		id, exists := s.Attr("id")
 		if !exists {
@@ -443,13 +442,8 @@ func (p *pkg) modifyHTML(c *Config) error {
 		needTOC = true
 	})
 	toc.WriteString("</ul>\n")
-
-	tocTarget := "h2#pkg-overview"
-	if p.Name == "main" {
-		tocTarget = "pre#command"
-	}
 	if needTOC {
-		doc.Find(tocTarget).AfterHtml(toc.String())
+		doc.Find("h2#pkg-overview").AfterHtml(toc.String())
 	}
 
 	html, err := doc.Html()
