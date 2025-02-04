@@ -443,8 +443,8 @@ func (p *pkg) modifyHTML(c *Config) error {
 	}
 	
 	if p.Name == "main" {
-		doc.Find("h2#pkg-overview").AfterHtml("<p>Install this program:</p>")
 		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre><code>$ go install %s</code></pre>", p.ImportPath))
+		doc.Find("h2#pkg-overview").AfterHtml("<p>Install this program:</p>")
 	}
 
 	html, err := doc.Html()
