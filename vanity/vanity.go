@@ -423,15 +423,11 @@ func (p *pkg) modifyHTML(c *Config) error {
 		return err
 	}
 
-	if p.Name == "main" {
-		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre><code>$ go install %s</code></pre>", p.ImportPath))
-	}
-
 	var (
 		needTOC bool
 		toc     strings.Builder
 	)
-	toc.WriteString("<h2>Table of Contents</h2><ul>\n")
+	toc.WriteString("<h3>Contents</h3><ul>\n")
 	doc.Find("[id^=hdr-]").Each(func(i int, s *goquery.Selection) {
 		id, exists := s.Attr("id")
 		if !exists {
@@ -444,6 +440,11 @@ func (p *pkg) modifyHTML(c *Config) error {
 	toc.WriteString("</ul>\n")
 	if needTOC {
 		doc.Find("h2#pkg-overview").AfterHtml(toc.String())
+	}
+	
+	if p.Name == "main" {
+		doc.Find("h2#pkg-overview").AfterHtml("<p>Install this program:</p>")
+		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre><code>$ go install %s</code></pre>", p.ImportPath))
 	}
 
 	html, err := doc.Html()
