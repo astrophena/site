@@ -1,3 +1,7 @@
+// © 2024 Ilya Mateyko. All rights reserved.
+// Use of this source code is governed by the ISC
+// license that can be found in the LICENSE file.
+
 //go:build js
 
 // Starplay implements the WebAssembly module that powers https://astrophena.name/starplay.
