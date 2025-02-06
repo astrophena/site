@@ -61,3 +61,4 @@ liked.
 - [Miss Scarlet and the Duke (2020)](https://www.imdb.com/title/tt8270592/)
 - [Vigil (2021)](https://www.imdb.com/title/tt11846996/)
 - [The Chelsea Detective (2022)](https://www.imdb.com/title/tt14321914/)
+- [A Complete Unknown (2024)](https://www.imdb.com/title/tt11563598/)
