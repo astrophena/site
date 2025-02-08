@@ -36,6 +36,7 @@ liked.
 - [Penguin Highway (2018)](https://www.imdb.com/title/tt8076344/)
 - [The Social Dilemma (2020)](https://www.imdb.com/title/tt11464826/)
 - [Dungeons & Dragons: Honour Among Thieves (2023)](https://www.imdb.com/title/tt2906216/)
+- [A Complete Unknown (2024)](https://www.imdb.com/title/tt11563598/)
 
 ## Shows {#shows}
 
@@ -61,4 +62,3 @@ liked.
 - [Miss Scarlet and the Duke (2020)](https://www.imdb.com/title/tt8270592/)
 - [Vigil (2021)](https://www.imdb.com/title/tt11846996/)
 - [The Chelsea Detective (2022)](https://www.imdb.com/title/tt14321914/)
-- [A Complete Unknown (2024)](https://www.imdb.com/title/tt11563598/)
