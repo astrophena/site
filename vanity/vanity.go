@@ -441,9 +441,9 @@ func (p *pkg) modifyHTML(c *Config) error {
 	if needTOC {
 		doc.Find("h2#pkg-overview").AfterHtml(toc.String())
 	}
-	
+
 	if p.Name == "main" {
-		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre><code>$ go install %s</code></pre>", p.ImportPath))
+		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre><code>$ go install %s@latest</code></pre>", p.ImportPath))
 		doc.Find("h2#pkg-overview").AfterHtml("<p>Install this program:</p>")
 	}
 
