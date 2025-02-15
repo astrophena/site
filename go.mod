@@ -6,7 +6,6 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gorilla/feeds v1.2.0
-	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95
 	go.astrophena.name/base v0.2.1
 	go.starlark.net v0.0.0-20240925182052-1207426daebd
 	rsc.io/markdown v0.0.0-20240717201619-868a055c40ae
@@ -20,6 +19,7 @@ require (
 	github.com/fluhus/godoc-tricks v1.5.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
+	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
