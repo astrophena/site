@@ -1,6 +1,6 @@
 module go.astrophena.name/site
 
-go 1.23
+go 1.24
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.1
@@ -27,3 +27,5 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 )
+
+tool go.abhg.dev/doc2go
