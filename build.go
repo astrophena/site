@@ -65,7 +65,14 @@ func main() {
 	}
 
 	if !*skipStarplay {
-		build := exec.Command("go", "build", "-o", filepath.Join("static", "wasm", "starplay.wasm"), "./starplay")
+		build := exec.Command(
+			"go",
+			"build",
+			"-ldflags", "-s -w -buildid=",
+			"-trimpath",
+			"-o", filepath.Join("static", "wasm", "starplay.wasm"),
+			"./starplay",
+		)
 		build.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
 		build.Stderr = os.Stderr
 		must(build.Run())
