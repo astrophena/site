@@ -68,6 +68,8 @@ import (
 	"rsc.io/markdown"
 )
 
+//go:generate cp $GOROOT/lib/wasm/wasm_exec.js static/js/go_wasm_exec.js
+
 // Possible errors, used in tests.
 var (
 	errFrontmatterSplit        = errors.New("failed to split frontmatter and contents")
