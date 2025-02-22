@@ -6,4 +6,5 @@
 
 # Tools
 
+- [Personal tools in Go](https://go.astrophena.name/tools)
 - [Starlark Playground]({{ url "/starplay" }})
