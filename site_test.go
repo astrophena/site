@@ -393,7 +393,7 @@ func TestNavLinkTemplateFunc(t *testing.T) {
 			title:    "Hello, world!",
 			iconName: "hello",
 			path:     "/hello",
-			want:     "<a href=\"https://astrophena.name/hello\" class=\"current\">\n<svg class=\"icon\" aria-hidden=\"true\">\n  <use xlink:href=\"/icons/sprite.svg#icon-hello\"/>\n</svg>Hello, world!</a>",
+			want:     "<a href=\"https://astrophena.name/hello\">\n<svg class=\"icon\" aria-hidden=\"true\">\n  <use xlink:href=\"/icons/sprite.svg#icon-hello\"/>\n</svg>Hello, world!</a>",
 		},
 	}
 

@@ -507,9 +507,19 @@ func (b *buildContext) image(path, caption string) template.HTML {
 }
 
 func (b *buildContext) navLink(p *Page, title, iconName, path string) template.HTML {
+	var highlight bool
+
+	// On vanity site always highlight packages link, and nothing else.
+	if b.c.Vanity {
+		if path == b.c.BaseURL.String() {
+			highlight = true
+		}
+	} else if p.Permalink == path {
+		highlight = true
+	}
+
 	var add string
-	// On vanity site always highlight packages link.
-	if p.Permalink == path || (b.c.Vanity && path == "https://go.astrophena.name") {
+	if highlight {
 		add = ` class="current"`
 	}
 	var u string
