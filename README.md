@@ -1,6 +1,6 @@
 # [astrophena.name](https://astrophena.name)
 
-This is my personal site.
+This is my personal website.
 
 ## Serving locally
 
