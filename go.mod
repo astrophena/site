@@ -28,4 +28,9 @@ require (
 	golang.org/x/tools v0.24.0 // indirect
 )
 
+tool (
+	go.astrophena.name/site/internal/tools/build
+	go.astrophena.name/site/internal/tools/serve
+)
+
 tool go.abhg.dev/doc2go

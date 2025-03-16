@@ -27,7 +27,7 @@ import (
 
 	"go.astrophena.name/base/logger"
 	"go.astrophena.name/base/request"
-	"go.astrophena.name/site"
+	"go.astrophena.name/site/internal/site"
 
 	"github.com/PuerkitoBio/goquery"
 )

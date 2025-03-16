@@ -1,10 +1,6 @@
-//usr/bin/env go run $0 $@; exit $?
-
 // © 2022 Ilya Mateyko. All rights reserved.
 // Use of this source code is governed by the ISC
 // license that can be found in the LICENSE file.
-
-//go:build ignore
 
 package main
 
@@ -20,8 +16,8 @@ import (
 	"os/signal"
 	"path/filepath"
 
-	"go.astrophena.name/site"
-	"go.astrophena.name/site/vanity"
+	"go.astrophena.name/site/internal/site"
+	"go.astrophena.name/site/internal/vanity"
 )
 
 func main() {
@@ -33,7 +29,7 @@ func main() {
 		vanityFlag   = flag.Bool("vanity", false, "Build vanity import site instead of main one.")
 	)
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: ./build.go [flags] [dir]\n")
+		fmt.Fprintf(os.Stderr, "Usage: go tool build [flags] [dir]\n")
 		fmt.Fprintf(os.Stderr, "Available flags:\n")
 		flag.PrintDefaults()
 	}
@@ -71,7 +67,7 @@ func main() {
 			"-ldflags", "-s -w -buildid=",
 			"-trimpath",
 			"-o", filepath.Join("static", "wasm", "starplay.wasm"),
-			"./starplay",
+			"./internal/starplay",
 		)
 		build.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
 		build.Stderr = os.Stderr

@@ -19,9 +19,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"go.astrophena.name/base/testutil"
 	"go.astrophena.name/base/txtar"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 var update = flag.Bool("update", false, "update golden files in testdata")
@@ -70,6 +71,7 @@ func TestServe(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		if err := Serve(ctx, &Config{
+			Src:  "../..",
 			Dst:  t.TempDir(),
 			Logf: t.Logf,
 		}, addr); err != nil {

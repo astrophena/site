@@ -5,7 +5,6 @@
 package vanity
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -30,7 +29,7 @@ var repos = []repo{
 		Private:     false,
 		Description: "Not a Go module.",
 		Archived:    false,
-		CloneURL:    filepath.Join("vanity", "testdata", "nogomod.bundle"),
+		CloneURL:    filepath.Join("internal", "vanity", "testdata", "nogomod.bundle"),
 		Owner:       &owner{Login: "example"},
 	},
 	{
@@ -39,7 +38,7 @@ var repos = []repo{
 		Private:     false,
 		Description: "Doesn't have root package.",
 		Archived:    false,
-		CloneURL:    filepath.Join("vanity", "testdata", "noroot.bundle"),
+		CloneURL:    filepath.Join("internal", "vanity", "testdata", "noroot.bundle"),
 		Owner:       &owner{Login: "example"},
 	},
 	{
@@ -48,7 +47,7 @@ var repos = []repo{
 		Private:     false,
 		Description: "Package nothing does nothing.",
 		Archived:    false,
-		CloneURL:    filepath.Join("vanity", "testdata", "nothing.bundle"),
+		CloneURL:    filepath.Join("internal", "vanity", "testdata", "nothing.bundle"),
 		Owner:       &owner{Login: "example"},
 	},
 	{
@@ -57,7 +56,7 @@ var repos = []repo{
 		Private:     false,
 		Description: "Package base does base.",
 		Archived:    false,
-		CloneURL:    filepath.Join("vanity", "testdata", "base.bundle"),
+		CloneURL:    filepath.Join("internal", "vanity", "testdata", "base.bundle"),
 		Owner:       &owner{Login: "example"},
 	},
 }
@@ -88,7 +87,7 @@ var filesForRepo = map[string][]file{
 var inspect = flag.Bool("inspect", false, "print location of test site for inspection")
 
 func TestMain(m *testing.M) {
-	if err := os.Chdir(".."); err != nil {
+	if err := os.Chdir("../.."); err != nil {
 		log.Fatalf("Changing working directory failed: %v", err)
 	}
 	flag.Parse()
@@ -115,7 +114,7 @@ func TestBuild(t *testing.T) {
 		ImportRoot:  "example.com",
 		HTTPClient:  testutil.MockHTTPClient(testHandler(t)),
 	}
-	if err := Build(context.Background(), c); err != nil {
+	if err := Build(t.Context(), c); err != nil {
 		t.Fatal(err)
 	}
 

@@ -1,6 +1,6 @@
 # [astrophena.name](https://astrophena.name)
 
-This is my personal site and a [Go] package that generates it.
+This is my personal site.
 
 ## Serving locally
 
@@ -9,7 +9,7 @@ You need the latest [Go] installed.
 ```sh
 $ git clone https://github.com/astrophena/site
 $ cd site
-$ ./serve.go
+$ go tool serve
 ```
 
 Open http://localhost:3000 in your browser.

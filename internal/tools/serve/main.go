@@ -1,10 +1,6 @@
-//usr/bin/env go run $0 $@; exit $?
-
 // © 2022 Ilya Mateyko. All rights reserved.
 // Use of this source code is governed by the ISC
 // license that can be found in the LICENSE file.
-
-//go:build ignore
 
 package main
 
@@ -17,7 +13,7 @@ import (
 	"os/signal"
 	"path/filepath"
 
-	"go.astrophena.name/site"
+	"go.astrophena.name/site/internal/site"
 )
 
 func main() {
@@ -25,7 +21,7 @@ func main() {
 
 	listenFlag := flag.String("listen", "localhost:3000", "Listen on `host:port`.")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: ./serve.go [flags] [dir]\n")
+		fmt.Fprintf(os.Stderr, "Usage: go tool serve [flags] [dir]\n")
 		fmt.Fprintf(os.Stderr, "Available flags:\n")
 		flag.PrintDefaults()
 	}
