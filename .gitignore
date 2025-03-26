@@ -1,2 +1,4 @@
 /build
+# copied from GOROOT during build
+/static/js/go_wasm_exec.js
 /static/wasm

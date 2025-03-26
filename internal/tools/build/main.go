@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 
 	"go.astrophena.name/site/internal/site"
 	"go.astrophena.name/site/internal/vanity"
@@ -61,6 +62,11 @@ func main() {
 	}
 
 	if !*skipStarplay {
+		// Copy wasm_exec.js from GOROOT to prevent version incompatibility.
+		goroot := strings.TrimSuffix(string(try(exec.Command("go", "env", "GOROOT").Output())), "\n")
+		wasmExecJS := try(os.ReadFile(filepath.Join(goroot, "lib", "wasm", "wasm_exec.js")))
+		must(os.WriteFile(filepath.Join("static", "js", "go_wasm_exec.js"), wasmExecJS, 0o644))
+
 		build := exec.Command(
 			"go",
 			"build",
