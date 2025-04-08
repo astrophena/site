@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.2
-	github.com/fsnotify/fsnotify v1.8.0
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
 	go.astrophena.name/base v0.4.0
 	go.starlark.net v0.0.0-20240925182052-1207426daebd
