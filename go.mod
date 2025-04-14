@@ -3,7 +3,7 @@ module go.astrophena.name/site
 go 1.24
 
 require (
-	github.com/PuerkitoBio/goquery v1.10.2
+	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
 	go.astrophena.name/base v0.4.0
@@ -21,10 +21,10 @@ require (
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 // indirect
 	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 	golang.org/x/tools v0.31.0 // indirect
 )
 
