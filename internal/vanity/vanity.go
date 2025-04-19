@@ -424,8 +424,8 @@ func (p *pkg) modifyHTML(c *Config) error {
 	}
 
 	var (
-		needTOC bool
-		toc     strings.Builder
+		tocHeadings int
+		toc         strings.Builder
 	)
 	toc.WriteString("<h3>Contents</h3><ul>\n")
 	doc.Find("[id^=hdr-]").Each(func(i int, s *goquery.Selection) {
@@ -435,10 +435,10 @@ func (p *pkg) modifyHTML(c *Config) error {
 		}
 		text := s.Text()
 		toc.WriteString(fmt.Sprintf("<li><a href=\"#%s\">%s</a></li>\n", id, text))
-		needTOC = true
+		tocHeadings += 1
 	})
 	toc.WriteString("</ul>\n")
-	if needTOC {
+	if tocHeadings > 1 {
 		doc.Find("h2#pkg-overview").AfterHtml(toc.String())
 	}
 
