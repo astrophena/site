@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
-	go.astrophena.name/base v0.4.0
+	go.astrophena.name/base v0.5.0
 	go.starlark.net v0.0.0-20240925182052-1207426daebd
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
