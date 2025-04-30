@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"embed"
-	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"

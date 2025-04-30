@@ -1,3 +1,9 @@
+<!--
+© 2025 Ilya Mateyko. All rights reserved.
+Use of this source code is governed by the CC-BY-SA
+license that can be found in the LICENSE.md file.
+-->
+
 # [astrophena.name](https://astrophena.name)
 
 This is my personal website.
