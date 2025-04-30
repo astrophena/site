@@ -51,7 +51,9 @@ var headers = map[string]string{
 	".star": `# ©`,
 }
 
-var exclusions = []string{}
+var exclusions = []string{
+	"LICENSE.md",
+}
 
 func isExcluded(path string) bool {
 	for _, ex := range exclusions {
