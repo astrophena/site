@@ -381,7 +381,7 @@ func TestNavLinkTemplateFunc(t *testing.T) {
 		title    string
 		iconName string
 		path     string
-		wantIn   string
+		want     string
 	}{
 		"Vanity is true": {
 			c: &Config{
@@ -395,7 +395,7 @@ func TestNavLinkTemplateFunc(t *testing.T) {
 			title:    "Hello, world!",
 			iconName: "hello",
 			path:     "/hello",
-			wantIn:   "<a href=\"https://astrophena.name/hello",
+			want:     "<a href=\"https://astrophena.name/hello\">\n<svg class=\"icon\" aria-hidden=\"true\">\n  <use xlink:href=\"/icons/sprite.svg#icon-hello\"/>\n</svg>Hello, world!</a>",
 		},
 	}
 
@@ -406,9 +406,7 @@ func TestNavLinkTemplateFunc(t *testing.T) {
 			b.c.setDefaults()
 
 			got := b.navLink(tc.p, tc.title, tc.iconName, tc.path)
-			if !strings.Contains(string(got), tc.wantIn) {
-				t.Errorf("got %q, want to contain %q", string(got), tc.wantIn)
-			}
+			testutil.AssertEqual(t, string(got), tc.want)
 		})
 	}
 }

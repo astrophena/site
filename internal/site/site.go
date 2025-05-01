@@ -484,13 +484,10 @@ func newBuildContext(c *Config) *buildContext {
 }
 
 func (b *buildContext) icon(name string) template.HTML {
-	// See https://forum.bricksbuilder.io/t/no-bug-svg-icon-flashing-when-loading-page/30777.
 	return template.HTML(fmt.Sprintf(`
-<div class="icon-container">
 <svg class="icon" aria-hidden="true">
   <use xlink:href="%s#icon-%s"/>
-</svg>
-</div>`, b.url("/icons/sprite.svg"), name))
+</svg>`, b.url("/icons/sprite.svg"), name))
 }
 
 func (b *buildContext) image(path, caption string) template.HTML {
