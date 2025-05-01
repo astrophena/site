@@ -319,6 +319,10 @@ li {
   margin-top: -1rem;
 }
 
+.icon-container {
+  display: inline;
+}
+
 .icon {
   width: 24px;
   height: 24px;
