@@ -208,20 +208,12 @@ func Build(ctx context.Context, c *Config) error {
 		// If the repository is not private and has only internal packages,
 		// create a special page for the repository root.
 		if repo.HasOnlyInternalPackages && !repo.Private {
-			dummyPkgForRepoRoot := &pkg{
-				ImportPath: c.ImportRoot + "/" + repo.Name,
-				BasePath:   repo.Name,
-				Repo:       repo,
-			}
-			if err := b.buildPage(filepath.Join(siteDir, "pages", repo.Name+".html"), &site.Page{
-				Title:       dummyPkgForRepoRoot.ImportPath,
-				Template:    "main",
-				Type:        "page",
-				Permalink:   "/" + repo.Name,
-				MetaTags:    metaTagsForRepo(c, repo),
-				ContentOnly: true,
-			}, "pkg", dummyPkgForRepoRoot); err != nil {
-				return err
+			repo.Pkgs = []*pkg{
+				{
+					ImportPath: c.ImportRoot + "/" + repo.Name,
+					BasePath:   repo.Name,
+					Repo:       repo,
+				},
 			}
 		}
 
@@ -241,6 +233,11 @@ func Build(ctx context.Context, c *Config) error {
 			}
 		}
 
+		contentOnly := repo.Private
+		if repo.HasOnlyInternalPackages {
+			contentOnly = true
+		}
+
 		for _, pkg := range repo.Pkgs {
 			if err := b.buildPage(filepath.Join(siteDir, "pages", pkg.BasePath+".html"), &site.Page{
 				Title:       pkg.ImportPath,
@@ -248,7 +245,7 @@ func Build(ctx context.Context, c *Config) error {
 				Type:        "page",
 				Permalink:   "/" + pkg.BasePath,
 				MetaTags:    metaTagsForRepo(c, repo),
-				ContentOnly: repo.Private,
+				ContentOnly: contentOnly,
 			}, "pkg", pkg); err != nil {
 				return err
 			}
