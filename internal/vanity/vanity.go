@@ -179,6 +179,9 @@ func Build(ctx context.Context, c *Config) error {
 				return err
 			}
 			p.Repo = repo
+			if strings.Contains(p.BasePath, "internal") {
+				continue
+			}
 			repo.Pkgs = append(repo.Pkgs, p)
 		}
 	}
@@ -202,10 +205,6 @@ func Build(ctx context.Context, c *Config) error {
 		}
 
 		for _, pkg := range repo.Pkgs {
-			if strings.Contains(pkg.BasePath, "internal") {
-				continue
-			}
-
 			if err := b.buildPage(filepath.Join(siteDir, "pages", pkg.BasePath+".html"), &site.Page{
 				Title:       pkg.ImportPath,
 				Template:    "main",
