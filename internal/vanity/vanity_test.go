@@ -59,28 +59,42 @@ var repos = []repo{
 		CloneURL:    filepath.Join("internal", "vanity", "testdata", "base.bundle"),
 		Owner:       &owner{Login: "example"},
 	},
+	{
+		Name:        "internalonlyrepo",
+		URL:         "https://api.github.com/repos/example/internalonlyrepo",
+		Private:     false,
+		Description: "Repo with only internal packages.",
+		Archived:    false,
+		CloneURL:    filepath.Join("internal", "vanity", "testdata", "internalonlyrepo.bundle"),
+		Owner:       &owner{Login: "example"},
+	},
 }
 
 // TODO: maybe generate this from Git bundle?
 var filesForRepo = map[string][]file{
-	"nogomod": []file{
+	"nogomod": {
 		{Path: "README.md"},
 	},
-	"noroot": []file{
+	"noroot": {
 		{Path: "go.mod"},
 		{Path: "hello/hello.go"},
 	},
-	"nothing": []file{
+	"nothing": {
 		{Path: "go.mod"},
 		{Path: "nothing.go"},
 	},
-	"base": []file{
+	"base": {
 		{Path: "LICENSE.md"},
 		{Path: "README.md"},
 		{Path: "base.go"},
 		{Path: "go.mod"},
 		{Path: "testutil/testutil.go"},
 		{Path: "txtar/txtar.go"},
+	},
+	"internalonlyrepo": {
+		{Path: "go.mod"},
+		{Path: "internal/pkg1/pkg1.go"},
+		{Path: "internal/deeper/pkg2/pkg2.go"},
 	},
 }
 
@@ -126,6 +140,15 @@ func TestBuild(t *testing.T) {
 		"css/main.css",
 	} {
 		wantFile(t, filepath.Join(dir, f))
+	}
+
+	// Check that internalonlyrepo contains only a placeholder.
+	internalOnlyPage, err := os.ReadFile(filepath.Join(dir, "internalonlyrepo.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(internalOnlyPage), "This repository does not contain any importable packages.") {
+		t.Errorf("internalonlyrepo page should contain only a placeholder, got:\n\t%s", internalOnlyPage)
 	}
 
 	if *inspect {
