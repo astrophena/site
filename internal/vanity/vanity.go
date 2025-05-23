@@ -179,15 +179,52 @@ func Build(ctx context.Context, c *Config) error {
 				return err
 			}
 			p.Repo = repo
-			if strings.Contains(p.BasePath, "internal") {
-				continue
-			}
 			repo.Pkgs = append(repo.Pkgs, p)
+		}
+
+		if len(repo.Pkgs) > 0 {
+			allInternal := true
+			for _, pkg := range repo.Pkgs {
+				if !strings.Contains(pkg.ImportPath, "/internal") && !strings.HasPrefix(pkg.ImportPath, "internal") {
+					allInternal = false
+					break
+				}
+			}
+			repo.HasOnlyInternalPackages = allInternal
+		} else {
+			// If there are no packages, it's not considered "all internal" in a way that should hide it.
+			// Or, handle as a special case if needed, but for now, it won't be marked as HasOnlyInternalPackages.
+			repo.HasOnlyInternalPackages = false
+		}
+
+		if repo.HasOnlyInternalPackages {
+			c.Logf("Repository %s has only internal packages.", repo.Name)
+			repo.Pkgs = nil
 		}
 	}
 
 	// Build repo and package pages.
 	for _, repo := range repos {
+		// If the repository is not private and has only internal packages,
+		// create a special page for the repository root.
+		if repo.HasOnlyInternalPackages && !repo.Private {
+			dummyPkgForRepoRoot := &pkg{
+				ImportPath: c.ImportRoot + "/" + repo.Name,
+				BasePath:   repo.Name,
+				Repo:       repo,
+			}
+			if err := b.buildPage(filepath.Join(siteDir, "pages", repo.Name+".html"), &site.Page{
+				Title:       dummyPkgForRepoRoot.ImportPath,
+				Template:    "main",
+				Type:        "page",
+				Permalink:   "/" + repo.Name,
+				MetaTags:    metaTagsForRepo(c, repo),
+				ContentOnly: false,
+			}, "pkg", dummyPkgForRepoRoot); err != nil {
+				return err
+			}
+		}
+
 		if repo.Dir != "" {
 			c.Logf("Generating docs for %s.", repo.Name)
 			git := exec.Command("git", "rev-parse", "--short", "HEAD")
@@ -310,6 +347,8 @@ type repo struct {
 	Dir string `json:"-"`
 	// Go packages that this repo contains
 	Pkgs []*pkg `json:"-"`
+	// HasOnlyInternalPackages is true if all packages in Pkgs are internal.
+	HasOnlyInternalPackages bool `json:"-"`
 }
 
 type owner struct {
