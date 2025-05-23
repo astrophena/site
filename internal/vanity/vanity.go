@@ -219,7 +219,7 @@ func Build(ctx context.Context, c *Config) error {
 				Type:        "page",
 				Permalink:   "/" + repo.Name,
 				MetaTags:    metaTagsForRepo(c, repo),
-				ContentOnly: false,
+				ContentOnly: true,
 			}, "pkg", dummyPkgForRepoRoot); err != nil {
 				return err
 			}

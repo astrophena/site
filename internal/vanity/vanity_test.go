@@ -142,6 +142,15 @@ func TestBuild(t *testing.T) {
 		wantFile(t, filepath.Join(dir, f))
 	}
 
+	// Check that internalonlyrepo is missing from the index page.
+	indexPage, err := os.ReadFile(filepath.Join(dir, "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(indexPage), "internalonlyrepo") {
+		t.Errorf("internalonlyrepo should be missing from the index page, got:\n\t%s", indexPage)
+	}
+
 	// Check that internalonlyrepo contains only a placeholder.
 	internalOnlyPage, err := os.ReadFile(filepath.Join(dir, "internalonlyrepo.html"))
 	if err != nil {
