@@ -156,7 +156,7 @@ func TestBuild(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(internalOnlyPage), "This repository does not contain any importable packages.") {
+	if !strings.Contains(string(internalOnlyPage), "This module does not contain any importable packages.") {
 		t.Errorf("internalonlyrepo page should contain only a placeholder, got:\n\t%s", internalOnlyPage)
 	}
 
