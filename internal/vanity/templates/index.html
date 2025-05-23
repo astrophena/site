@@ -11,7 +11,7 @@ license that can be found in the LICENSE.md file.
   {{ range . }}
     {{ if not .Archived }}
       {{ if not .Private }}
-        {{ if .Pkgs }}
+        {{ if not .HasOnlyInternalPackages }}
           {{ template "repo" . }}
         {{ end }}
       {{ end }}
@@ -22,7 +22,7 @@ license that can be found in the LICENSE.md file.
     {{ range . }}
       {{ if .Archived }}
         {{ if not .Private }}
-          {{ if .Pkgs }}
+          {{ if not .HasOnlyInternalPackages }}
             {{ template "repo" . }}
           {{ end }}
         {{ end }}
