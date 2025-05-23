@@ -233,11 +233,6 @@ func Build(ctx context.Context, c *Config) error {
 			}
 		}
 
-		contentOnly := repo.Private
-		if repo.HasOnlyInternalPackages {
-			contentOnly = true
-		}
-
 		for _, pkg := range repo.Pkgs {
 			if err := b.buildPage(filepath.Join(siteDir, "pages", pkg.BasePath+".html"), &site.Page{
 				Title:       pkg.ImportPath,
@@ -245,7 +240,7 @@ func Build(ctx context.Context, c *Config) error {
 				Type:        "page",
 				Permalink:   "/" + pkg.BasePath,
 				MetaTags:    metaTagsForRepo(c, repo),
-				ContentOnly: contentOnly,
+				ContentOnly: repo.Private,
 			}, "pkg", pkg); err != nil {
 				return err
 			}

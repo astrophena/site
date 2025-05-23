@@ -18,8 +18,8 @@ license that can be found in the LICENSE.md file.
     </p>
     <p>If you are get here by mistake, go to the <a href="https://astrophena.name">home page</a>.</p>
   {{ else if .Repo.HasOnlyInternalPackages }}
-    <h1>{{ .Repo.Name }}</h1>
-    <p>This repository does not contain any importable packages.</p>
+    {{ template "repo" .Repo }}
+    <p>This module does not contain any importable packages.</p>
   {{ else }}
     {{ template "repo" .Repo }}
     {{ if .Repo.Archived }}
