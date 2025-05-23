@@ -34,6 +34,7 @@ require (
 tool (
 	go.astrophena.name/site/internal/devtools/addcopyright
 	go.astrophena.name/site/internal/devtools/build
+	go.astrophena.name/site/internal/devtools/pre-commit
 	go.astrophena.name/site/internal/devtools/serve
 )
 
