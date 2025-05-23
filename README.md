@@ -20,6 +20,14 @@ $ go tool serve
 
 Open http://localhost:3000 in your browser.
 
+## Development
+
+Setting up Git pre-commit hook for development:
+
+```sh
+$ go tool pre-commit
+```
+
 ## License
 
 The content for this website is
