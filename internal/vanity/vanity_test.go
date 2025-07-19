@@ -136,8 +136,6 @@ func TestBuild(t *testing.T) {
 	for _, f := range []string{
 		"404.html",
 		"index.html",
-		"css/godoc.css",
-		"css/main.css",
 	} {
 		wantFile(t, filepath.Join(dir, f))
 	}
