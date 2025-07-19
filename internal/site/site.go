@@ -37,6 +37,8 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -156,6 +158,10 @@ func Build(c *Config) error {
 	if err := filepath.WalkDir(filepath.Join(b.c.Src, "pages"), b.parsePages); err != nil {
 		return err
 	}
+	// Hash static files.
+	if err := filepath.WalkDir(filepath.Join(b.c.Src, "static"), b.hashStatic); err != nil {
+		return err
+	}
 
 	// Sort pages by date. Pages without date are pushed to the end.
 	sort.SliceStable(b.pages, func(i, j int) bool {
@@ -202,11 +208,7 @@ func Build(c *Config) error {
 	}
 
 	// Copy static files.
-	if err := os.CopyFS(b.c.Dst, os.DirFS(filepath.Join(b.c.Src, "static"))); err != nil {
-		return err
-	}
-
-	return nil
+	return filepath.WalkDir(filepath.Join(b.c.Src, "static"), b.copyStatic)
 }
 
 var serveReadyHook func() // used in tests, called when Serve started serving the site
@@ -447,6 +449,7 @@ type buildContext struct {
 	funcs     template.FuncMap
 	pages     []*Page
 	templates map[string]*template.Template
+	static    map[string]string // path -> hashed path (e.g. /css/main.css -> /css/main-[hash].css)
 }
 
 func newBuildContext(c *Config) *buildContext {
@@ -466,6 +469,7 @@ func newBuildContext(c *Config) *buildContext {
 			Footnote:           true,
 		},
 		templates: make(map[string]*template.Template),
+		static:    make(map[string]string),
 	}
 
 	b.funcs = template.FuncMap{
@@ -476,6 +480,7 @@ func newBuildContext(c *Config) *buildContext {
 		"navLink":   b.navLink,
 		"pages":     b.pagesByType,
 		"url":       b.url,
+		"static":    b.getStatic,
 		"vanity":    func() bool { return b.c.Vanity },
 		"vanityURL": b.vanityURL,
 	}
@@ -487,7 +492,7 @@ func (b *buildContext) icon(name string) template.HTML {
 	return template.HTML(fmt.Sprintf(`
 <svg class="icon" aria-hidden="true">
   <use xlink:href="%s#icon-%s"/>
-</svg>`, b.url("/icons/sprite.svg"), name))
+</svg>`, b.getStatic("/icons/sprite.svg"), name))
 }
 
 func (b *buildContext) image(path, caption string) template.HTML {
@@ -495,7 +500,7 @@ func (b *buildContext) image(path, caption string) template.HTML {
   <img alt="%[2]s" src="%[1]s" loading="lazy"/>
   <figcaption>%[2]s</figcaption>
 </figure>`
-	s := fmt.Sprintf(tmpl, b.url(path), caption)
+	s := fmt.Sprintf(tmpl, b.getStatic(path), caption)
 	return template.HTML(s)
 }
 
@@ -566,6 +571,14 @@ func (b *buildContext) vanityURL(base string) string {
 	return u.String()
 }
 
+func (b *buildContext) getStatic(base string) string {
+	hashed, ok := b.static[base]
+	if !ok {
+		return b.url(base)
+	}
+	return b.url(hashed)
+}
+
 func (b *buildContext) parseTemplates(path string, d fs.DirEntry, err error) error {
 	if err != nil {
 		return err
@@ -604,17 +617,7 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 		return err
 	}
 
-	if d.IsDir() {
-		return nil
-	}
-
-	// Ignore files that look like Vim backups.
-	if strings.HasSuffix(path, "~") {
-		return nil
-	}
-
-	// Ignore .gitignore files.
-	if strings.Contains(path, ".gitignore") {
+	if d.IsDir() || isIgnorable(path) {
 		return nil
 	}
 
@@ -633,6 +636,107 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 	}
 
 	return nil
+}
+
+var skipHashing = []string{
+	"blocklists",
+	"robots.txt",
+	"wasm", // for now
+}
+
+func (b *buildContext) hashStatic(path string, d fs.DirEntry, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if d.IsDir() || isIgnorable(path) {
+		return nil
+	}
+
+	for _, skip := range skipHashing {
+		if strings.Contains(path, skip) {
+			return nil
+		}
+	}
+
+	rel, err := filepath.Rel(filepath.Join(b.c.Src, "static"), path)
+	if err != nil {
+		return err
+	}
+
+	buf, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	hash := sha256.Sum256(buf)
+	hashhex := hex.EncodeToString(hash[:])
+	b.static["/"+rel] = "/" + formatStaticName(rel, hashhex)
+
+	return nil
+}
+
+// formatStaticName returns a hash name that inserts hash before the filename's
+// extension. If no extension exists on filename then the hash is appended.
+// Returns blank string the original filename if hash is blank. Returns a blank
+// string if the filename is blank.
+func formatStaticName(filename, hash string) string {
+	if filename == "" {
+		return ""
+	} else if hash == "" {
+		return filename
+	}
+
+	dir, base := path.Split(filename)
+	if i := strings.Index(base, "."); i != -1 {
+		return path.Join(dir, fmt.Sprintf("%s-%s%s", base[:i], hash, base[i:]))
+	}
+	return path.Join(dir, fmt.Sprintf("%s-%s", base, hash))
+}
+
+func (b *buildContext) copyStatic(path string, d fs.DirEntry, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if d.IsDir() || isIgnorable(path) {
+		return nil
+	}
+
+	rel, err := filepath.Rel(filepath.Join(b.c.Src, "static"), path)
+	if err != nil {
+		return err
+	}
+
+	hashed, ok := b.static["/"+rel]
+	if !ok {
+		hashed = "/" + rel
+	}
+
+	buf, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	dst := filepath.Join(b.c.Dst, hashed)
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(dst, buf, 0o644)
+}
+
+func isIgnorable(path string) bool {
+	// Ignore files that look like Vim backups.
+	if strings.HasSuffix(path, "~") {
+		return true
+	}
+
+	// Ignore .gitignore files.
+	if strings.Contains(path, ".gitignore") {
+		return true
+	}
+
+	return false
 }
 
 // Page represents a site page. The exported fields is the front matter fields.
