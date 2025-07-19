@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.astrophena.name/site/internal/devtools"
+	"go.astrophena.name/base/unwrap"
 	"go.astrophena.name/site/internal/site"
 	"go.astrophena.name/site/internal/vanity"
 )
@@ -37,7 +37,7 @@ func main() {
 	}
 	flag.Parse()
 
-	wd := devtools.Try(os.Getwd())
+	wd := unwrap.Value(os.Getwd())
 	if _, err := os.Stat(filepath.Join(wd, "go.mod")); errors.Is(err, fs.ErrNotExist) {
 		log.Fatal("Are you at repo root?")
 	} else if err != nil {
@@ -53,7 +53,7 @@ func main() {
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 		defer cancel()
 
-		devtools.Must(vanity.Build(ctx, &vanity.Config{
+		unwrap.NoError(vanity.Build(ctx, &vanity.Config{
 			Dir:         dir,
 			GitHubToken: os.Getenv("GITHUB_TOKEN"),
 			ImportRoot:  "go.astrophena.name",
@@ -64,9 +64,9 @@ func main() {
 
 	if !*skipStarplay {
 		// Copy wasm_exec.js from GOROOT to prevent version incompatibility.
-		goroot := strings.TrimSuffix(string(devtools.Try(exec.Command("go", "env", "GOROOT").Output())), "\n")
-		wasmExecJS := devtools.Try(os.ReadFile(filepath.Join(goroot, "lib", "wasm", "wasm_exec.js")))
-		devtools.Must(os.WriteFile(filepath.Join("static", "js", "go_wasm_exec.js"), wasmExecJS, 0o644))
+		goroot := strings.TrimSuffix(string(unwrap.Value(exec.Command("go", "env", "GOROOT").Output())), "\n")
+		wasmExecJS := unwrap.Value(os.ReadFile(filepath.Join(goroot, "lib", "wasm", "wasm_exec.js")))
+		unwrap.NoError(os.WriteFile(filepath.Join("static", "js", "go_wasm_exec.js"), wasmExecJS, 0o644))
 
 		build := exec.Command(
 			"go",
@@ -78,7 +78,7 @@ func main() {
 		)
 		build.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
 		build.Stderr = os.Stderr
-		devtools.Must(build.Run())
+		unwrap.NoError(build.Run())
 	}
 
 	c := &site.Config{
@@ -86,5 +86,5 @@ func main() {
 		Dst:  dir,
 		Prod: *prodFlag,
 	}
-	devtools.Must(site.Build(c))
+	unwrap.NoError(site.Build(c))
 }
