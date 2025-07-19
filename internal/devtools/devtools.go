@@ -8,32 +8,14 @@ package devtools
 import (
 	"os"
 	"path/filepath"
+
+	"go.astrophena.name/base/unwrap"
 )
-
-// Must is a helper that wraps a call to a function returning an error
-// and panics if the error is non-nil.
-func Must(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-// Try is a helper that wraps a call to a function returning (T,
-// error) and panics if the error is non-nil.
-func Try[T any](val T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return val
-}
 
 // EnsureRoot checks that the current working directory is at the repository
 // root and panics if it doesn't.
 func EnsureRoot() {
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
+	wd := unwrap.Value(os.Getwd())
 	if _, err := os.Stat(filepath.Join(wd, ".git")); os.IsNotExist(err) {
 		panic("Are you at repo root?")
 	} else if err != nil {
