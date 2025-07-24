@@ -30,14 +30,14 @@ var templates = map[string]string{
 `,
 	".html": `<!--
 © %d Ilya Mateyko. All rights reserved.
-Use of this source code is governed by the CC-BY-SA
+Use of this source code is governed by the CC-BY
 license that can be found in the LICENSE.md file.
 -->
 
 `,
 	".md": `<!--
 © %d Ilya Mateyko. All rights reserved.
-Use of this source code is governed by the CC-BY-SA
+Use of this source code is governed by the CC-BY
 license that can be found in the LICENSE.md file.
 -->
 
