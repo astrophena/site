@@ -40,6 +40,17 @@ license that can be found in the LICENSE.md file.
     <link rel="stylesheet" href="{{ static "/css/main.css" }}" />
     <script defer src="{{ static "/js/lightense.min.js" }}"></script>
     <script defer src="{{ static "/js/main.js"}}"></script>
+    <script type="speculationrules">
+      {
+        "prerender": [
+          {
+            "where": {
+              "selector_matches": "a"
+            }
+          }
+        ]
+      }
+    </script>
     <title>{{ .Title }}</title>
   </head>
   <body>
