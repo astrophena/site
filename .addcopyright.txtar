@@ -1,0 +1,38 @@
+-- exclusions.json --
+[
+  "LICENSE.md"
+]
+-- template.go --
+// © %d Ilya Mateyko. All rights reserved.
+// Use of this source code is governed by the ISC
+// license that can be found in the LICENSE.md file.
+
+-- header.go --
+// ©
+-- template.star --
+# © %d Ilya Mateyko. All rights reserved.
+# Use of this source code is governed by the ISC
+# license that can be found in the LICENSE.md file.
+
+-- header.star --
+# ©
+-- template.html --
+<!--
+© %d Ilya Mateyko. All rights reserved.
+Use of this source code is governed by the CC-BY
+license that can be found in the LICENSE.md file.
+-->
+
+-- header.html --
+<!--
+© 
+-- template.md --
+<!--
+© %d Ilya Mateyko. All rights reserved.
+Use of this source code is governed by the CC-BY
+license that can be found in the LICENSE.md file.
+-->
+
+-- header.md --
+<!--
+© 
