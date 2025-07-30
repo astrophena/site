@@ -639,7 +639,6 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 }
 
 var skipHashing = []string{
-	"blocklists",
 	"robots.txt",
 	"wasm", // for now
 }
