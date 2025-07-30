@@ -1,38 +1,61 @@
--- exclusions.json --
+-- copyright/exclusions.json --
 [
   "LICENSE.md"
 ]
--- template.go --
+-- copyright/template.go --
 // © %d Ilya Mateyko. All rights reserved.
 // Use of this source code is governed by the ISC
 // license that can be found in the LICENSE.md file.
 
--- header.go --
+-- copyright/header.go --
 // ©
--- template.star --
+-- copyright/template.star --
 # © %d Ilya Mateyko. All rights reserved.
 # Use of this source code is governed by the ISC
 # license that can be found in the LICENSE.md file.
 
--- header.star --
+-- copyright/header.star --
 # ©
--- template.html --
+-- copyright/template.html --
 <!--
 © %d Ilya Mateyko. All rights reserved.
 Use of this source code is governed by the CC-BY
 license that can be found in the LICENSE.md file.
 -->
 
--- header.html --
+-- copyright/header.html --
 <!--
 © 
--- template.md --
+-- copyright/template.md --
 <!--
 © %d Ilya Mateyko. All rights reserved.
 Use of this source code is governed by the CC-BY
 license that can be found in the LICENSE.md file.
 -->
 
--- header.md --
+-- copyright/header.md --
 <!--
 © 
+-- pre-commit.json --
+[
+  {
+    "run": ["gofmt", "-d"]
+  },
+  {
+    "run": ["go", "tool", "staticcheck", "./..."]
+  },
+  {
+    "run": ["go", "test", "./..."],
+    "skip_in_ci": true
+  },
+  {
+    "run": ["go", "test", "-race", "./..."],
+    "only_in_ci": true
+  },
+  {
+    "run": ["go", "mod", "tidy", "--diff"]
+  },
+  {
+    "run": ["go", "tool", "addcopyright", "-check"]
+  }
+]
