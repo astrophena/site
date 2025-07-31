@@ -7,50 +7,34 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
-	"log"
-	"os"
-	"os/signal"
 	"path/filepath"
 
+	"go.astrophena.name/base/cli"
+	"go.astrophena.name/site/internal/devtools/internal"
 	"go.astrophena.name/site/internal/site"
 )
 
-func main() {
-	log.SetFlags(0)
+func main() { cli.Main(new(app)) }
 
-	listenFlag := flag.String("listen", "localhost:3000", "Listen on `host:port`.")
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: go tool serve [flags] [dir]\n")
-		fmt.Fprintf(os.Stderr, "Available flags:\n")
-		flag.PrintDefaults()
-	}
-	flag.Parse()
+type app struct {
+	listen string
+}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err := os.Stat(filepath.Join(wd, "go.mod")); os.IsNotExist(err) {
-		log.Fatal("Are you at repo root?")
-	} else if err != nil {
-		log.Fatal(err)
-	}
+func (a *app) Flags(fs *flag.FlagSet) {
+	fs.StringVar(&a.listen, "listen", "localhost:3000", "Listen on `host:port`.")
+}
+
+func (a *app) Run(ctx context.Context) error {
+	internal.EnsureRoot()
 
 	dir := filepath.Join(".", "build")
 	if len(flag.Args()) > 0 {
 		dir = flag.Args()[0]
 	}
 
-	c := &site.Config{
+	cfg := &site.Config{
 		Src: ".",
 		Dst: dir,
 	}
-
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer cancel()
-
-	if err := site.Serve(ctx, c, *listenFlag); err != nil {
-		log.Fatal(err)
-	}
+	return site.Serve(ctx, cfg, a.listen)
 }
