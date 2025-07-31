@@ -375,13 +375,3 @@ span.module {
   padding: .125rem .625rem;
   vertical-align: middle;
 }
-
-/* View transitions. */
-
-@view-transition {
-  navigation: auto;
-}
-
-::view-transition-group(*) {
-  animation-duration: 0.3s;
-}
