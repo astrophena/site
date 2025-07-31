@@ -8,21 +8,36 @@ license that can be found in the LICENSE.md file.
 
 This is my personal website.
 
-## Serving locally
+## Development
 
-You need the latest [Go] installed.
+You need the latest version of [Go] installed.
+
+First, clone the repository:
 
 ```sh
 $ git clone https://github.com/astrophena/site
 $ cd site
+```
+
+To serve the site locally, run:
+
+```sh
 $ go tool serve
 ```
 
-Open http://localhost:3000 in your browser.
+This command starts a development server at `http://localhost:3000` and
+automatically rebuilds the site when files in the `pages`, `static`, or
+`templates` directories are changed.
 
-## Development
+To generate a production-ready build, use:
 
-Setting up Git pre-commit hook for development:
+```sh
+$ go tool build -prod
+```
+
+The static files will be placed in the `build/` directory.
+
+To set up the Git pre-commit hook for development:
 
 ```sh
 $ go tool pre-commit
