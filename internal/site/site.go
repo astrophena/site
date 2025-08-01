@@ -207,9 +207,16 @@ func Build(c *Config) error {
 		}
 	}
 
+	// Write robots.txt.
+	if err := os.WriteFile(filepath.Join(b.c.Dst, "robots.txt"), []byte(robotsTxt), 0o644); err != nil {
+		return err
+	}
 	// Copy static files.
 	return filepath.WalkDir(filepath.Join(b.c.Src, "static"), b.copyStatic)
 }
+
+const robotsTxt = `User-agent: *
+`
 
 var serveReadyHook func() // used in tests, called when Serve started serving the site
 
@@ -640,7 +647,6 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 
 var skipHashing = []string{
 	"robots.txt",
-	"wasm", // for now
 }
 
 func (b *buildContext) hashStatic(path string, d fs.DirEntry, err error) error {

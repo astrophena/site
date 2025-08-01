@@ -42,7 +42,11 @@ license that can be found in the LICENSE.md file.
     <script defer src="{{ static "/js/main.js"}}"></script>
     <title>{{ .Title }}</title>
   </head>
+{{ if eq .Permalink "/starplay" }}
+  <body data-starplay-wasm="{{ static "/wasm/starplay.wasm" }}">
+{{ else }}
   <body>
+{{ end }}
     {{ if not .ContentOnly }}
       <header>
         <h1>

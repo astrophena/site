@@ -15,7 +15,8 @@ if [[ -z "${1:-}" ]]; then
 	exit 1
 fi
 
-INPUT_FILE="$1"
+INPUT_FILE="$(realpath $1)"
+cd "$(dirname $0)/../../../static/icons"
 
 if [[ ! -f "$INPUT_FILE" ]]; then
 	echo "Error: Input file $INPUT_FILE not found."
