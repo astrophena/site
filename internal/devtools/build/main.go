@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"go.astrophena.name/base/cli"
+	"go.astrophena.name/base/logger"
 	"go.astrophena.name/site/internal/devtools/internal"
 	"go.astrophena.name/site/internal/site"
 	"go.astrophena.name/site/internal/vanity"
@@ -34,6 +35,7 @@ func (a *app) Flags(fs *flag.FlagSet) {
 
 func (a *app) Run(ctx context.Context) error {
 	internal.EnsureRoot()
+	env := cli.GetEnv(ctx)
 
 	dir := filepath.Join(".", "build")
 	if len(flag.Args()) > 0 {
@@ -42,6 +44,7 @@ func (a *app) Run(ctx context.Context) error {
 
 	if a.vanity {
 		return vanity.Build(ctx, &vanity.Config{
+			Logf:        env.Logf,
 			Dir:         dir,
 			GitHubToken: os.Getenv("GITHUB_TOKEN"),
 			ImportRoot:  "go.astrophena.name",
@@ -55,12 +58,11 @@ func (a *app) Run(ctx context.Context) error {
 		}
 		goroot := strings.TrimSuffix(string(gorootb), "\n")
 
+		// Copy wasm_exec.js from GOROOT to prevent version incompatibility.
 		wasmExecJS, err := os.ReadFile(filepath.Join(goroot, "lib", "wasm", "wasm_exec.js"))
 		if err != nil {
 			return err
 		}
-
-		// Copy wasm_exec.js from GOROOT to prevent version incompatibility.
 		if err := os.WriteFile(filepath.Join("static", "js", "go_wasm_exec.js"), wasmExecJS, 0o644); err != nil {
 			return err
 		}
@@ -74,13 +76,14 @@ func (a *app) Run(ctx context.Context) error {
 			"./internal/starplay",
 		)
 		build.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
-		build.Stderr = os.Stderr
+		build.Stderr = logger.Logf(env.Logf)
 		if err := build.Run(); err != nil {
 			return err
 		}
 	}
 
 	c := &site.Config{
+		Logf: env.Logf,
 		Src:  ".",
 		Dst:  dir,
 		Prod: a.prod,

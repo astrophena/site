@@ -17,6 +17,8 @@
 
   </body>
 </html>
+-- robots.txt --
+User-agent: *
 -- test-dc122cd797e76d1e0b07efe6262829098581816f1727d9a883bd4052a4e659ef --
 test
 
