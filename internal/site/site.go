@@ -62,6 +62,11 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/feeds"
+	"github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/css"
+	"github.com/tdewolff/minify/v2/html"
+	"github.com/tdewolff/minify/v2/js"
+	mjson "github.com/tdewolff/minify/v2/json"
 	"rsc.io/markdown"
 )
 
@@ -217,6 +222,28 @@ func Build(c *Config) error {
 
 const robotsTxt = `User-agent: *
 `
+
+type min struct {
+	m *minify.M
+}
+
+func newMin() *min {
+	m := minify.New()
+	m.AddFunc("text/css", css.Minify)
+	m.Add("text/html", &html.Minifier{
+		KeepDocumentTags:    true,
+		KeepDefaultAttrVals: true,
+		KeepEndTags:         true,
+	})
+	m.AddFunc("application/javascript", js.Minify)
+	m.AddFunc("application/json", mjson.Minify)
+
+	return &min{m: m}
+}
+
+func (m *min) Bytes(mediaType string, b []byte) ([]byte, error) {
+	return m.m.Bytes(mediaType, b)
+}
 
 var serveReadyHook func() // used in tests, called when Serve started serving the site
 
@@ -457,6 +484,7 @@ type buildContext struct {
 	pages     []*Page
 	templates map[string]*template.Template
 	static    map[string]string // path -> hashed path (e.g. /css/main.css -> /css/main-[hash].css)
+	min       *min
 }
 
 func newBuildContext(c *Config) *buildContext {
@@ -477,6 +505,7 @@ func newBuildContext(c *Config) *buildContext {
 		},
 		templates: make(map[string]*template.Template),
 		static:    make(map[string]string),
+		min:       newMin(),
 	}
 
 	b.funcs = template.FuncMap{
@@ -723,6 +752,23 @@ func (b *buildContext) copyStatic(path string, d fs.DirEntry, err error) error {
 		return err
 	}
 
+	var mediaType string
+	switch filepath.Ext(path) {
+	case ".css":
+		mediaType = "text/css"
+	case ".js":
+		mediaType = "application/javascript"
+	case ".json":
+		mediaType = "application/json"
+	}
+	if mediaType != "" {
+		minified, err := b.min.Bytes(mediaType, buf)
+		if err != nil {
+			return err
+		}
+		buf = minified
+	}
+
 	dst := filepath.Join(b.c.Dst, hashed)
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return err
@@ -898,7 +944,12 @@ func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error
 		return fmt.Errorf("%s: failed to execute template %q: %w", p.path, p.Template, err)
 	}
 
-	_, err = buf.WriteTo(w)
+	minified, err := b.min.Bytes("text/html", buf.Bytes())
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write(minified)
 	return err
 }
 
