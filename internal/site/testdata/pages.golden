@@ -1,12 +1,5 @@
 -- another.html --
-<html>
-  <body>
-    
-another page
-
-
-  </body>
-</html>
+<html><body>another page</body></html>
 -- feed.xml --
 <?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom">
   <title>Ilya Mateyko</title>
@@ -18,23 +11,7 @@ another page
   </author>
 </feed>
 -- index.html --
-<html>
-  <body>
-    
-<h1>hello, world!</h1>
-
-
-<ul>
-
-  <li>image</li>
-
-  <li>another page</li>
-
-</ul>
-
-
-  </body>
-</html>
+<html><body><h1>hello, world!</h1><ul><li>image</li><li>another page</li></ul></body></html>
 -- robots.txt --
 User-agent: *
 -- test-dc122cd797e76d1e0b07efe6262829098581816f1727d9a883bd4052a4e659ef --
