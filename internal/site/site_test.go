@@ -163,6 +163,35 @@ func TestShouldRebuild(t *testing.T) {
 	}
 }
 
+func TestDebouncer(t *testing.T) {
+	var (
+		mu    sync.Mutex
+		count int
+	)
+
+	d := newDebouncer(50*time.Millisecond, func() {
+		mu.Lock()
+		count++
+		mu.Unlock()
+	})
+
+	// Trigger the debouncer multiple times in a quick succession.
+	for i := 0; i < 5; i++ {
+		d.Do()
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	// Wait for the debounced function to execute.
+	time.Sleep(100 * time.Millisecond)
+
+	// Check that the function was only called once.
+	mu.Lock()
+	if count != 1 {
+		t.Fatalf("debounced function was called %d times, want 1", count)
+	}
+	mu.Unlock()
+}
+
 func TestStripComments(t *testing.T) {
 	b := newBuildContext(&Config{})
 	tpl := template.Must(template.New("test").Funcs(b.funcs).Parse(`{{ content . }}`))

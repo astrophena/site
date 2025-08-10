@@ -55,6 +55,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	ttemplate "text/template"
 	"time"
 
@@ -247,6 +248,35 @@ func (m *min) Bytes(mediaType string, b []byte) ([]byte, error) {
 
 var serveReadyHook func() // used in tests, called when Serve started serving the site
 
+// debouncer delays execution of a function until a specified duration has
+// passed without any new events.
+type debouncer struct {
+	d  time.Duration
+	mu sync.Mutex
+	f  func()
+	t  *time.Timer
+}
+
+// newDebouncer creates a new debouncer.
+func newDebouncer(d time.Duration, f func()) *debouncer {
+	return &debouncer{
+		d: d,
+		f: f,
+	}
+}
+
+// Do schedules a function to be executed.
+func (d *debouncer) Do() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	if d.t != nil {
+		d.t.Stop()
+	}
+
+	d.t = time.AfterFunc(d.d, d.f)
+}
+
 // Serve builds the site and starts serving it on a provided host:port.
 func Serve(ctx context.Context, c *Config, addr string) error {
 	c.setDefaults()
@@ -288,66 +318,31 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 		}
 	}()
 
+	rebuild := func() {
+		c.Logf("Triggering build.")
+		if err := Build(c); err != nil {
+			c.Logf("Failed to rebuild the site: %v", err)
+		}
+	}
+	// It's better to have a bit of delay, so that we don't start building
+	// the site on each keystroke.
+	debouncer := newDebouncer(250*time.Millisecond, rebuild)
+
 	go func() {
 		c.Logf("Started watching for new changes.")
 
-		// FIXME: Debounce closer changes.
-
-		var (
-			changes   = make(chan struct{}, 1) // buffered to avoid blocking
-			buildDone = make(chan struct{})    // signals when a build is done
-		)
-
-		go func() {
-			defer close(changes)
-
-			var pending bool
-
-			for {
-				select {
-				case event := <-watcher.Events:
-					if !shouldRebuild(event.Name, event.Op) {
-						continue
-					}
-
-					if pending {
-						c.Logf("Detected change %s (%v), but build is in progress.", event.Name, event.Op)
-						continue
-					}
-
-					c.Logf("Detected change %s (%v), triggering build.", event.Name, event.Op)
-					pending = true
-					changes <- struct{}{}
-				case <-buildDone:
-					if pending {
-						c.Logf("Accumulated changes detected, triggering new build.")
-						changes <- struct{}{}
-						pending = false
-						continue
-					}
-
-					c.Logf("Build completed with no further changes.")
-					pending = false
-				case <-ctx.Done():
-					return
+		for {
+			select {
+			case event := <-watcher.Events:
+				if !shouldRebuild(event.Name, event.Op) {
+					continue
 				}
+				c.Logf("Detected change %s (%v), scheduling build.", event.Name, event.Op)
+				debouncer.Do()
+			case <-ctx.Done():
+				return
 			}
-		}()
-
-		go func() {
-			defer close(buildDone)
-			for {
-				select {
-				case <-changes:
-					if err := Build(c); err != nil {
-						c.Logf("Failed to rebuild the site: %v", err)
-					}
-					buildDone <- struct{}{}
-				case <-ctx.Done():
-					return
-				}
-			}
-		}()
+		}
 	}()
 
 	if serveReadyHook != nil {
