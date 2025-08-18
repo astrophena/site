@@ -67,9 +67,7 @@ func TestServe(t *testing.T) {
 	errCh := make(chan error, 1)
 	ctx, cancel := context.WithCancel(context.Background())
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err := Serve(ctx, &Config{
 			Src:  "../..",
 			Dst:  t.TempDir(),
@@ -77,7 +75,7 @@ func TestServe(t *testing.T) {
 		}, addr); err != nil {
 			errCh <- err
 		}
-	}()
+	})
 
 	// Wait until the server is ready.
 	select {
@@ -176,7 +174,7 @@ func TestDebouncer(t *testing.T) {
 	})
 
 	// Trigger the debouncer multiple times in a quick succession.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		d.Do()
 		time.Sleep(10 * time.Millisecond)
 	}

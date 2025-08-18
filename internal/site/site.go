@@ -53,6 +53,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -829,11 +830,8 @@ func (d *date) UnmarshalJSON(p []byte) error {
 func (p *Page) parse(r io.Reader) error {
 	// Check that format of the page is supported.
 	var supported bool
-	for _, f := range []string{".html", ".md"} {
-		if filepath.Ext(p.path) == f {
-			supported = true
-			break
-		}
+	if slices.Contains([]string{".html", ".md"}, filepath.Ext(p.path)) {
+		supported = true
 	}
 	if !supported {
 		return fmt.Errorf("%s: %w", p.path, errFormatUnsupported)
