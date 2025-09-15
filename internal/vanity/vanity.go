@@ -13,7 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -39,8 +39,6 @@ type Config struct {
 	GitHubToken string
 	// ImportRoot is a root import path for the Go packages.
 	ImportRoot string
-	// Logf is a logger to use. If nil, log.Printf is used.
-	Logf logger.Logf
 	// HTTPClient is a HTTP client for making requests.
 	HTTPClient *http.Client
 }
@@ -58,9 +56,6 @@ const highlightTheme = "native" // doc2go syntax highlighting theme
 // Build builds a site based on the provided [Config].
 func Build(ctx context.Context, c *Config) error {
 	// Initialize internal state.
-	if c.Logf == nil {
-		c.Logf = logger.Logf(log.Printf)
-	}
 	b := &buildContext{c: c}
 
 	// Initialize templates.
@@ -128,11 +123,10 @@ func Build(ctx context.Context, c *Config) error {
 	}
 
 	// Compile the doc2go binary.
-	c.Logf("Building doc2go.")
+	logger.Info(ctx, "building doc2go")
 	doc2go := filepath.Join(tmpdir, "doc2go")
 	install := exec.Command("go", "install", "go.abhg.dev/doc2go")
 	install.Env = append(os.Environ(), "GOBIN="+filepath.Join(tmpdir))
-	install.Stderr = c.Logf
 	if err := install.Run(); err != nil {
 		return err
 	}
@@ -154,15 +148,16 @@ func Build(ctx context.Context, c *Config) error {
 			repo.Description += "."
 		}
 
-		c.Logf("Cloning repository %s.", repo.Name)
+		lg := logger.Get(ctx).With(slog.String("repo", repo.Name))
+
+		lg.Info("cloning")
 		repo.Dir = filepath.Join(reposDir, repo.Name)
 		clone := exec.Command("git", "clone", "--depth=1", repo.CloneURL, repo.Dir)
-		clone.Stderr = c.Logf
 		if err := clone.Run(); err != nil {
 			return err
 		}
 
-		c.Logf("Running \"go list\" for %s.", repo.Name)
+		lg.Info("running \"go list\"")
 		var obuf, errbuf bytes.Buffer
 		list := exec.Command("go", "list", "-json", "./...")
 		list.Dir = repo.Dir
@@ -198,7 +193,7 @@ func Build(ctx context.Context, c *Config) error {
 		}
 
 		if repo.HasOnlyInternalPackages {
-			c.Logf("Repository %s has only internal packages.", repo.Name)
+			lg.Info("repository has only internal packages")
 			repo.Pkgs = nil
 		}
 	}
@@ -217,8 +212,10 @@ func Build(ctx context.Context, c *Config) error {
 			}
 		}
 
+		lg := logger.Get(ctx).With(slog.String("repo", repo.Name))
+
 		if repo.Dir != "" {
-			c.Logf("Generating docs for %s.", repo.Name)
+			lg.Info("generating docs")
 			git := exec.Command("git", "rev-parse", "--short", "HEAD")
 			git.Dir = repo.Dir
 			commitb, err := git.Output()
@@ -392,7 +389,6 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 		"-embed", "-out", tmpdir,
 		"./...",
 	)
-	doc2go.Stderr = c.Logf
 	doc2go.Dir = r.Dir
 	if err := doc2go.Run(); err != nil {
 		return err

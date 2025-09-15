@@ -124,7 +124,6 @@ func TestBuild(t *testing.T) {
 	c := &Config{
 		Dir:         dir,
 		GitHubToken: githubToken,
-		Logf:        t.Logf,
 		ImportRoot:  "example.com",
 		HTTPClient:  testutil.MockHTTPClient(testHandler(t)),
 	}

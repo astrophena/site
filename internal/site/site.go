@@ -45,7 +45,7 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -96,8 +96,6 @@ type Config struct {
 	// Dst is the directory where to write files. If empty, uses the build
 	// directory.
 	Dst string
-	// Logf specifies a logger to use. If nil, log.Printf is used.
-	Logf logger.Logf
 	// Prod determines if the site should be built in a production mode. This
 	// means that drafts are excluded and the base URL is used to derive absolute
 	// URLs from relative ones.
@@ -117,10 +115,6 @@ type Config struct {
 func (c *Config) setDefaults() {
 	if c == nil {
 		c = &Config{}
-	}
-
-	if c.Logf == nil {
-		c.Logf = log.Printf
 	}
 
 	if c.Title == "" {
@@ -282,9 +276,9 @@ func (d *debouncer) Do() {
 func Serve(ctx context.Context, c *Config, addr string) error {
 	c.setDefaults()
 
-	c.Logf("Performing an initial build...")
+	logger.Info(ctx, "performing an initial build")
 	if err := Build(c); err != nil {
-		c.Logf("Initial build failed: %v", err)
+		logger.Error(ctx, "initial build failed", slog.Any("err", err))
 	}
 
 	watcher, err := fsnotify.NewWatcher()
@@ -307,7 +301,7 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 		return err
 	}
 	defer l.Close()
-	c.Logf("Listening on http://%s...", l.Addr().String())
+	logger.Info(ctx, "listening for HTTP requests", slog.String("addr", "http://"+l.Addr().String()))
 
 	httpSrv := &http.Server{Handler: &staticHandler{fs: os.DirFS(c.Dst)}}
 	errCh := make(chan error, 1)
@@ -320,9 +314,9 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 	}()
 
 	rebuild := func() {
-		c.Logf("Triggering build.")
+		logger.Info(ctx, "triggering build")
 		if err := Build(c); err != nil {
-			c.Logf("Failed to rebuild the site: %v", err)
+			logger.Error(ctx, "failed to rebuild the site", slog.Any("err", err))
 		}
 	}
 	// It's better to have a bit of delay, so that we don't start building
@@ -330,7 +324,7 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 	debouncer := newDebouncer(250*time.Millisecond, rebuild)
 
 	go func() {
-		c.Logf("Started watching for new changes.")
+		logger.Info(ctx, "started watching for new changes")
 
 		for {
 			select {
@@ -338,7 +332,10 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 				if !shouldRebuild(event.Name, event.Op) {
 					continue
 				}
-				c.Logf("Detected change %s (%v), scheduling build.", event.Name, event.Op)
+				logger.Info(ctx, "detected change, scheduling build",
+					slog.String("name", event.Name),
+					slog.Any("op", event.Op),
+				)
 				debouncer.Do()
 			case <-ctx.Done():
 				return
@@ -352,7 +349,7 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 
 	select {
 	case <-ctx.Done():
-		c.Logf("Gracefully shutting down...")
+		logger.Info(ctx, "gracefully shutting down")
 	case <-errCh:
 		return err
 	}

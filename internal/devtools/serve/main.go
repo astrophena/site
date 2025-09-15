@@ -26,7 +26,6 @@ func (a *app) Flags(fs *flag.FlagSet) {
 
 func (a *app) Run(ctx context.Context) error {
 	internal.EnsureRoot()
-	env := cli.GetEnv(ctx)
 
 	dir := filepath.Join(".", "build")
 	if len(flag.Args()) > 0 {
@@ -34,9 +33,8 @@ func (a *app) Run(ctx context.Context) error {
 	}
 
 	cfg := &site.Config{
-		Logf: env.Logf,
-		Src:  ".",
-		Dst:  dir,
+		Src: ".",
+		Dst: dir,
 	}
 	return site.Serve(ctx, cfg, a.listen)
 }

@@ -7,7 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/tdewolff/minify/v2 v2.24.3
-	go.astrophena.name/base v0.11.0
+	go.astrophena.name/base v0.12.2
 	go.starlark.net v0.0.0-20250623223156-8bf495bf4e9a
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
@@ -20,6 +20,7 @@ require (
 	github.com/dlclark/regexp2 v1.11.4 // indirect
 	github.com/fluhus/godoc-tricks v1.5.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/lmittmann/tint v1.1.2 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
 	github.com/tdewolff/parse/v2 v2.8.3 // indirect
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 // indirect
@@ -27,7 +28,8 @@ require (
 	golang.org/x/mod v0.25.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/term v0.35.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	golang.org/x/tools v0.33.0 // indirect
 	honnef.co/go/tools v0.6.1 // indirect

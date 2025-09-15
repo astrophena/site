@@ -40,7 +40,6 @@ func TestBuild(t *testing.T) {
 		if err := Build(&Config{
 			Src:         srcDir,
 			Dst:         dstDir,
-			Logf:        t.Logf,
 			feedCreated: time.Date(2023, time.December, 8, 0, 0, 0, 0, time.UTC),
 		}); err != nil {
 			t.Fatal(err)
@@ -69,9 +68,8 @@ func TestServe(t *testing.T) {
 
 	wg.Go(func() {
 		if err := Serve(ctx, &Config{
-			Src:  "../..",
-			Dst:  t.TempDir(),
-			Logf: t.Logf,
+			Src: "../..",
+			Dst: t.TempDir(),
 		}, addr); err != nil {
 			errCh <- err
 		}
