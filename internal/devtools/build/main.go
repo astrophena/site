@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"go.astrophena.name/base/cli"
-	"go.astrophena.name/base/logger"
 	"go.astrophena.name/site/internal/devtools/internal"
 	"go.astrophena.name/site/internal/site"
 	"go.astrophena.name/site/internal/vanity"
@@ -35,7 +34,6 @@ func (a *app) Flags(fs *flag.FlagSet) {
 
 func (a *app) Run(ctx context.Context) error {
 	internal.EnsureRoot()
-	env := cli.GetEnv(ctx)
 
 	dir := filepath.Join(".", "build")
 	if len(flag.Args()) > 0 {
@@ -44,7 +42,6 @@ func (a *app) Run(ctx context.Context) error {
 
 	if a.vanity {
 		return vanity.Build(ctx, &vanity.Config{
-			Logf:        env.Logf,
 			Dir:         dir,
 			GitHubToken: os.Getenv("GITHUB_TOKEN"),
 			ImportRoot:  "go.astrophena.name",
@@ -76,14 +73,12 @@ func (a *app) Run(ctx context.Context) error {
 			"./internal/starplay",
 		)
 		build.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
-		build.Stderr = logger.Logf(env.Logf)
 		if err := build.Run(); err != nil {
 			return err
 		}
 	}
 
 	c := &site.Config{
-		Logf: env.Logf,
 		Src:  ".",
 		Dst:  dir,
 		Prod: a.prod,
