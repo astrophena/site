@@ -7,7 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/tdewolff/minify/v2 v2.24.3
-	go.astrophena.name/base v0.12.2
+	go.astrophena.name/base v0.12.3
 	go.starlark.net v0.0.0-20250623223156-8bf495bf4e9a
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
@@ -39,6 +39,7 @@ tool (
 	go.astrophena.name/base/devtools/addcopyright
 	go.astrophena.name/base/devtools/pre-commit
 	go.astrophena.name/site/internal/devtools/build
+	go.astrophena.name/site/internal/devtools/resize-icons
 	go.astrophena.name/site/internal/devtools/serve
 )
 
