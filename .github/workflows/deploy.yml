@@ -3,6 +3,9 @@ on:
   push:
     branches: ['master']
   workflow_dispatch:
+permissions:
+  id-token: 'write'
+  contents: 'read'
 jobs:
   site:
     name: 'Site'
@@ -17,15 +20,22 @@ jobs:
       - name: 'Build'
         run: 'go tool build -prod'
       - name: 'Deploy'
-        uses: 'easingthemes/ssh-deploy@v5.1.0'
-        with:
-          SSH_PRIVATE_KEY: '${{ secrets.SSH_KEY }}'
-          ARGS: '-rltgoDzv --delete'
-          SOURCE: 'build/'
-          REMOTE_HOST: '${{ secrets.SSH_HOST }}'
-          REMOTE_PORT: '${{ secrets.SSH_PORT }}'
-          REMOTE_USER: 'deploy'
-          TARGET: '/srv/astrophena.name'
+        run: |
+          echo "::group::Requesting OIDC token"
+          OIDC_TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=astrophena.name" -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+          JWT=$(echo $OIDC_TOKEN | jq -j '.value')
+          echo "::endgroup::"
+
+          echo "::group::Creating deployment archive"
+          tar -czf archive.tar.gz -C build .
+          echo "::endgroup::"
+
+          echo "::group::Deploying to astrophena.name"
+          curl --fail -X POST \
+            -H "Authorization: Bearer $OIDC_TOKEN" \
+            -F "archive=@archive.tar.gz" \
+            https://deploy.astrophena.name/site/astrophena.name
+          echo "::endgroup::"
   vanity:
     name: 'Vanity'
     runs-on: 'ubuntu-latest'
