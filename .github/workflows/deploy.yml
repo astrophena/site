@@ -32,7 +32,7 @@ jobs:
 
           echo "::group::Deploying to astrophena.name"
           curl --fail -X POST \
-            -H "Authorization: Bearer $OIDC_TOKEN" \
+            -H "Authorization: Bearer $JWT" \
             -F "archive=@archive.tar.gz" \
             https://deploy.astrophena.name/site/astrophena.name
           echo "::endgroup::"
