@@ -18,24 +18,11 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - name: 'Build'
-        run: 'go tool build -prod'
-      - name: 'Deploy'
         run: |
-          echo "::group::Requesting OIDC token"
-          OIDC_TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=astrophena.name" -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN")
-          JWT=$(echo $OIDC_TOKEN | jq -j '.value')
-          echo "::endgroup::"
-
-          echo "::group::Creating deployment archive"
+          go tool build -prod
           tar -czf archive.tar.gz -C build .
-          echo "::endgroup::"
-
-          echo "::group::Deploying to astrophena.name"
-          curl --fail -X POST \
-            -H "Authorization: Bearer $JWT" \
-            -F "archive=@archive.tar.gz" \
-            https://deploy.astrophena.name/site/astrophena.name
-          echo "::endgroup::"
+      - name: 'Deploy'
+        run: 'go tool deploy astrophena.name archive.tar.gz'
   vanity:
     name: 'Vanity'
     runs-on: 'ubuntu-latest'
@@ -49,21 +36,8 @@ jobs:
       - name: 'Build'
         env:
           GITHUB_TOKEN: '${{ secrets.VANITY_GITHUB_TOKEN }}'
-        run: 'go tool build -prod -vanity'
-      - name: 'Deploy'
         run: |
-          echo "::group::Requesting OIDC token"
-          OIDC_TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=astrophena.name" -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN")
-          JWT=$(echo $OIDC_TOKEN | jq -j '.value')
-          echo "::endgroup::"
-
-          echo "::group::Creating deployment archive"
+          go tool build -prod -vanity
           tar -czf archive.tar.gz -C build .
-          echo "::endgroup::"
-
-          echo "::group::Deploying to go.astrophena.name"
-          curl --fail -X POST \
-            -H "Authorization: Bearer $JWT" \
-            -F "archive=@archive.tar.gz" \
-            https://deploy.astrophena.name/site/go.astrophena.name
-          echo "::endgroup::"
+      - name: 'Deploy'
+        run: 'go tool deploy go.astrophena.name archive.tar.gz'
