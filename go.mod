@@ -7,8 +7,8 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/tdewolff/minify/v2 v2.24.3
-	go.astrophena.name/base v0.12.3
-	go.starlark.net v0.0.0-20250623223156-8bf495bf4e9a
+	go.astrophena.name/base v0.12.5
+	go.starlark.net v0.0.0-20250906160240-bf296ed553ea
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
 
@@ -19,19 +19,20 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/dlclark/regexp2 v1.11.4 // indirect
 	github.com/fluhus/godoc-tricks v1.5.0 // indirect
-	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/lmittmann/tint v1.1.2 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
 	github.com/tdewolff/parse/v2 v2.8.3 // indirect
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 // indirect
+	go.astrophena.name/tools v1.2.1-0.20250925115459-1c70e3e58329 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678 // indirect
-	golang.org/x/mod v0.25.0 // indirect
-	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/term v0.35.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
-	golang.org/x/tools v0.33.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
+	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
 	honnef.co/go/tools v0.6.1 // indirect
 )
 
@@ -39,9 +40,9 @@ tool (
 	go.astrophena.name/base/devtools/addcopyright
 	go.astrophena.name/base/devtools/pre-commit
 	go.astrophena.name/site/internal/devtools/build
-	go.astrophena.name/site/internal/devtools/deploy
 	go.astrophena.name/site/internal/devtools/resize-icons
 	go.astrophena.name/site/internal/devtools/serve
+	go.astrophena.name/tools/cmd/deploy
 )
 
 tool (

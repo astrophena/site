@@ -22,7 +22,7 @@ jobs:
           go tool build -prod
           tar -czf archive.tar.gz -C build .
       - name: 'Deploy'
-        run: 'go tool deploy astrophena.name archive.tar.gz'
+        run: 'go tool deploy -type site astrophena.name archive.tar.gz'
   vanity:
     name: 'Vanity'
     runs-on: 'ubuntu-latest'
@@ -40,4 +40,4 @@ jobs:
           go tool build -prod -vanity
           tar -czf archive.tar.gz -C build .
       - name: 'Deploy'
-        run: 'go tool deploy go.astrophena.name archive.tar.gz'
+        run: 'go tool deploy -type site go.astrophena.name archive.tar.gz'
