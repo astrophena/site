@@ -39,7 +39,7 @@ license that can be found in the LICENSE.md file.
 -- pre-commit.json --
 [
   {
-    "run": ["gofmt", "-d"]
+    "run": ["gofmt", "-d", "."]
   },
   {
     "run": ["go", "tool", "staticcheck", "./..."]
