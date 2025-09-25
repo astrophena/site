@@ -1,4 +1,4 @@
-window.addEventListener("load", function() {
+window.addEventListener("load", function () {
   const wasmURL = document.body.dataset.starplayWasm;
   const go = new Go();
   WebAssembly.instantiateStreaming(fetch(wasmURL), go.importObject)

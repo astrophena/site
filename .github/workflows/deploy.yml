@@ -1,43 +1,46 @@
-name: 'Deploy'
+name: "Deploy"
 on:
   push:
-    branches: ['master']
+    branches: ["master"]
   workflow_dispatch:
 permissions:
-  id-token: 'write'
-  contents: 'read'
+  id-token: "write"
+  contents: "read"
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
 jobs:
   site:
-    name: 'Site'
-    runs-on: 'ubuntu-latest'
+    name: "Site"
+    runs-on: "ubuntu-latest"
     steps:
-      - name: 'Check out'
-        uses: 'actions/checkout@v5'
-      - name: 'Set up Go'
-        uses: 'actions/setup-go@v6'
+      - name: "Check out"
+        uses: "actions/checkout@v5"
+      - name: "Set up Go"
+        uses: "actions/setup-go@v6"
         with:
-          go-version-file: 'go.mod'
-      - name: 'Build'
+          go-version-file: "go.mod"
+      - name: "Build"
         run: |
           go tool build -prod
           tar -czf archive.tar.gz -C build .
-      - name: 'Deploy'
-        run: 'go tool deploy -type site astrophena.name archive.tar.gz'
+      - name: "Deploy"
+        run: "go tool deploy -type site astrophena.name archive.tar.gz"
   vanity:
-    name: 'Vanity'
-    runs-on: 'ubuntu-latest'
+    name: "Vanity"
+    runs-on: "ubuntu-latest"
     steps:
-      - name: 'Check out'
-        uses: 'actions/checkout@v5'
-      - name: 'Set up Go'
-        uses: 'actions/setup-go@v6'
+      - name: "Check out"
+        uses: "actions/checkout@v5"
+      - name: "Set up Go"
+        uses: "actions/setup-go@v6"
         with:
-          go-version-file: 'go.mod'
-      - name: 'Build'
+          go-version-file: "go.mod"
+      - name: "Build"
         env:
-          GITHUB_TOKEN: '${{ secrets.VANITY_GITHUB_TOKEN }}'
+          GITHUB_TOKEN: "${{ secrets.VANITY_GITHUB_TOKEN }}"
         run: |
-          go tool build -prod -vanity
+          go tool build -vanity
           tar -czf archive.tar.gz -C build .
-      - name: 'Deploy'
-        run: 'go tool deploy -type site go.astrophena.name archive.tar.gz'
+      - name: "Deploy"
+        run: "go tool deploy -type site go.astrophena.name archive.tar.gz"
