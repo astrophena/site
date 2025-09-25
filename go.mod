@@ -39,6 +39,7 @@ tool (
 	go.astrophena.name/base/devtools/addcopyright
 	go.astrophena.name/base/devtools/pre-commit
 	go.astrophena.name/site/internal/devtools/build
+	go.astrophena.name/site/internal/devtools/deploy
 	go.astrophena.name/site/internal/devtools/resize-icons
 	go.astrophena.name/site/internal/devtools/serve
 )
