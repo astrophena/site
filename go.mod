@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
-	github.com/tdewolff/minify/v2 v2.24.5
+	github.com/tdewolff/minify/v2 v2.24.7
 	go.astrophena.name/base v0.13.0
 	go.starlark.net v0.0.0-20250906160240-bf296ed553ea
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
@@ -21,7 +21,7 @@ require (
 	github.com/fluhus/godoc-tricks v1.5.0 // indirect
 	github.com/lmittmann/tint v1.1.2 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
-	github.com/tdewolff/parse/v2 v2.8.5-0.20251020133559-0efcf90bef1a // indirect
+	github.com/tdewolff/parse/v2 v2.8.5 // indirect
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 // indirect
 	go.astrophena.name/tools v1.2.1-0.20250925115459-1c70e3e58329 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678 // indirect
