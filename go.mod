@@ -6,8 +6,8 @@ require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
-	github.com/tdewolff/minify/v2 v2.24.7
-	go.astrophena.name/base v0.14.0
+	github.com/tdewolff/minify/v2 v2.24.8
+	go.astrophena.name/base v0.15.0
 	go.starlark.net v0.0.0-20250906160240-bf296ed553ea
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
@@ -19,6 +19,7 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/dlclark/regexp2 v1.11.4 // indirect
 	github.com/fluhus/godoc-tricks v1.5.0 // indirect
+	github.com/go4org/hashtriemap v0.0.0-20251130024219-545ba229f689 // indirect
 	github.com/lmittmann/tint v1.1.2 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
 	github.com/tdewolff/parse/v2 v2.8.5 // indirect
