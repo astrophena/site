@@ -6,8 +6,8 @@ require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
-	github.com/tdewolff/minify/v2 v2.24.8
-	go.astrophena.name/base v0.16.1
+	github.com/tdewolff/minify/v2 v2.24.9
+	go.astrophena.name/base v0.16.2
 	go.starlark.net v0.0.0-20250906160240-bf296ed553ea
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
@@ -20,17 +20,17 @@ require (
 	github.com/dlclark/regexp2 v1.11.4 // indirect
 	github.com/fluhus/godoc-tricks v1.5.0 // indirect
 	github.com/go4org/hashtriemap v0.0.0-20251130024219-545ba229f689 // indirect
-	github.com/lmittmann/tint v1.1.2 // indirect
+	github.com/lmittmann/tint v1.1.3 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
-	github.com/tdewolff/parse/v2 v2.8.5 // indirect
+	github.com/tdewolff/parse/v2 v2.8.8 // indirect
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 // indirect
 	go.astrophena.name/tools v1.2.1-0.20250925115459-1c70e3e58329 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
-	golang.org/x/term v0.39.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/term v0.40.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/tools v0.40.0 // indirect
 	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
