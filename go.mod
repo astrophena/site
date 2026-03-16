@@ -3,7 +3,7 @@ module go.astrophena.name/site
 go 1.26.0
 
 require (
-	github.com/PuerkitoBio/goquery v1.11.0
+	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/tdewolff/minify/v2 v2.24.10
@@ -26,13 +26,13 @@ require (
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 // indirect
 	go.astrophena.name/tools v1.2.1-0.20250925115459-1c70e3e58329 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20251219203646-944ab1f22d93 // indirect
-	golang.org/x/mod v0.31.0 // indirect
-	golang.org/x/net v0.48.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/term v0.40.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
-	golang.org/x/tools v0.40.0 // indirect
+	golang.org/x/mod v0.33.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/term v0.41.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/tools v0.42.0 // indirect
 	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
 	honnef.co/go/tools v0.6.1 // indirect
 )
