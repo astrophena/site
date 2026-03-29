@@ -7,7 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/tdewolff/minify/v2 v2.24.10
-	go.astrophena.name/base v0.16.2
+	go.astrophena.name/base v0.17.0
 	go.starlark.net v0.0.0-20260210143700-b62fd896b91b
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
