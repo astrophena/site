@@ -6,8 +6,8 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
-	github.com/tdewolff/minify/v2 v2.24.10
-	go.astrophena.name/base v0.17.0
+	github.com/tdewolff/minify/v2 v2.24.11
+	go.astrophena.name/base v0.18.0
 	go.starlark.net v0.0.0-20260210143700-b62fd896b91b
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
@@ -22,7 +22,7 @@ require (
 	github.com/go4org/hashtriemap v0.0.0-20251130024219-545ba229f689 // indirect
 	github.com/lmittmann/tint v1.1.3 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
-	github.com/tdewolff/parse/v2 v2.8.10 // indirect
+	github.com/tdewolff/parse/v2 v2.8.11 // indirect
 	go.abhg.dev/doc2go v0.8.2-0.20240626042920-4345d7c36b95 // indirect
 	go.astrophena.name/tools v1.8.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260218203240-3dfff04db8fa // indirect
