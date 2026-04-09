@@ -1,6 +1,6 @@
 module go.astrophena.name/site
 
-go 1.26.1
+go 1.26.2
 
 require (
 	github.com/PuerkitoBio/goquery v1.12.0
