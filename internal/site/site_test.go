@@ -14,6 +14,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -49,8 +51,57 @@ func TestBuild(t *testing.T) {
 	}, *update)
 }
 
+func TestBuildNilConfig(t *testing.T) {
+	cwd := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(cwd, "templates"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(cwd, "pages"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(cwd, "static"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cwd, "templates", "main.html"), []byte(`{{ content . }}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cwd, "pages", "index.html"), []byte(`{
+  "title": "Home",
+  "template": "main",
+  "permalink": "/"
+}
+
+<p>Hello</p>
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	oldwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(oldwd)
+	if err := os.Chdir(cwd); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := Build(nil); err != nil {
+		t.Fatal(err)
+	}
+	wantFile(t, filepath.Join(cwd, "build", "index.html"))
+}
+
+func wantFile(t *testing.T, path string) {
+	t.Helper()
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("file %q does not exist", path)
+	} else if err != nil {
+		t.Fatalf("checking existence of %q failed: %v", path, err)
+	}
+}
+
 func TestServe(t *testing.T) {
-	// Find a free port for us.
+	// Reserve a free port for the test server.
 	port, err := getFreePort()
 	if err != nil {
 		t.Fatalf("Failed to find a free port: %v", err)
@@ -75,14 +126,14 @@ func TestServe(t *testing.T) {
 		}
 	})
 
-	// Wait until the server is ready.
+	// Wait for the server to become ready.
 	select {
 	case err := <-errCh:
 		t.Fatalf("Test server crashed during startup or runtime: %v", err)
 	case <-ready:
 	}
 
-	// Make some HTTP requests.
+	// Exercise a few representative routes.
 	urls := []struct {
 		url        string
 		wantStatus int
@@ -104,11 +155,9 @@ func TestServe(t *testing.T) {
 		}
 	}
 
-	// Try to gracefully shutdown the server.
+	// Shut the server down and ensure it exits cleanly.
 	cancel()
-	// Wait until the server shuts down.
 	wg.Wait()
-	// See if the server failed to shutdown.
 	select {
 	case err := <-errCh:
 		t.Fatalf("Test server crashed during shutdown: %v", err)
@@ -159,6 +208,43 @@ func TestShouldRebuild(t *testing.T) {
 	}
 }
 
+func TestHandleWatcherEventAddsNewDirectories(t *testing.T) {
+	ctx := context.Background()
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer w.Close()
+
+	root := t.TempDir()
+	subdir := filepath.Join(root, "nested")
+	if err := os.MkdirAll(subdir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	triggered := make(chan struct{}, 1)
+	d := newDebouncer(0, func() {
+		triggered <- struct{}{}
+	})
+
+	if err := handleWatcherEvent(ctx, w, fsnotify.Event{
+		Name: subdir,
+		Op:   fsnotify.Create,
+	}, d); err != nil {
+		t.Fatal(err)
+	}
+
+	select {
+	case <-triggered:
+	case <-time.After(time.Second):
+		t.Fatal("expected build to be scheduled")
+	}
+
+	if err := os.WriteFile(filepath.Join(subdir, "page.md"), []byte("hello"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestDebouncer(t *testing.T) {
 	var (
 		mu    sync.Mutex
@@ -171,7 +257,7 @@ func TestDebouncer(t *testing.T) {
 		mu.Unlock()
 	})
 
-	// Trigger the debouncer multiple times in a quick succession.
+	// Trigger the debouncer several times in quick succession.
 	for range 5 {
 		d.Do()
 		time.Sleep(10 * time.Millisecond)
@@ -180,12 +266,29 @@ func TestDebouncer(t *testing.T) {
 	// Wait for the debounced function to execute.
 	time.Sleep(100 * time.Millisecond)
 
-	// Check that the function was only called once.
+	// It should have fired exactly once.
 	mu.Lock()
 	if count != 1 {
 		t.Fatalf("debounced function was called %d times, want 1", count)
 	}
 	mu.Unlock()
+}
+
+func TestSortPages(t *testing.T) {
+	pages := []*Page{
+		{Title: "undated-a"},
+		{Title: "older", Date: &date{Time: time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)}},
+		{Title: "newer", Date: &date{Time: time.Date(2024, time.February, 1, 0, 0, 0, 0, time.UTC)}},
+		{Title: "undated-b"},
+	}
+
+	sortPages(pages)
+
+	var got []string
+	for _, p := range pages {
+		got = append(got, p.Title)
+	}
+	testutil.AssertEqual(t, got, []string{"newer", "older", "undated-a", "undated-b"})
 }
 
 func TestStripComments(t *testing.T) {
@@ -297,6 +400,20 @@ Test.
 Test
 `,
 			wantType: "blog",
+		},
+		"nested JSON in frontmatter": {
+			name: "nested-frontmatter.html",
+			content: `{
+  "title": "Foo",
+  "template": "test",
+  "permalink": "/test",
+  "meta_tags": {
+    "description": "hello"
+  }
+}
+
+<p>Test!</p>
+`,
 		},
 		"modeline comment": {
 			name: "modeline-comment.html",
