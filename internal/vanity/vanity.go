@@ -389,19 +389,24 @@ func prepareRepo(ctx context.Context, c *Config, repo *repo, reposDir string) er
 }
 
 func syncRepoCheckout(ctx context.Context, repo *repo) error {
-	if _, err := os.Stat(filepath.Join(repo.Dir, ".git")); err == nil {
+	gitDir := filepath.Join(repo.Dir, ".git")
+	if _, err := os.Stat(gitDir); err == nil {
 		if err := updateRepoCheckout(ctx, repo); err == nil {
 			return nil
 		}
 		if err := os.RemoveAll(repo.Dir); err != nil {
 			return err
 		}
-	} else if err != nil && !errors.Is(err, fs.ErrNotExist) {
+	} else if !errors.Is(err, fs.ErrNotExist) {
 		return err
-	} else if _, err := os.Stat(repo.Dir); err == nil {
+	}
+
+	if _, err := os.Stat(repo.Dir); err == nil {
 		if err := os.RemoveAll(repo.Dir); err != nil {
 			return err
 		}
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return err
 	}
 
 	return cloneRepoCheckout(ctx, repo)

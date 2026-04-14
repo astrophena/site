@@ -3,25 +3,21 @@
 // license that can be found in the LICENSE.md file.
 
 /*
-Package site builds https://astrophena.name.
+Package site builds the astrophena.name static site.
 
-# Directory Structure
+A source tree is expected to contain these directories:
 
-Site has the following directories:
+	build      Default output directory for the generated site.
+	pages      Source pages in HTML or Markdown format.
+	static     Static assets copied into the generated site, with hashing and
+	           minification applied where appropriate.
+	templates  HTML templates used to render pages. Front matter selects the
+	           template for each page, and template files must have a .html
+	           extension.
 
-	build      This is where the generated site will be placed by default.
-	pages      All content for the site lives inside this directory. HTML and
-	           Markdown formats can be used.
-	static     Files in this directory will be copied verbatim to the
-	           generated site.
-	templates  These are the templates that wrap pages. Templates are
-	           chosen on a page-by-page basis in the front matter.
-	           They must have the '.html' extension.
+# Front Matter
 
-# Page Layout
-
-Each page must be of the supported format (HTML or Markdown) and have JSON front
-matter in the beginning:
+Each page must be HTML or Markdown and begin with a JSON front matter object:
 
 	{
 	  "title": "Hello, world!",
@@ -29,12 +25,11 @@ matter in the beginning:
 	  "permalink": "/hello-world"
 	}
 
-See Page for all available front matter fields.
+See [Page] for the full list of front matter fields.
 */
 package site
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -82,7 +77,7 @@ var (
 	errPermalinkInvalid        = errors.New("invalid permalink")
 )
 
-// Config represents a build configuration.
+// Config configures a site build or dev server.
 type Config struct {
 	// Title is the title of the site.
 	Title string
@@ -100,11 +95,10 @@ type Config struct {
 	// means that drafts are excluded and the base URL is used to derive absolute
 	// URLs from relative ones.
 	Prod bool
-	// SkipFeed determines if the feed for site shouldn't be built.
+	// SkipFeed disables feed generation.
 	SkipFeed bool
-	// Vanity determines if the site is vanity import domain built with vanity
-	// package. If so, navigation links created with navLink will point to URLs
-	// derived from PrimaryURL instead of BaseURL.
+	// Vanity indicates that this build is for the vanity import site.
+	// When set, navLink uses PrimaryURL instead of BaseURL.
 	Vanity bool
 	// PrimaryURL is the base URL for navigation links when Vanity set to true.
 	PrimaryURL *url.URL
@@ -112,7 +106,7 @@ type Config struct {
 	feedCreated time.Time // used in tests
 }
 
-func (c *Config) setDefaults() {
+func (c *Config) setDefaults() *Config {
 	if c == nil {
 		c = &Config{}
 	}
@@ -145,11 +139,13 @@ func (c *Config) setDefaults() {
 	if c.Dst == "" {
 		c.Dst = filepath.Join(".", "build")
 	}
+
+	return c
 }
 
 // Build builds a site based on the provided [Config].
 func Build(c *Config) error {
-	c.setDefaults()
+	c = c.setDefaults()
 	b := newBuildContext(c)
 
 	// Parse templates and pages.
@@ -164,15 +160,10 @@ func Build(c *Config) error {
 		return err
 	}
 
-	// Sort pages by date. Pages without date are pushed to the end.
-	sort.SliceStable(b.pages, func(i, j int) bool {
-		if b.pages[i].Date == nil || b.pages[j].Date == nil {
-			return true
-		}
-		return !b.pages[i].Date.Time.Before(b.pages[j].Date.Time)
-	})
+	// Sort pages for output and feed generation.
+	sortPages(b.pages)
 
-	// Clean up after previous build.
+	// Remove any previous build output before generating the new site.
 	if _, err := os.Stat(b.c.Dst); err == nil {
 		if err := os.RemoveAll(b.c.Dst); err != nil {
 			return err
@@ -182,7 +173,7 @@ func Build(c *Config) error {
 		return err
 	}
 
-	// Build pages and RSS feed.
+	// Render pages, then generate the feed.
 	for _, p := range b.pages {
 		if err := os.MkdirAll(filepath.Dir(filepath.Join(b.c.Dst, p.dstPath)), 0o755); err != nil {
 			return err
@@ -192,13 +183,17 @@ func Build(c *Config) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 
 		tpl, ok := b.templates[p.Template]
 		if !ok {
+			f.Close()
 			return fmt.Errorf("%s: no such template %q", p.path, p.Template)
 		}
 		if err := p.build(b, tpl, f); err != nil {
+			f.Close()
+			return err
+		}
+		if err := f.Close(); err != nil {
 			return err
 		}
 	}
@@ -241,7 +236,7 @@ func (m *min) Bytes(mediaType string, b []byte) ([]byte, error) {
 	return m.m.Bytes(mediaType, b)
 }
 
-var serveReadyHook func() // used in tests, called when Serve started serving the site
+var serveReadyHook func() // used in tests after Serve starts accepting requests
 
 // debouncer delays execution of a function until a specified duration has
 // passed without any new events.
@@ -252,7 +247,7 @@ type debouncer struct {
 	t  *time.Timer
 }
 
-// newDebouncer creates a new debouncer.
+// newDebouncer returns a debouncer that coalesces bursts of events.
 func newDebouncer(d time.Duration, f func()) *debouncer {
 	return &debouncer{
 		d: d,
@@ -260,7 +255,7 @@ func newDebouncer(d time.Duration, f func()) *debouncer {
 	}
 }
 
-// Do schedules a function to be executed.
+// Do resets the timer and schedules the debounced function.
 func (d *debouncer) Do() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -274,7 +269,7 @@ func (d *debouncer) Do() {
 
 // Serve builds the site and starts serving it on a provided host:port.
 func Serve(ctx context.Context, c *Config, addr string) error {
-	c.setDefaults()
+	c = c.setDefaults()
 
 	logger.Info(ctx, "performing an initial build")
 	if err := Build(c); err != nil {
@@ -319,8 +314,7 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 			logger.Error(ctx, "failed to rebuild the site", slog.Any("err", err))
 		}
 	}
-	// It's better to have a bit of delay, so that we don't start building
-	// the site on each keystroke.
+	// Delay rebuilds slightly so edits in quick succession collapse into one build.
 	debouncer := newDebouncer(250*time.Millisecond, rebuild)
 
 	go func() {
@@ -328,15 +322,18 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 
 		for {
 			select {
-			case event := <-watcher.Events:
-				if !shouldRebuild(event.Name, event.Op) {
-					continue
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
 				}
-				logger.Info(ctx, "detected change, scheduling build",
-					slog.String("name", event.Name),
-					slog.Any("op", event.Op),
-				)
-				debouncer.Do()
+				if err := handleWatcherEvent(ctx, watcher, event, debouncer); err != nil {
+					logger.Error(ctx, "watch event handling failed", slog.Any("err", err))
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				logger.Error(ctx, "watcher error", slog.Any("err", err))
 			case <-ctx.Done():
 				return
 			}
@@ -372,6 +369,43 @@ func watchRecursive(w *fsnotify.Watcher, dir string) error {
 	})
 }
 
+func handleWatcherEvent(ctx context.Context, watcher *fsnotify.Watcher, event fsnotify.Event, debouncer *debouncer) error {
+	if event.Op&fsnotify.Create != 0 {
+		if info, err := os.Stat(event.Name); err == nil && info.IsDir() {
+			if err := watchRecursive(watcher, event.Name); err != nil {
+				return err
+			}
+		}
+	}
+
+	if !shouldRebuild(event.Name, event.Op) {
+		return nil
+	}
+	logger.Info(ctx, "detected change, scheduling build",
+		slog.String("name", event.Name),
+		slog.Any("op", event.Op),
+	)
+	debouncer.Do()
+	return nil
+}
+
+func sortPages(pages []*Page) {
+	// Order dated pages newest-first and keep undated pages last.
+	sort.SliceStable(pages, func(i, j int) bool {
+		di, dj := pages[i].Date, pages[j].Date
+		switch {
+		case di == nil && dj == nil:
+			return false
+		case di == nil:
+			return false
+		case dj == nil:
+			return true
+		default:
+			return di.Time.After(dj.Time)
+		}
+	})
+}
+
 // Copied from
 // https://github.com/brandur/modulir/blob/1ff912fdc45a79cb4d8d9f199d213ae9c3598cbd/watch.go#L201.
 func shouldRebuild(path string, op fsnotify.Op) bool {
@@ -382,13 +416,12 @@ func shouldRebuild(path string, op fsnotify.Op) bool {
 		return false
 	}
 
-	// Vim creates this temporary file to see whether it can write into a target
-	// directory. It screws up our watching algorithm, so ignore it.
+	// Vim uses this temporary file to probe writability; ignore it.
 	if base == "4913" {
 		return false
 	}
 
-	// A special case, but ignore creates on files that look like Vim backups.
+	// Ignore files that look like Vim backups.
 	if strings.HasSuffix(base, "~") {
 		return false
 	}
@@ -703,10 +736,9 @@ func (b *buildContext) hashStatic(path string, d fs.DirEntry, err error) error {
 	return nil
 }
 
-// formatStaticName returns a hash name that inserts hash before the filename's
-// extension. If no extension exists on filename then the hash is appended.
-// Returns blank string the original filename if hash is blank. Returns a blank
-// string if the filename is blank.
+// formatStaticName inserts the hash before the file extension.
+// If there is no extension, it appends the hash.
+// It returns the original filename when hash is blank and an empty string when filename is blank.
 func formatStaticName(filename, hash string) string {
 	if filename == "" {
 		return ""
@@ -783,14 +815,15 @@ func isIgnorable(path string) bool {
 	return false
 }
 
-// Page represents a site page. The exported fields is the front matter fields.
+// Page represents a site page.
+// Its exported fields are populated from front matter.
 type Page struct {
 	Title       string            `json:"title"`                  // title: Page title, required.
 	Permalink   string            `json:"permalink"`              // permalink: Output path for the page, required.
 	Template    string            `json:"template"`               // template: Template that should be used for rendering this page, required.
 	ContentOnly bool              `json:"content_only,omitempty"` // content_only: Determines whether this page should be rendered without header and footer, false by default.
 	Date        *date             `json:"date,omitempty"`         // date: Publication date in the 'year-month-day' format, e.g. 2006-01-02, optional.
-	Draft       bool              `json:"draft,omitempty"`        // draft: Determines whether this page should be not included in production builds, false by default.
+	Draft       bool              `json:"draft,omitempty"`        // draft: Excludes the page from production builds when true.
 	MetaTags    map[string]string `json:"meta_tags,omitempty"`    // meta_tags: Determines additional HTML meta tags that will be added to this page, optional.
 	Summary     string            `json:"summary,omitempty"`      // summary: Page summary, used in RSS feed, optional.
 	Type        string            `json:"type,omitempty"`         // type: Used to distinguish different kinds of pages, page by default.
@@ -825,53 +858,12 @@ func (d *date) UnmarshalJSON(p []byte) error {
 }
 
 func (p *Page) parse(r io.Reader) error {
-	// Check that format of the page is supported.
-	var supported bool
-	if slices.Contains([]string{".html", ".md"}, filepath.Ext(p.path)) {
-		supported = true
-	}
-	if !supported {
+	if !slices.Contains([]string{".html", ".md"}, filepath.Ext(p.path)) {
 		return fmt.Errorf("%s: %w", p.path, errFormatUnsupported)
 	}
 
-	const (
-		leftDelim  = "{\n"
-		rightDelim = "}\n"
-	)
-
-	// Split the front matter and contents.
-	scanner := bufio.NewScanner(r)
-	var (
-		frontmatter, contents []byte
-		reachedFrontmatter    bool
-		reachedContents       bool
-	)
-	for scanner.Scan() {
-		line := scanner.Text() + "\n"
-
-		if !reachedContents {
-			if line == leftDelim {
-				reachedFrontmatter = true
-			}
-
-			if line == rightDelim {
-				reachedFrontmatter = false
-				frontmatter = append(frontmatter, line...)
-				reachedContents = true
-				continue
-			}
-		}
-
-		if reachedFrontmatter {
-			frontmatter = append(frontmatter, line...)
-			continue
-		}
-
-		if reachedContents {
-			contents = append(contents, line...)
-		}
-	}
-	if err := scanner.Err(); err != nil {
+	frontmatter, contents, err := splitFrontmatter(r)
+	if err != nil {
 		return fmt.Errorf("%s: %w: %v", p.path, errFrontmatterSplit, err)
 	}
 	if len(frontmatter) == 0 {
@@ -879,16 +871,13 @@ func (p *Page) parse(r io.Reader) error {
 	}
 	p.contents = contents
 
-	// Parse the front matter.
 	if err := json.Unmarshal(frontmatter, p); err != nil {
 		return fmt.Errorf("%s: %w: %v", p.path, errFrontmatterParse, err)
 	}
-	// Set the default page type.
 	if p.Type == "" {
 		p.Type = "page"
 	}
 
-	// Check front matter fields.
 	if p.Title == "" || p.Template == "" || p.Permalink == "" {
 		return fmt.Errorf("%s: %w", p.path, errFrontmatterMissingParam)
 	}
@@ -907,11 +896,43 @@ func (p *Page) parse(r io.Reader) error {
 	return nil
 }
 
+func splitFrontmatter(r io.Reader) (frontmatter, contents []byte, err error) {
+	src, err := io.ReadAll(r)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	start := bytes.Index(src, []byte("{\n"))
+	if start == -1 {
+		return nil, nil, nil
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(src[start:]))
+	var raw json.RawMessage
+	if err := dec.Decode(&raw); err != nil {
+		return nil, nil, err
+	}
+	frontmatter = raw
+	if len(frontmatter) == 0 || frontmatter[0] != '{' {
+		return nil, nil, errFrontmatterMissing
+	}
+
+	offset := start + int(dec.InputOffset())
+	if offset > len(src) {
+		return nil, nil, errFrontmatterSplit
+	}
+	if bytes.HasPrefix(src[offset:], []byte("\r\n")) {
+		offset += 2
+	} else if bytes.HasPrefix(src[offset:], []byte("\n")) {
+		offset++
+	}
+	return frontmatter, src[offset:], nil
+}
+
 var htmlCommentRe = regexp.MustCompile("<!--(.*?)-->")
 
 func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error {
-	// We use here text/template, but not html/template because we don't want to
-	// escape any HTML on the Markdown source.
+	// Use text/template for page source so embedded HTML in Markdown stays intact.
 	ptpl, err := ttemplate.New(p.path).Funcs(ttemplate.FuncMap(b.funcs)).Parse(string(p.contents))
 	if err != nil {
 		return err

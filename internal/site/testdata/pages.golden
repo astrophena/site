@@ -11,7 +11,7 @@
   </author>
 </feed>
 -- index.html --
-<html><body><h1>hello, world!</h1><ul><li>image</li><li>another page</li></ul></body></html>
+<html><body><h1>hello, world!</h1><ul><li>another page</li><li>image</li></ul></body></html>
 -- robots.txt --
 User-agent: *
 -- test-dc122cd797e76d1e0b07efe6262829098581816f1727d9a883bd4052a4e659ef --
