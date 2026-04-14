@@ -122,15 +122,6 @@ func Build(ctx context.Context, c *Config) error {
 		}
 	}
 
-	// Compile the doc2go binary.
-	logger.Info(ctx, "building doc2go")
-	doc2go := filepath.Join(tmpdir, "doc2go")
-	install := exec.Command("go", "install", "go.abhg.dev/doc2go")
-	install.Env = append(os.Environ(), "GOBIN="+filepath.Join(tmpdir))
-	if err := install.Run(); err != nil {
-		return err
-	}
-
 	for _, repo := range repos {
 		if repo.Private {
 			// For private repos, we create a single virtual package.
@@ -160,6 +151,7 @@ func Build(ctx context.Context, c *Config) error {
 		lg.Info("running \"go list\"")
 		var obuf, errbuf bytes.Buffer
 		list := exec.Command("go", "list", "-json", "./...")
+		list.Env = append(os.Environ(), "GOTOOLCHAIN=auto") // auto download Go toolchains when needed
 		list.Dir = repo.Dir
 		list.Stdout = &obuf
 		list.Stderr = &errbuf
@@ -225,7 +217,7 @@ func Build(ctx context.Context, c *Config) error {
 			commitn := string(commitb)
 			repo.Commit = strings.TrimSuffix(commitn, "\n")
 
-			if err := repo.generateDoc(c, doc2go); err != nil {
+			if err := repo.generateDoc(c); err != nil {
 				return err
 			}
 		}
@@ -270,7 +262,9 @@ func Build(ctx context.Context, c *Config) error {
 	// Generate CSS for syntax highlighting.
 
 	hcss, err := exec.Command(
-		doc2go,
+		"go",
+		"tool",
+		"doc2go",
 		"-highlight", highlightTheme,
 		"-highlight-print-css",
 	).Output()
@@ -374,7 +368,7 @@ type file struct {
 	Path string `json:"path"`
 }
 
-func (r *repo) generateDoc(c *Config, doc2goBin string) error {
+func (r *repo) generateDoc(c *Config) error {
 	tmpdir, err := os.MkdirTemp("", "vanity-doc2go")
 	if err != nil {
 		return err
@@ -382,14 +376,16 @@ func (r *repo) generateDoc(c *Config, doc2goBin string) error {
 	defer os.RemoveAll(tmpdir)
 
 	doc2go := exec.Command(
-		doc2goBin,
+		"go",
+		"tool",
+		"doc2go",
+		"-C", r.Dir,
 		"-highlight",
 		"classes:"+highlightTheme,
 		"-pkg-doc", path.Join(c.ImportRoot, r.Name)+"=https://{{ .ImportPath }}",
 		"-embed", "-out", tmpdir,
 		"./...",
 	)
-	doc2go.Dir = r.Dir
 	if err := doc2go.Run(); err != nil {
 		return err
 	}
