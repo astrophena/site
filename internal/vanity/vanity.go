@@ -2,7 +2,7 @@
 // Use of this source code is governed by the ISC
 // license that can be found in the LICENSE.md file.
 
-// Package vanity builds https://go.astrophena.name.
+// Package vanity builds the go.astrophena.name site.
 package vanity
 
 import (
@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -21,6 +22,8 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -29,18 +32,25 @@ import (
 	"go.astrophena.name/site/internal/site"
 
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/sync/errgroup"
 )
 
-// Config represents a build configuration.
+const pkgOverviewSelector = "h2#pkg-overview"
+
+// Config configures a vanity-site build.
 type Config struct {
-	// Dir is a directory where the generated site will be stored.
+	// Dir is the output directory for the generated site.
 	Dir string
-	// GitHubToken is a token for accessing the GitHub API.
+	// GitHubToken is used to access the GitHub API.
 	GitHubToken string
-	// ImportRoot is a root import path for the Go packages.
+	// ImportRoot is the root import path for the published packages.
 	ImportRoot string
-	// HTTPClient is a HTTP client for making requests.
+	// HTTPClient is used for GitHub API requests.
 	HTTPClient *http.Client
+	// RepoCacheDir, when set, stores persistent repository checkouts between builds.
+	RepoCacheDir string
+	// Concurrency limits how many repositories are prepared in parallel.
+	Concurrency int
 }
 
 type buildContext struct {
@@ -55,6 +65,13 @@ const highlightTheme = "native" // doc2go syntax highlighting theme
 
 // Build builds a site based on the provided [Config].
 func Build(ctx context.Context, c *Config) error {
+	if c == nil {
+		return errors.New("nil config")
+	}
+	if c.Dir == "" || c.Dir == "." || c.Dir == string(filepath.Separator) {
+		return fmt.Errorf("refusing to remove unsafe build directory %q", c.Dir)
+	}
+
 	// Initialize internal state.
 	b := &buildContext{c: c}
 
@@ -69,13 +86,13 @@ func Build(ctx context.Context, c *Config) error {
 		return err
 	}
 
-	// Obtain needed repositories from GitHub API.
-	allRepos, err := makeRequest[[]*repo](ctx, c, "https://api.github.com/user/repos")
+	// Fetch repositories visible to the authenticated user from GitHub.
+	allRepos, err := listRepos(ctx, c)
 	if err != nil {
 		return err
 	}
 
-	// Filter only Go modules.
+	// Keep only repositories whose root contains a go.mod file.
 	var repos []*repo
 	for _, repo := range allRepos {
 		if repo.Fork || repo.Name == "vanity" {
@@ -94,7 +111,7 @@ func Build(ctx context.Context, c *Config) error {
 		}
 	}
 
-	// Clean up after previous build.
+	// Remove any previous build output before generating the new site.
 	if _, err := os.Stat(c.Dir); err == nil {
 		if err := os.RemoveAll(c.Dir); err != nil {
 			return err
@@ -104,96 +121,44 @@ func Build(ctx context.Context, c *Config) error {
 		return err
 	}
 
-	// Create a temporary directory where generated site sources will be placed.
+	// Create a temporary workspace for generated site sources.
 	tmpdir, err := os.MkdirTemp("", "vanity")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpdir)
 
-	// Create subdirectories for various tasks.
-	var (
-		reposDir = filepath.Join(tmpdir, "repos")
-		siteDir  = filepath.Join(tmpdir, "site")
-	)
+	reposDir := filepath.Join(tmpdir, "repos")
+	if c.RepoCacheDir != "" {
+		reposDir = c.RepoCacheDir
+	}
+	siteDir := filepath.Join(tmpdir, "site")
+
 	for _, dir := range []string{reposDir, siteDir} {
+		if dir == "" {
+			continue
+		}
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return err
 		}
 	}
 
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(parallelism(c))
 	for _, repo := range repos {
-		if repo.Private {
-			// For private repos, we create a single virtual package.
-			repo.Pkgs = []*pkg{
-				{
-					BasePath:   repo.Name,
-					ImportPath: c.ImportRoot + "/" + repo.Name,
-					Repo:       repo,
-				},
-			}
-			continue
-		}
-
-		if !strings.HasSuffix(repo.Description, ".") {
-			repo.Description += "."
-		}
-
-		lg := logger.Get(ctx).With(slog.String("repo", repo.Name))
-
-		lg.Info("cloning")
-		repo.Dir = filepath.Join(reposDir, repo.Name)
-		clone := exec.Command("git", "clone", "--depth=1", repo.CloneURL, repo.Dir)
-		if err := clone.Run(); err != nil {
-			return err
-		}
-
-		lg.Info("running \"go list\"")
-		var obuf, errbuf bytes.Buffer
-		list := exec.Command("go", "list", "-json", "./...")
-		list.Env = append(os.Environ(), "GOTOOLCHAIN=auto") // auto download Go toolchains when needed
-		list.Dir = repo.Dir
-		list.Stdout = &obuf
-		list.Stderr = &errbuf
-		if err := list.Run(); err != nil {
-			return fmt.Errorf("go list failed for repo %s: %v (it returned %q)", repo.Name, err, errbuf.String())
-		}
-
-		dec := json.NewDecoder(&obuf)
-		for dec.More() {
-			p := new(pkg)
-			if err := dec.Decode(p); err != nil {
-				return err
-			}
-			p.Repo = repo
-			repo.Pkgs = append(repo.Pkgs, p)
-		}
-
-		if len(repo.Pkgs) > 0 {
-			allInternal := true
-			for _, pkg := range repo.Pkgs {
-				if !strings.Contains(pkg.ImportPath, "/internal") && !strings.HasPrefix(pkg.ImportPath, "internal") {
-					allInternal = false
-					break
-				}
-			}
-			repo.HasOnlyInternalPackages = allInternal
-		} else {
-			// If there are no packages, it's not considered "all internal" in a way that should hide it.
-			// Or, handle as a special case if needed, but for now, it won't be marked as HasOnlyInternalPackages.
-			repo.HasOnlyInternalPackages = false
-		}
-
-		if repo.HasOnlyInternalPackages {
-			lg.Info("repository has only internal packages")
-			repo.Pkgs = nil
-		}
+		repo := repo
+		g.Go(func() error {
+			return prepareRepo(gctx, c, repo, reposDir)
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return err
 	}
 
-	// Build repo and package pages.
+	// Build pages for packages and repository roots.
 	for _, repo := range repos {
-		// If the repository is not private and has only internal packages,
-		// create a special page for the repository root.
+		// Public repositories with only internal packages still get a root page
+		// that explains there are no importable packages.
 		if repo.HasOnlyInternalPackages && !repo.Private {
 			repo.Pkgs = []*pkg{
 				{
@@ -203,25 +168,6 @@ func Build(ctx context.Context, c *Config) error {
 				},
 			}
 		}
-
-		lg := logger.Get(ctx).With(slog.String("repo", repo.Name))
-
-		if repo.Dir != "" {
-			lg.Info("generating docs")
-			git := exec.Command("git", "rev-parse", "--short", "HEAD")
-			git.Dir = repo.Dir
-			commitb, err := git.Output()
-			if err != nil {
-				return err
-			}
-			commitn := string(commitb)
-			repo.Commit = strings.TrimSuffix(commitn, "\n")
-
-			if err := repo.generateDoc(c); err != nil {
-				return err
-			}
-		}
-
 		for _, pkg := range repo.Pkgs {
 			if err := b.buildPage(filepath.Join(siteDir, "pages", pkg.BasePath+".html"), &site.Page{
 				Title:       pkg.ImportPath,
@@ -259,9 +205,10 @@ func Build(ctx context.Context, c *Config) error {
 		}
 	}
 
-	// Generate CSS for syntax highlighting.
+	// Ask doc2go for the syntax-highlighting stylesheet used by generated docs.
 
-	hcss, err := exec.Command(
+	hcss, err := exec.CommandContext(
+		ctx,
 		"go",
 		"tool",
 		"doc2go",
@@ -278,7 +225,7 @@ func Build(ctx context.Context, c *Config) error {
 		return err
 	}
 
-	// Finally, build.
+	// Build the final static site from the generated source tree.
 	return site.Build(&site.Config{
 		Title: "Go Packages",
 		BaseURL: &url.URL{
@@ -315,20 +262,21 @@ func (b *buildContext) buildPage(path string, page *site.Page, tmpl string, data
 }
 
 type repo struct {
-	// From GitHub API:
-	Name        string `json:"name"`
-	URL         string `json:"url"`
-	Private     bool   `json:"private"`
-	Description string `json:"description"`
-	Archived    bool   `json:"archived"`
-	CloneURL    string `json:"clone_url"`
-	Fork        bool   `json:"fork"`
-	Owner       *owner `json:"owner"`
-	// Obtained by 'git rev-parse --short HEAD'
+	// Populated from the GitHub API.
+	Name          string `json:"name"`
+	URL           string `json:"url"`
+	Private       bool   `json:"private"`
+	Description   string `json:"description"`
+	Archived      bool   `json:"archived"`
+	CloneURL      string `json:"clone_url"`
+	DefaultBranch string `json:"default_branch"`
+	Fork          bool   `json:"fork"`
+	Owner         *owner `json:"owner"`
+	// Commit is the short HEAD revision of the cloned repository.
 	Commit string `json:"-"`
-	// For use with doc2go
+	// Dir is the local clone path used when generating docs.
 	Dir string `json:"-"`
-	// Go packages that this repo contains
+	// Pkgs contains the packages discovered in the repository.
 	Pkgs []*pkg `json:"-"`
 	// HasOnlyInternalPackages is true if all packages in Pkgs are internal.
 	HasOnlyInternalPackages bool `json:"-"`
@@ -339,14 +287,15 @@ type owner struct {
 }
 
 type pkg struct {
-	// bits of 'go list -json' that we need.
+	// Subset of fields returned by `go list -json`.
 	Name       string   // package name
 	ImportPath string   // import path of package in dir
 	Doc        string   // package documentation string
 	GoFiles    []string // .go source files
 	Imports    []string // import paths used by this package
 
-	FullDoc string // generated by doc2go
+	// FullDoc is the HTML documentation generated by doc2go.
+	FullDoc string
 
 	BasePath string
 
@@ -364,25 +313,207 @@ func makeRequest[Response any](ctx context.Context, c *Config, url string) (Resp
 	})
 }
 
+func listRepos(ctx context.Context, c *Config) ([]*repo, error) {
+	var repos []*repo
+	for page := 1; ; page++ {
+		u := fmt.Sprintf("https://api.github.com/user/repos?per_page=100&page=%d", page)
+		batch, err := makeRequest[[]*repo](ctx, c, u)
+		if err != nil {
+			return nil, err
+		}
+		if len(batch) == 0 {
+			break
+		}
+		repos = append(repos, batch...)
+		if len(batch) < 100 {
+			break
+		}
+	}
+	return repos, nil
+}
+
+func parallelism(c *Config) int {
+	if c != nil && c.Concurrency > 0 {
+		return c.Concurrency
+	}
+	if n := runtime.GOMAXPROCS(0); n > 0 {
+		return n
+	}
+	return 1
+}
+
+func prepareRepo(ctx context.Context, c *Config, repo *repo, reposDir string) error {
+	if repo.Private {
+		// Private repositories get a synthetic root package page with access instructions.
+		repo.Pkgs = []*pkg{{
+			BasePath:   repo.Name,
+			ImportPath: c.ImportRoot + "/" + repo.Name,
+			Repo:       repo,
+		}}
+		return nil
+	}
+
+	if !strings.HasSuffix(repo.Description, ".") {
+		repo.Description += "."
+	}
+
+	lg := logger.Get(ctx).With(slog.String("repo", repo.Name))
+	repo.Dir = filepath.Join(reposDir, repo.Name)
+
+	lg.Info("syncing checkout")
+	if err := syncRepoCheckout(ctx, repo); err != nil {
+		return err
+	}
+
+	commitb, err := runCommand(ctx, repo.Dir, nil, "git", "rev-parse", "--short", "HEAD")
+	if err != nil {
+		return err
+	}
+	repo.Commit = strings.TrimSpace(string(commitb))
+
+	lg.Info("running \"go list\"")
+	pkgs, err := listRepoPackages(ctx, repo)
+	if err != nil {
+		return err
+	}
+	repo.Pkgs = pkgs
+	repo.HasOnlyInternalPackages = hasOnlyInternalPackages(repo.Pkgs)
+	if repo.HasOnlyInternalPackages {
+		lg.Info("repository has only internal packages")
+		repo.Pkgs = nil
+		return nil
+	}
+
+	lg.Info("generating docs")
+	return repo.generateDoc(ctx, c)
+}
+
+func syncRepoCheckout(ctx context.Context, repo *repo) error {
+	if _, err := os.Stat(filepath.Join(repo.Dir, ".git")); err == nil {
+		if err := updateRepoCheckout(ctx, repo); err == nil {
+			return nil
+		}
+		if err := os.RemoveAll(repo.Dir); err != nil {
+			return err
+		}
+	} else if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	} else if _, err := os.Stat(repo.Dir); err == nil {
+		if err := os.RemoveAll(repo.Dir); err != nil {
+			return err
+		}
+	}
+
+	return cloneRepoCheckout(ctx, repo)
+}
+
+func cloneRepoCheckout(ctx context.Context, repo *repo) error {
+	args := []string{"clone", "--depth=1"}
+	if repo.DefaultBranch != "" {
+		args = append(args, "--branch", repo.DefaultBranch, "--single-branch")
+	}
+	args = append(args, repo.CloneURL, repo.Dir)
+	_, err := runCommand(ctx, "", nil, "git", args...)
+	return err
+}
+
+func updateRepoCheckout(ctx context.Context, repo *repo) error {
+	if _, err := runCommand(ctx, repo.Dir, nil, "git", "remote", "set-url", "origin", repo.CloneURL); err != nil {
+		return err
+	}
+
+	if repo.DefaultBranch != "" {
+		refspec := "refs/heads/" + repo.DefaultBranch
+		if _, err := runCommand(ctx, repo.Dir, nil, "git", "fetch", "--depth=1", "origin", refspec); err != nil {
+			return err
+		}
+		if _, err := runCommand(ctx, repo.Dir, nil, "git", "checkout", "--force", "-B", repo.DefaultBranch, "FETCH_HEAD"); err != nil {
+			return err
+		}
+	} else {
+		if _, err := runCommand(ctx, repo.Dir, nil, "git", "fetch", "--depth=1", "origin"); err != nil {
+			return err
+		}
+		if _, err := runCommand(ctx, repo.Dir, nil, "git", "reset", "--hard", "FETCH_HEAD"); err != nil {
+			return err
+		}
+	}
+	_, err := runCommand(ctx, repo.Dir, nil, "git", "clean", "-fdx")
+	return err
+}
+
+func listRepoPackages(ctx context.Context, repo *repo) ([]*pkg, error) {
+	var (
+		obuf   bytes.Buffer
+		errbuf bytes.Buffer
+		env    = append(os.Environ(), "GOTOOLCHAIN=auto")
+	)
+	cmd := exec.CommandContext(ctx, "go", "list", "-json", "./...")
+	cmd.Env = env
+	cmd.Dir = repo.Dir
+	cmd.Stdout = &obuf
+	cmd.Stderr = &errbuf
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("go list failed for repo %s: %v (it returned %q)", repo.Name, err, errbuf.String())
+	}
+
+	var pkgs []*pkg
+	dec := json.NewDecoder(&obuf)
+	for dec.More() {
+		p := new(pkg)
+		if err := dec.Decode(p); err != nil {
+			return nil, err
+		}
+		p.Repo = repo
+		pkgs = append(pkgs, p)
+	}
+	return pkgs, nil
+}
+
+func runCommand(ctx context.Context, dir string, env []string, name string, args ...string) ([]byte, error) {
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Dir = dir
+	if env != nil {
+		cmd.Env = env
+	}
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("%s %s failed: %v (it returned %q)", name, strings.Join(args, " "), err, strings.TrimSpace(string(out)))
+	}
+	return out, nil
+}
+
 type file struct {
 	Path string `json:"path"`
 }
 
-func (r *repo) generateDoc(c *Config) error {
+func (r *repo) generateDoc(ctx context.Context, c *Config) error {
 	tmpdir, err := os.MkdirTemp("", "vanity-doc2go")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpdir)
 
-	doc2go := exec.Command(
+	rootImportPath := path.Join(c.ImportRoot, r.Name)
+	haveRootPkg := slices.ContainsFunc(r.Pkgs, func(pkg *pkg) bool {
+		return pkg.ImportPath == rootImportPath
+	})
+	if !haveRootPkg {
+		r.Pkgs = append(r.Pkgs, &pkg{
+			ImportPath: rootImportPath,
+			Repo:       r,
+		})
+	}
+
+	doc2go := exec.CommandContext(
+		ctx,
 		"go",
 		"tool",
 		"doc2go",
 		"-C", r.Dir,
 		"-highlight",
 		"classes:"+highlightTheme,
-		"-pkg-doc", path.Join(c.ImportRoot, r.Name)+"=https://{{ .ImportPath }}",
+		"-pkg-doc", rootImportPath+"=https://{{ .ImportPath }}",
 		"-embed", "-out", tmpdir,
 		"./...",
 	)
@@ -390,31 +521,12 @@ func (r *repo) generateDoc(c *Config) error {
 		return err
 	}
 
-	// If we don't have a package which import path equals the module path
-	// (e.g. for github.com/astrophena/go-testrepo module there's no package
-	// "github.com/astrophena/go-testrepo", only subpackages like
-	// "github.com/astrophena/go-testrepo/http"), then we create such a
-	// package manually.
-	haveRootPkg := false
-	for _, pkg := range r.Pkgs {
-		if pkg.ImportPath == c.ImportRoot+"/"+r.Name {
-			haveRootPkg = true
-			break
-		}
-	}
-	if !haveRootPkg {
-		r.Pkgs = append(r.Pkgs, &pkg{
-			ImportPath: c.ImportRoot + "/" + r.Name,
-			Repo:       r,
-		})
-	}
-
 	for _, pkg := range r.Pkgs {
 		pkg.BasePath = strings.TrimPrefix(pkg.ImportPath, c.ImportRoot+"/")
 
 		docfile := filepath.Join(tmpdir, pkg.ImportPath, "index.html")
 		if _, err := os.Stat(docfile); errors.Is(err, fs.ErrNotExist) {
-			return nil
+			continue
 		} else if err != nil {
 			return err
 		}
@@ -436,6 +548,38 @@ func isFullURL(u string) bool {
 	return strings.HasPrefix(u, "http://") || strings.HasPrefix(u, "https://")
 }
 
+func isRelativePackageLink(link string) bool {
+	if link == "" || strings.HasPrefix(link, "#") {
+		return false
+	}
+	if strings.HasPrefix(link, "/") || isFullURL(link) {
+		return false
+	}
+	if strings.HasPrefix(link, "//") {
+		return false
+	}
+	if strings.Contains(link, ":") {
+		return false
+	}
+	return true
+}
+
+func isInternalImportPath(importPath string) bool {
+	if importPath == "internal" || strings.HasPrefix(importPath, "internal/") {
+		return true
+	}
+	return strings.HasSuffix(importPath, "/internal") || strings.Contains(importPath, "/internal/")
+}
+
+func hasOnlyInternalPackages(pkgs []*pkg) bool {
+	if len(pkgs) == 0 {
+		return false
+	}
+	return !slices.ContainsFunc(pkgs, func(pkg *pkg) bool {
+		return !isInternalImportPath(pkg.ImportPath)
+	})
+}
+
 func (p *pkg) modifyHTML(c *Config) error {
 	p.replaceRelLinks(c)
 
@@ -444,28 +588,18 @@ func (p *pkg) modifyHTML(c *Config) error {
 		return err
 	}
 
-	var (
-		tocHeadings int
-		toc         strings.Builder
-	)
-	toc.WriteString("<h3>Contents</h3><ul>\n")
-	doc.Find("[id^=hdr-]").Each(func(i int, s *goquery.Selection) {
-		id, exists := s.Attr("id")
-		if !exists {
-			return
+	overview := doc.Find(pkgOverviewSelector).First()
+	if overview.Length() > 0 {
+		var sections []string
+		if p.Name == "main" {
+			sections = append(sections, installSnippet(p.ImportPath))
 		}
-		text := s.Text()
-		toc.WriteString(fmt.Sprintf("<li><a href=\"#%s\">%s</a></li>\n", id, text))
-		tocHeadings += 1
-	})
-	toc.WriteString("</ul>\n")
-	if tocHeadings > 1 {
-		doc.Find("h2#pkg-overview").AfterHtml(toc.String())
-	}
-
-	if p.Name == "main" {
-		doc.Find("h2#pkg-overview").AfterHtml(fmt.Sprintf("<pre><code>$ go install %s@latest</code></pre>", p.ImportPath))
-		doc.Find("h2#pkg-overview").AfterHtml("<p>Install this program:</p>")
+		if toc := buildTOCSnippet(doc); toc != "" {
+			sections = append(sections, toc)
+		}
+		if len(sections) > 0 {
+			overview.AfterHtml(strings.Join(sections, ""))
+		}
 	}
 
 	html, err := doc.Html()
@@ -477,58 +611,82 @@ func (p *pkg) modifyHTML(c *Config) error {
 	return nil
 }
 
+func buildTOCSnippet(doc *goquery.Document) string {
+	var (
+		headings int
+		toc      strings.Builder
+	)
+
+	toc.WriteString("<h3>Contents</h3><ul>\n")
+	doc.Find("[id^=hdr-]").Each(func(_ int, s *goquery.Selection) {
+		id, exists := s.Attr("id")
+		if !exists {
+			return
+		}
+		fmt.Fprintf(&toc, "<li><a href=\"#%s\">%s</a></li>\n",
+			html.EscapeString(id),
+			html.EscapeString(s.Text()))
+		headings++
+	})
+	toc.WriteString("</ul>\n")
+
+	if headings <= 1 {
+		return ""
+	}
+	return toc.String()
+}
+
+func installSnippet(importPath string) string {
+	return fmt.Sprintf(
+		"<p>Install this program:</p><pre><code>$ go install %s@latest</code></pre>",
+		html.EscapeString(importPath),
+	)
+}
+
 var (
 	hrefRe     = regexp.MustCompile(`href="(.*?)"`)
 	fragmentRe = regexp.MustCompile(`^(.*?)(#(.*))?$`)
 )
 
 func (p *pkg) replaceRelLinks(c *Config) {
-	// Calculate the correct base path for relative links.
-	// For example, if the package is "go.astrophena.name/base/testutil",
-	// the base path will be "/base/testutil".
+	// Rewrite doc2go's module-relative links so they point at vanity-hosted pages.
 	basePath := "/" + strings.TrimPrefix(p.ImportPath, c.ImportRoot+"/")
 
-	// Define a function to handle link replacements.
 	replaceLink := func(link string) string {
-		// If the link starts with "../", it's a relative link within the module.
 		if strings.HasPrefix(link, "../") {
-			// Calculate the absolute path by navigating up the directory structure.
-			absPath := filepath.Join(basePath, link)
-			// Clean the path to remove any unnecessary "./" or "../" segments.
-			absPath = filepath.Clean(absPath)
+			absPath := path.Join(basePath, link)
+			absPath = path.Clean(absPath)
 			return absPath
 		}
-		// If the link doesn't contain a slash, it's a relative link to the package
-		// root. The same case for missing slash in the beginning.
-		if !strings.Contains(link, "/") || (!strings.HasPrefix(link, "/") && !isFullURL(link)) {
-			absPath := filepath.Join(basePath, link)
+		if isRelativePackageLink(link) {
+			absPath := path.Join(basePath, link)
 			return absPath
 		}
-		// If it's not a relative link within the module, return it cleaned, at
-		// least.
-		if isFullURL(link) {
+		if isFullURL(link) || strings.HasPrefix(link, "#") || strings.Contains(link, ":") || strings.HasPrefix(link, "//") {
 			return link
 		}
-		return filepath.Clean(link)
+		return path.Clean(link)
 	}
 
-	// Use a regular expression to find all links in the documentation.
 	p.FullDoc = hrefRe.ReplaceAllStringFunc(p.FullDoc, func(match string) string {
-		// Extract the actual link from the matched string.
 		parts := strings.Split(match, `"`)
 		link := parts[1]
 
-		// Replace the link if necessary.
 		newLink := replaceLink(link)
 
-		// Handle links with fragments.
 		if path, frag := linkFragment(newLink); frag != "" && !isFullURL(newLink) {
-			newLink = filepath.Clean(path) + "#" + frag
+			newLink = pathpkgClean(path) + "#" + frag
 		}
 
-		// Return the modified match with the updated link.
 		return fmt.Sprintf(`href="%s"`, newLink)
 	})
+}
+
+func pathpkgClean(p string) string {
+	if p == "" {
+		return ""
+	}
+	return path.Clean(p)
 }
 
 func linkFragment(link string) (path string, fragment string) {

@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"go.astrophena.name/base/cli"
@@ -42,9 +43,11 @@ func (a *app) Run(ctx context.Context) error {
 
 	if a.vanity {
 		return vanity.Build(ctx, &vanity.Config{
-			Dir:         dir,
-			GitHubToken: os.Getenv("GITHUB_TOKEN"),
-			ImportRoot:  "go.astrophena.name",
+			Dir:          dir,
+			GitHubToken:  os.Getenv("GITHUB_TOKEN"),
+			ImportRoot:   "go.astrophena.name",
+			RepoCacheDir: os.Getenv("VANITY_REPO_CACHE_DIR"),
+			Concurrency:  envInt("VANITY_CONCURRENCY"),
 		})
 	}
 
@@ -84,4 +87,16 @@ func (a *app) Run(ctx context.Context) error {
 		Prod: a.prod,
 	}
 	return site.Build(c)
+}
+
+func envInt(name string) int {
+	v := os.Getenv(name)
+	if v == "" {
+		return 0
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return 0
+	}
+	return n
 }
