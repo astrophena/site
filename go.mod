@@ -9,6 +9,7 @@ require (
 	github.com/tdewolff/minify/v2 v2.24.11
 	go.astrophena.name/base v0.19.0
 	go.starlark.net v0.0.0-20260326113308-fadfc96def35
+	golang.org/x/sync v0.20.0
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
 
@@ -27,7 +28,6 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/mod v0.35.0 // indirect
 	golang.org/x/net v0.53.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/term v0.42.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
