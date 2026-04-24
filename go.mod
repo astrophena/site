@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/feeds v1.2.0
-	github.com/tdewolff/minify/v2 v2.24.11
+	github.com/tdewolff/minify/v2 v2.24.12
 	go.astrophena.name/base v0.19.0
 	go.starlark.net v0.0.0-20260326113308-fadfc96def35
 	golang.org/x/sync v0.20.0
