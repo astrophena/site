@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	github.com/PuerkitoBio/goquery v1.12.0
-	github.com/fsnotify/fsnotify v1.9.0
+	github.com/fsnotify/fsnotify v1.10.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/tdewolff/minify/v2 v2.24.13
 	go.astrophena.name/base v0.19.0
