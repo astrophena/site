@@ -43,6 +43,8 @@ type Config struct {
 	Dir string
 	// GitHubToken is used to access the GitHub API.
 	GitHubToken string
+	// GitHubOwner is the GitHub user or organization whose public repositories are published.
+	GitHubOwner string
 	// ImportRoot is the root import path for the published packages.
 	ImportRoot string
 	// HTTPClient is used for GitHub API requests.
@@ -157,9 +159,9 @@ func Build(ctx context.Context, c *Config) error {
 
 	// Build pages for packages and repository roots.
 	for _, repo := range repos {
-		// Public repositories with only internal packages still get a root page
+		// Repositories with only internal packages still get a root page
 		// that explains there are no importable packages.
-		if repo.HasOnlyInternalPackages && !repo.Private {
+		if repo.HasOnlyInternalPackages {
 			repo.Pkgs = []*pkg{
 				{
 					ImportPath: c.ImportRoot + "/" + repo.Name,
@@ -170,12 +172,11 @@ func Build(ctx context.Context, c *Config) error {
 		}
 		for _, pkg := range repo.Pkgs {
 			if err := b.buildPage(filepath.Join(siteDir, "pages", pkg.BasePath+".html"), &site.Page{
-				Title:       pkg.ImportPath,
-				Template:    "main",
-				Type:        "page",
-				Permalink:   "/" + pkg.BasePath,
-				MetaTags:    metaTagsForRepo(c, repo),
-				ContentOnly: repo.Private,
+				Title:     pkg.ImportPath,
+				Template:  "main",
+				Type:      "page",
+				Permalink: "/" + pkg.BasePath,
+				MetaTags:  metaTagsForRepo(c, repo),
 			}, "pkg", pkg); err != nil {
 				return err
 			}
@@ -263,9 +264,9 @@ func (b *buildContext) buildPage(path string, page *site.Page, tmpl string, data
 
 type repo struct {
 	// Populated from the GitHub API.
-	Name          string `json:"name"`
-	URL           string `json:"url"`
-	Private       bool   `json:"private"`
+	Name string `json:"name"`
+	URL  string `json:"url"`
+
 	Description   string `json:"description"`
 	Archived      bool   `json:"archived"`
 	CloneURL      string `json:"clone_url"`
@@ -303,20 +304,26 @@ type pkg struct {
 }
 
 func makeRequest[Response any](ctx context.Context, c *Config, url string) (Response, error) {
+	headers := map[string]string{}
+	if c.GitHubToken != "" {
+		headers["Authorization"] = "Bearer " + c.GitHubToken
+	}
 	return request.Make[Response](ctx, request.Params{
-		Method: http.MethodGet,
-		URL:    url,
-		Headers: map[string]string{
-			"Authorization": "Bearer " + c.GitHubToken,
-		},
+		Method:     http.MethodGet,
+		URL:        url,
+		Headers:    headers,
 		HTTPClient: c.HTTPClient,
 	})
 }
 
 func listRepos(ctx context.Context, c *Config) ([]*repo, error) {
+	if c.GitHubOwner == "" {
+		return nil, errors.New("empty GitHub owner")
+	}
+
 	var repos []*repo
 	for page := 1; ; page++ {
-		u := fmt.Sprintf("https://api.github.com/user/repos?per_page=100&page=%d", page)
+		u := fmt.Sprintf("https://api.github.com/users/%s/repos?per_page=100&page=%d", url.PathEscape(c.GitHubOwner), page)
 		batch, err := makeRequest[[]*repo](ctx, c, u)
 		if err != nil {
 			return nil, err
@@ -343,16 +350,6 @@ func parallelism(c *Config) int {
 }
 
 func prepareRepo(ctx context.Context, c *Config, repo *repo, reposDir string) error {
-	if repo.Private {
-		// Private repositories get a synthetic root package page with access instructions.
-		repo.Pkgs = []*pkg{{
-			BasePath:   repo.Name,
-			ImportPath: c.ImportRoot + "/" + repo.Name,
-			Repo:       repo,
-		}}
-		return nil
-	}
-
 	if !strings.HasSuffix(repo.Description, ".") {
 		repo.Description += "."
 	}

@@ -45,6 +45,7 @@ func (a *app) Run(ctx context.Context) error {
 		return vanity.Build(ctx, &vanity.Config{
 			Dir:          dir,
 			GitHubToken:  os.Getenv("GITHUB_TOKEN"),
+			GitHubOwner:  "astrophena",
 			ImportRoot:   "go.astrophena.name",
 			RepoCacheDir: os.Getenv("VANITY_REPO_CACHE_DIR"),
 			Concurrency:  envInt("VANITY_CONCURRENCY"),

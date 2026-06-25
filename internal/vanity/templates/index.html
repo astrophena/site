@@ -10,10 +10,8 @@ license that can be found in the LICENSE.md file.
   <p><a href="https://go.dev">Go</a> packages and tools that I wrote.</p>
   {{ range . }}
     {{ if not .Archived }}
-      {{ if not .Private }}
-        {{ if not .HasOnlyInternalPackages }}
-          {{ template "repo" . }}
-        {{ end }}
+      {{ if not .HasOnlyInternalPackages }}
+        {{ template "repo" . }}
       {{ end }}
     {{ end }}
   {{ end }}
@@ -21,10 +19,8 @@ license that can be found in the LICENSE.md file.
     <summary>No longer maintained</summary>
     {{ range . }}
       {{ if .Archived }}
-        {{ if not .Private }}
-          {{ if not .HasOnlyInternalPackages }}
-            {{ template "repo" . }}
-          {{ end }}
+        {{ if not .HasOnlyInternalPackages }}
+          {{ template "repo" . }}
         {{ end }}
       {{ end }}
     {{ end }}

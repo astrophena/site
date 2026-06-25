@@ -6,18 +6,7 @@ license that can be found in the LICENSE.md file.
 
 <!-- vim: set ft=gotplhtml: -->
 {{ define "pkg" }}
-  {{ if .Repo.Private }}
-    <h1>Whoa there!</h1>
-    <p>This module is private.</p>
-    <p>
-      To fetch it, ensure that your <code>GOPRIVATE</code> environment variable includes
-      <code>{{ .ImportPath }}</code> and you have access to <code>{{ .Repo.Name }}</code> repository.
-    </p>
-    <p>
-      See <a href="https://go.dev/ref/mod#private-module-privacy">Go documentation</a> for reference.
-    </p>
-    <p>If you got here by mistake, go to the <a href="https://astrophena.name">home page</a>.</p>
-  {{ else if .Repo.HasOnlyInternalPackages }}
+  {{ if .Repo.HasOnlyInternalPackages }}
     {{ template "repo" .Repo }}
     <p>This module does not contain any importable packages.</p>
   {{ else }}
