@@ -28,7 +28,6 @@ var repos = []repo{
 	{
 		Name:          "nogomod",
 		URL:           "https://api.github.com/repos/example/nogomod",
-		Private:       false,
 		Description:   "Not a Go module.",
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "nogomod.bundle"),
@@ -38,7 +37,6 @@ var repos = []repo{
 	{
 		Name:          "noroot",
 		URL:           "https://api.github.com/repos/example/noroot",
-		Private:       false,
 		Description:   "Doesn't have root package.",
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "noroot.bundle"),
@@ -48,7 +46,6 @@ var repos = []repo{
 	{
 		Name:          "nothing",
 		URL:           "https://api.github.com/repos/example/nothing",
-		Private:       false,
 		Description:   "Package nothing does nothing.",
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "nothing.bundle"),
@@ -58,7 +55,6 @@ var repos = []repo{
 	{
 		Name:          "base",
 		URL:           "https://api.github.com/repos/example/base",
-		Private:       false,
 		Description:   "Package base does base.",
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "base.bundle"),
@@ -68,7 +64,6 @@ var repos = []repo{
 	{
 		Name:          "internalonlyrepo",
 		URL:           "https://api.github.com/repos/example/internalonlyrepo",
-		Private:       false,
 		Description:   "Repo with only internal packages.",
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "internalonlyrepo.bundle"),
@@ -80,7 +75,6 @@ var repos = []repo{
 var secondPageRepo = repo{
 	Name:          "page2repo",
 	URL:           "https://api.github.com/repos/example/page2repo",
-	Private:       false,
 	Description:   "Repo returned on the second page.",
 	Archived:      false,
 	CloneURL:      filepath.Join("internal", "vanity", "testdata", "nothing.bundle"),
@@ -146,6 +140,7 @@ func TestBuild(t *testing.T) {
 	c := &Config{
 		Dir:         dir,
 		GitHubToken: githubToken,
+		GitHubOwner: "example",
 		ImportRoot:  "example.com",
 		HTTPClient:  testutil.MockHTTPClient(testHandler(t)),
 		Concurrency: 2,
@@ -192,6 +187,7 @@ func TestBuildWithRepoCacheDir(t *testing.T) {
 		c := &Config{
 			Dir:          dir,
 			GitHubToken:  githubToken,
+			GitHubOwner:  "example",
 			ImportRoot:   "example.com",
 			HTTPClient:   testutil.MockHTTPClient(testHandler(t)),
 			RepoCacheDir: cacheDir,
@@ -216,7 +212,8 @@ func wantFile(t *testing.T, path string) {
 
 func testHandler(t *testing.T) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("api.github.com/user/repos", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("api.github.com/users/{owner}/repos", func(w http.ResponseWriter, r *http.Request) {
+		testutil.AssertEqual(t, r.PathValue("owner"), "example")
 		testutil.AssertEqual(t, strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), githubToken)
 		respondJSON(t, w, repos)
 	})
@@ -272,6 +269,7 @@ func TestListReposPagination(t *testing.T) {
 
 	c := &Config{
 		GitHubToken: githubToken,
+		GitHubOwner: "example",
 		HTTPClient:  testutil.MockHTTPClient(handler),
 	}
 

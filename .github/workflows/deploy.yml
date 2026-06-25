@@ -43,7 +43,7 @@ jobs:
           key: "${{ runner.os }}-vanity-repos-v1"
       - name: "Build"
         env:
-          GITHUB_TOKEN: "${{ secrets.VANITY_GITHUB_TOKEN }}"
+          GITHUB_TOKEN: "${{ github.token }}"
           VANITY_REPO_CACHE_DIR: ".cache/vanity/repos"
           VANITY_CONCURRENCY: "4"
         run: |
