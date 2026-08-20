@@ -148,7 +148,6 @@ func Build(ctx context.Context, c *Config) error {
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(parallelism(c))
 	for _, repo := range repos {
-		repo := repo
 		g.Go(func() error {
 			return prepareRepo(gctx, c, repo, reposDir)
 		})

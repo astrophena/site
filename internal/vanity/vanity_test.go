@@ -249,7 +249,7 @@ func TestListReposPagination(t *testing.T) {
 				t.Fatalf("per_page = %d, want 100", perPage)
 			}
 			var fullPage []repo
-			for i := 0; i < 100; i++ {
+			for i := range 100 {
 				fullPage = append(fullPage, repo{
 					Name:          fmt.Sprintf("page1repo-%03d", i),
 					URL:           fmt.Sprintf("https://api.github.com/repos/example/page1repo-%03d", i),
