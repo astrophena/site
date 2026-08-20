@@ -1,14 +1,14 @@
 module go.astrophena.name/site
 
-go 1.27.0
+go 1.27
 
 require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/feeds v1.2.0
-	github.com/tdewolff/minify/v2 v2.24.14
-	go.astrophena.name/base v0.23.2
-	go.starlark.net v0.0.0-20260326113308-fadfc96def35
+	github.com/tdewolff/minify/v2 v2.24.17
+	go.astrophena.name/base v0.23.4
+	go.starlark.net v0.0.0-20260708150628-5395d018f003
 	golang.org/x/sync v0.22.0
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
@@ -17,14 +17,14 @@ require (
 	braces.dev/errtrace v0.4.0 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
-	github.com/andybalholm/cascadia v1.3.3 // indirect
+	github.com/andybalholm/cascadia v1.3.4 // indirect
 	github.com/dlclark/regexp2/v2 v2.7.1 // indirect
 	github.com/fluhus/godoc-tricks v1.6.0 // indirect
 	github.com/go4org/hashtriemap v0.0.0-20251130024219-545ba229f689 // indirect
-	github.com/lmittmann/tint v1.1.3 // indirect
+	github.com/lmittmann/tint v1.2.0 // indirect
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
 	github.com/restic/chunker v0.5.0 // indirect
-	github.com/tdewolff/parse/v2 v2.8.14 // indirect
+	github.com/tdewolff/parse/v2 v2.8.16 // indirect
 	go.abhg.dev/doc2go v0.12.2 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260820142414-ca536658362e // indirect
 	golang.org/x/mod v0.40.0 // indirect
