@@ -3,7 +3,7 @@ module go.astrophena.name/site
 go 1.27
 
 require (
-	github.com/PuerkitoBio/goquery v1.12.0
+	github.com/PuerkitoBio/goquery v1.13.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/feeds v1.2.0
 	github.com/tdewolff/minify/v2 v2.24.17
