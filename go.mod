@@ -9,7 +9,7 @@ require (
 	github.com/tdewolff/minify/v2 v2.24.17
 	go.astrophena.name/base v0.23.4
 	go.starlark.net v0.0.0-20260708150628-5395d018f003
-	golang.org/x/sync v0.22.0
+	golang.org/x/sync v0.23.0
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
 )
 
