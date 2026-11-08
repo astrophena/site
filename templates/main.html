@@ -27,7 +27,7 @@ license that can be found in the LICENSE.md file.
     {{ end }}
     {{ if .JS }}
       {{ range .JS }}
-        <script src="{{ static . }}"></script>
+        <script defer src="{{ static . }}"></script>
       {{ end }}
     {{ end }}
     <link rel="icon" href="{{ static "/icons/35x35.webp" }}" />
