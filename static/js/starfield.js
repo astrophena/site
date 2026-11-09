@@ -19,9 +19,9 @@
   // Times are in milliseconds, distances in CSS pixels.
   const MAX_DPR = 2;
   const MAX_PIXELS = 3.5e6; // cap on the canvas backing store size
-  const SKY_STARS = 280; // stars in the generated sky
+  const MAX_STARS = 420;
   const STAR_DENSITY = 8000; // CSS px² of viewport per background star
-  const MIN_STARS = 50;
+  const MIN_STARS = 60;
   const LINE_ALPHA = 0.16;
   const TWINKLE_GAP = [2500, 7000];
   const TWINKLE_LENGTH = [2000, 3500];
@@ -34,7 +34,8 @@
   // A few real constellations. Stars are [right ascension (hours),
   // declination (degrees), magnitude, tint], where tint < 0 is bluish and
   // tint > 0 is warm. Lines are pairs of star indices. `wide` and `tall` place
-  // the group on landscape and portrait viewports as [x, y, size, rotation]:
+  // the group on roomy landscape and portrait/compact viewports, respectively,
+  // as [x, y, size, rotation]:
   // x and y are fractions of the viewport, size is a fraction of its shorter
   // side, and rotation is in degrees. Groups without a placement are hidden.
   const CONSTELLATIONS = [
@@ -51,7 +52,7 @@
       ],
       lines: [0, 1, 1, 2, 2, 3, 3, 0, 3, 4, 4, 5, 5, 6],
       wide: [0.83, 0.5, 0.34, 0],
-      tall: [0.6, 0.64, 0.7, -12],
+      tall: [0.59, 0.38, 0.72, -16],
     },
     {
       // Cassiopeia.
@@ -79,7 +80,7 @@
       ],
       lines: [7, 0, 7, 2, 0, 5, 2, 3, 3, 4, 4, 5, 5, 6, 3, 1],
       wide: [0.17, 0.76, 0.32, 8],
-      tall: [0.25, 0.88, 0.36, 8],
+      tall: [0.68, 0.8, 0.46, 8],
     },
     {
       // Cygnus and Lyra.
@@ -113,13 +114,17 @@
       ],
       lines: [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6],
       wide: [0.36, 0.58, 0.11, 0],
-      tall: [0.2, 0.6, 0.24, 0],
+      tall: [0.22, 0.64, 0.27, 0],
     },
   ];
 
   const reducedMotion = window.matchMedia
     ? window.matchMedia("(prefers-reduced-motion: reduce)")
     : { matches: false };
+
+  const finePointer = window.matchMedia
+    ? window.matchMedia("(hover: hover) and (pointer: fine)")
+    : { matches: true };
 
   // Deterministic PRNG (mulberry32), so that the sky is the same on every
   // visit.
@@ -137,35 +142,6 @@
     const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
     return t * t * (3 - 2 * t);
   };
-
-  // Generate a unit square of sky with Mitchell's best-candidate sampling.
-  // It avoids clumps, and every prefix of the list is itself evenly spread,
-  // so smaller screens can simply take fewer stars from the front. Few
-  // candidates keep it loose enough not to look like a grid.
-  const sky = [];
-  (function () {
-    const r = prng(0x5ca1ab1e);
-    for (let i = 0; i < SKY_STARS; i++) {
-      let bx = 0, by = 0, best = -1;
-      for (let c = 0; c < 4; c++) {
-        const x = r(), y = r();
-        let d = Infinity;
-        for (let j = 0; j < i; j++) {
-          const dx = x - sky[j][0], dy = y - sky[j][1];
-          d = Math.min(d, dx * dx + dy * dy);
-        }
-        if (d > best) {
-          best = d;
-          bx = x;
-          by = y;
-        }
-      }
-      const m = Math.pow(r(), 3); // most stars are faint
-      const tint = r() < 0.15 ? 0.3 + r() * 0.5 : -r() * 0.6;
-      // [x, y, size, brightness, depth, tint]
-      sky.push([bx, by, 0.7 + 1.3 * m, 0.14 + 0.5 * m, 0.15 + 0.6 * m + 0.25 * r(), tint]);
-    }
-  })();
 
   // Project each constellation onto a plane around its center and normalize
   // it to fit [-1, 1].
@@ -187,7 +163,8 @@
   let starData = new Float32Array(0); // x, y, id, size, brightness, depth, tint
   let lineData = new Float32Array(0); // x, y, depth
   let groups = []; // visible constellations, used for pulses
-  const quiet = new Float32Array(8); // two rectangles around text: x0, y0, x1, y1
+  const quietSelectors = ["header h1", "header nav", "main", "footer"];
+  const quiet = new Float32Array(quietSelectors.length * 4); // x0, y0, x1, y1
 
   // Animation state.
   const twinkles = [null, null, null, null];
@@ -231,22 +208,28 @@
     const stars = [], lines = [], taken = [];
     groups = [];
 
-    const tall = W < H, unit = Math.min(W, H);
+    const unit = Math.min(W, H), compact = unit < 600;
+    const sizeScale = compact ? 1.15 : 1;
     for (const c of CONSTELLATIONS) {
-      const place = tall ? c.tall : c.wide;
+      // Small screens get three larger, separated figures, including when
+      // a phone is turned sideways. Keep their stars clear of the edges.
+      const place = compact || W < H ? c.tall : c.wide;
       if (!place) continue;
       const half = Math.min(place[2] * unit, 420) / 2;
       const rot = (place[3] * Math.PI) / 180, cos = Math.cos(rot), sin = Math.sin(rot);
-      const cx = place[0] * W, cy = place[1] * H, depth = 0.5;
+      const pts = c.pts.map((p) => [(p[0] * cos - p[1] * sin) * half, (p[0] * sin + p[1] * cos) * half]);
+      const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+      const cx = Math.max(16 - Math.min(...xs), Math.min(W - 16 - Math.max(...xs), place[0] * W));
+      const cy = Math.max(16 - Math.min(...ys), Math.min(H - 16 - Math.max(...ys), place[1] * H));
+      const depth = 0.5;
       const base = stars.length / 7, pos = [];
-      c.pts.forEach((p, i) => {
-        const x = cx + (p[0] * cos - p[1] * sin) * half;
-        const y = cy + (p[0] * sin + p[1] * cos) * half;
+      pts.forEach((p, i) => {
+        const x = cx + p[0], y = cy + p[1];
         const mag = c.stars[i][2];
-        const size = 2.3 - 0.28 * mag;
+        const size = (2.3 - 0.28 * mag) * sizeScale;
         stars.push(x, y, base + i, size, Math.min(0.85, Math.max(0.3, 0.85 - 0.12 * mag)), depth, c.stars[i][3]);
         pos.push([x, y, size]);
-        taken.push(x, y);
+        taken.push([x, y]);
       });
       // Leave a small gap between lines and stars, like on a printed chart.
       for (let i = 0; i < c.lines.length; i += 2) {
@@ -260,20 +243,32 @@
       groups.push({ pos, lines: c.lines, depth });
     }
 
-    // Background stars: cover the viewport with the unit sky and keep the
-    // first visible ones, skipping any that would crowd a constellation.
-    const s = Math.max(W, H), ox = (W - s) / 2, oy = (H - s) / 2;
-    const want = Math.max(MIN_STARS, Math.round((W * H) / STAR_DENSITY));
-    for (let i = 0, n = 0; i < sky.length && n < want; i++) {
-      const st = sky[i], x = ox + st[0] * s, y = oy + st[1] * s;
-      if (x < -8 || y < -8 || x > W + 8 || y > H + 8) continue;
-      let crowded = false;
-      for (let j = 0; j < taken.length && !crowded; j += 2) {
-        crowded = Math.abs(taken[j] - x) < 16 && Math.abs(taken[j + 1] - y) < 16;
+    // Best-candidate sampling in viewport pixels avoids both clumps and the
+    // loss of stars from cropping a square sky to a narrow or wide screen.
+    // Start from the same seed on every layout; cap retries on tiny screens.
+    const r = prng(0x5ca1ab1e), sky = [];
+    const want = Math.min(MAX_STARS, Math.max(MIN_STARS, Math.round((W * H) / STAR_DENSITY)));
+    for (let attempt = 0; attempt < want * 2 && sky.length < want; attempt++) {
+      let bx = 0, by = 0, best = -1;
+      for (let c = 0; c < 4; c++) {
+        const x = r() * W, y = r() * H;
+        if (taken.some((p) => Math.abs(p[0] - x) < 16 && Math.abs(p[1] - y) < 16)) continue;
+        let d = Infinity;
+        for (const p of sky) {
+          const dx = x - p[0], dy = y - p[1];
+          d = Math.min(d, dx * dx + dy * dy);
+        }
+        if (d > best) {
+          best = d;
+          bx = x;
+          by = y;
+        }
       }
-      if (crowded) continue;
-      stars.push(x, y, stars.length / 7, st[2], st[3], st[4], st[5]);
-      n++;
+      if (best < 0) continue;
+      const m = Math.pow(r(), 3); // most stars are faint
+      const tint = r() < 0.15 ? 0.3 + r() * 0.5 : -r() * 0.6;
+      stars.push(bx, by, stars.length / 7, (0.7 + 1.3 * m) * sizeScale, 0.18 + 0.46 * m, 0.15 + 0.6 * m + 0.25 * r(), tint);
+      sky.push([bx, by]);
     }
 
     // The last vertex is the head of a travelling pulse, positioned by the
@@ -287,27 +282,36 @@
     for (let i = 0; i < 4; i++) stopTwinkle(i);
   }
 
-  // Stars behind the text are dimmed, so the background never competes with
-  // it.
+  // Keep each text region separate: a full-width footer must not dim the
+  // gutters beside a long main column. Its range measures the text, not the
+  // block's empty space. Clamp off-screen bounds for low-precision shaders.
   function measureQuiet() {
-    const sets = [document.querySelectorAll("header > *"), document.querySelectorAll("main, footer")];
-    sets.forEach((els, i) => {
-      let x0 = 1e4, y0 = 1e4, x1 = -1e4, y1 = -1e4;
-      for (const el of els) {
-        const r = el.getBoundingClientRect();
-        if (!r.width || !r.height) continue;
-        x0 = Math.min(x0, r.left);
-        y0 = Math.min(y0, r.top);
-        x1 = Math.max(x1, r.right);
-        y1 = Math.max(y1, r.bottom);
+    quiet.fill(-9000);
+    quietSelectors.forEach((selector, i) => {
+      const el = document.querySelector(selector);
+      if (!el) return;
+      let r = el.getBoundingClientRect();
+      if (selector === "footer") {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        r = range.getBoundingClientRect();
       }
-      quiet.set(x0 < x1 ? [x0, y0, x1, y1] : [-9e3, -9e3, -9e3, -9e3], i * 4);
+      if (!r.width || !r.height || r.bottom < -56 || r.top > H + 56) return;
+      quiet.set([
+        Math.max(-64, r.left), Math.max(-64, r.top),
+        Math.min(W + 64, r.right), Math.min(H + 64, r.bottom),
+      ], i * 4);
     });
+  }
+
+  function invalidateQuiet() {
+    quietDirty = true;
+    request();
   }
 
   function quietAt(x, y) {
     let k = 1;
-    for (let i = 0; i < 8; i += 4) {
+    for (let i = 0; i < quiet.length; i += 4) {
       const d = Math.max(quiet[i] - x, x - quiet[i + 2], quiet[i + 1] - y, y - quiet[i + 3]);
       k = Math.min(k, smoothstep(-8, 56, d));
     }
@@ -503,22 +507,32 @@
 
   // Renderers.
 
+  // Shared by the star vertex shader and the line fragment shader, so stars,
+  // pulse heads, and every point along a line obey the same text mask.
+  const QUIET_GLSL = `
+    uniform vec4 u_quiet[${quietSelectors.length}];
+
+    float quietAt(vec2 p) {
+      float k = 1.0;
+      for (int i = 0; i < ${quietSelectors.length}; i++) {
+        vec2 d = max(u_quiet[i].xy - p, p - u_quiet[i].zw);
+        k = min(k, smoothstep(-8.0, 56.0, max(d.x, d.y)));
+      }
+      return mix(${QUIET_DIM.toFixed(2)}, 1.0, k);
+    }`;
+
   const STAR_VS = `
     attribute vec3 a_pos; // x, y, id
     attribute vec4 a_star; // size, brightness, depth, tint
     uniform vec2 u_res;
     uniform vec2 u_off;
     uniform vec4 u_pulse;
-    uniform vec4 u_quiet[2];
     uniform vec4 u_twId;
     uniform vec4 u_twAmp;
     uniform float u_dpr;
     varying vec3 v_color;
 
-    float quiet(vec2 p, vec4 r) {
-      vec2 d = max(r.xy - p, p - r.zw);
-      return smoothstep(-8.0, 56.0, max(d.x, d.y));
-    }
+    ${QUIET_GLSL}
 
     void main() {
       vec2 p = a_pos.xy;
@@ -535,11 +549,11 @@
         float glow = u_pulse.z * exp(-dot(dp, dp) * 50.0);
         b = b * (1.0 + tw) + glow * 0.8;
         size *= 1.0 + 0.3 * max(tw, 0.0) + glow;
-        b *= mix(${QUIET_DIM.toFixed(2)}, 1.0, min(quiet(p, u_quiet[0]), quiet(p, u_quiet[1])));
       }
+      p += u_off * depth;
+      b *= quietAt(p);
       vec3 tint = a_star.w < 0.0 ? vec3(0.68, 0.79, 1.0) : vec3(1.0, 0.82, 0.62);
       v_color = mix(vec3(0.9, 0.93, 1.0), tint, abs(a_star.w)) * b;
-      p += u_off * depth;
       gl_Position = vec4(p / u_res * vec2(2.0, -2.0) + vec2(-1.0, 1.0), 0.0, 1.0);
       gl_PointSize = max(2.0, size * 4.0 * u_dpr);
     }`;
@@ -558,12 +572,13 @@
   const LINE_VS = `
     attribute vec3 a_pos; // x, y, depth
     uniform vec2 u_res;
-    uniform vec2 u_off;
+    // Match the fragment uniform even on devices without fragment highp.
+    uniform mediump vec2 u_off;
     varying vec2 v_pos;
 
     void main() {
-      v_pos = a_pos.xy;
       vec2 p = a_pos.xy + u_off * a_pos.z;
+      v_pos = p;
       gl_Position = vec4(p / u_res * vec2(2.0, -2.0) + vec2(-1.0, 1.0), 0.0, 1.0);
     }`;
 
@@ -574,13 +589,15 @@
     precision mediump float;
     #endif
     uniform vec4 u_pulse;
+    uniform mediump vec2 u_off;
     varying vec2 v_pos;
+    ${QUIET_GLSL}
 
     void main() {
-      vec2 d = clamp((v_pos - u_pulse.xy) / 100.0, -2.0, 2.0);
+      vec2 d = clamp((v_pos - u_pulse.xy - u_off * u_pulse.w) / 100.0, -2.0, 2.0);
       float glow = u_pulse.z * exp(-dot(d, d) * 16.0);
       vec3 c = vec3(0.6, 0.7, 0.86) * ${LINE_ALPHA.toFixed(2)} + vec3(0.7, 0.82, 1.0) * glow * 0.6;
-      gl_FragColor = vec4(c, 1.0);
+      gl_FragColor = vec4(c * quietAt(v_pos), 1.0);
     }`;
 
   function initGL() {
@@ -615,8 +632,8 @@
     let stars, lines, starBuf, lineBuf, starCount = 0, lineCount = 0, bg = [0, 0, 0];
 
     function init() {
-      const common = ["u_res", "u_off", "u_pulse"];
-      stars = program(STAR_VS, STAR_FS, ["a_pos", "a_star"], common.concat(["u_quiet", "u_twId", "u_twAmp", "u_dpr"]));
+      const common = ["u_res", "u_off", "u_pulse", "u_quiet"];
+      stars = program(STAR_VS, STAR_FS, ["a_pos", "a_star"], common.concat(["u_twId", "u_twAmp", "u_dpr"]));
       lines = program(LINE_VS, LINE_FS, ["a_pos"], common);
       if (!stars || !lines) return false;
       starBuf = gl.createBuffer();
@@ -634,6 +651,7 @@
       gl.uniform2f(prog.u.u_res, W, H);
       gl.uniform2f(prog.u.u_off, offset[0], offset[1]);
       gl.uniform4fv(prog.u.u_pulse, pulseU);
+      gl.uniform4fv(prog.u.u_quiet, quiet);
     }
 
     if (!init()) return null;
@@ -673,7 +691,6 @@
         }
 
         common(stars);
-        gl.uniform4fv(stars.u.u_quiet, quiet);
         gl.uniform4fv(stars.u.u_twId, twinkleId);
         gl.uniform4fv(stars.u.u_twAmp, twinkleAmp);
         gl.uniform1f(stars.u.u_dpr, dpr);
@@ -701,13 +718,20 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.globalCompositeOperation = "lighter";
         ctx.lineWidth = 1 / dpr;
-        ctx.strokeStyle = rgba([0.6, 0.7, 0.86], LINE_ALPHA);
-        ctx.beginPath();
         for (let i = 0; i < lineData.length; i += 6) {
-          ctx.moveTo(lineData[i], lineData[i + 1]);
-          ctx.lineTo(lineData[i + 3], lineData[i + 4]);
+          const x0 = lineData[i], y0 = lineData[i + 1], x1 = lineData[i + 3], y1 = lineData[i + 4];
+          const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+          const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 12));
+          for (let j = 0; j <= steps; j++) {
+            const t = j / steps;
+            gradient.addColorStop(t, rgba([0.6, 0.7, 0.86], LINE_ALPHA * quietAt(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)));
+          }
+          ctx.strokeStyle = gradient;
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+          ctx.stroke();
         }
-        ctx.stroke();
         for (let i = 0; i < starData.length - 7; i += 7) {
           const x = starData[i], y = starData[i + 1], size = starData[i + 3];
           const b = starData[i + 4] * quietAt(x, y), t = starData[i + 6];
@@ -742,6 +766,7 @@
   // Wakes the scene from scratch, e.g. after the page becomes visible again.
   function restart() {
     lastActivity = -DORMANT_AFTER;
+    quietDirty = true;
     onActivity();
     request();
   }
@@ -767,14 +792,17 @@
       needsLayout = true;
       request();
     });
-    addEventListener(
-      "scroll",
-      () => {
-        quietDirty = true;
-        request();
-      },
-      { passive: true },
-    );
+    addEventListener("scroll", invalidateQuiet, { passive: true });
+    // Disclosures on the package index move the footer without a scroll.
+    // Observe content sizes even when the scene is static or dormant.
+    if (window.ResizeObserver) {
+      const observer = new ResizeObserver(invalidateQuiet);
+      for (const selector of quietSelectors) {
+        const el = document.querySelector(selector);
+        if (el) observer.observe(el);
+      }
+    }
+    document.addEventListener("toggle", invalidateQuiet, true);
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) cancel();
       else restart();
@@ -793,7 +821,7 @@
     addEventListener(
       "pointermove",
       (e) => {
-        if (e.pointerType !== "mouse" || !W || !H) return onActivity();
+        if (!finePointer.matches || e.pointerType !== "mouse" || !W || !H) return onActivity();
         moveTarget((0.5 - e.clientX / W) * 2 * PARALLAX, (0.5 - e.clientY / H) * 2 * PARALLAX);
       },
       { passive: true },
