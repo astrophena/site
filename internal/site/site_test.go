@@ -51,6 +51,102 @@ func TestBuild(t *testing.T) {
 	}, *update)
 }
 
+func TestAssetBundles(t *testing.T) {
+	ar, err := txtar.ParseFile("testdata/assets.txtar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := &Config{
+		Src:      t.TempDir(),
+		Dst:      t.TempDir(),
+		SkipFeed: true,
+	}
+	testutil.ExtractTxtar(t, ar, c.Src)
+	build := func() (string, string) {
+		t.Helper()
+		if err := Build(c); err != nil {
+			t.Fatal(err)
+		}
+		bundles := make([]string, 0, 2)
+		for _, ext := range []string{"js", "css"} {
+			files, err := filepath.Glob(filepath.Join(c.Dst, ext, "main-*."+ext))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(files) != 1 {
+				t.Fatalf("want one %s bundle, got %v", ext, files)
+			}
+			bundles = append(bundles, files[0])
+		}
+		return bundles[0], bundles[1]
+	}
+
+	js, css := build()
+	if err := os.WriteFile(filepath.Join(c.Src, "static", "js", "greet.ts"), []byte(`export const greet = (name: string) => "Hi, " + name`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if nextJS, _ := build(); nextJS == js {
+		t.Fatal("changing imported TypeScript did not change the JavaScript bundle name")
+	}
+	if err := os.WriteFile(filepath.Join(c.Src, "static", "css", "colors.css"), []byte(`body { color: teal; }`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, nextCSS := build(); nextCSS == css {
+		t.Fatal("changing imported CSS did not change the stylesheet bundle name")
+	}
+
+	c.Vanity = true
+	_, css = build()
+	data, err := os.ReadFile(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(data, []byte(".highlight")) {
+		t.Fatal("vanity stylesheet is missing syntax highlighting")
+	}
+}
+
+func TestAssetBundleErrors(t *testing.T) {
+	ar, err := txtar.ParseFile("testdata/assets.txtar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := map[string]struct {
+		source string
+		want   string
+	}{
+		"syntax": {
+			source: "const broken: = 1",
+			want:   "main.ts",
+		},
+		"import": {
+			source: `import "./missing.ts"`,
+			want:   "missing.ts",
+		},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			c := &Config{
+				Src:      t.TempDir(),
+				Dst:      t.TempDir(),
+				SkipFeed: true,
+			}
+			testutil.ExtractTxtar(t, ar, c.Src)
+			if err := Build(c); err != nil {
+				t.Fatal(err)
+			}
+			before := testutil.BuildTxtar(t, c.Dst)
+			if err := os.WriteFile(filepath.Join(c.Src, "static", "js", "main.ts"), []byte(tc.source), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if err := Build(c); err == nil || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("want an error containing %q, got %v", tc.want, err)
+			}
+			testutil.AssertEqual(t, testutil.BuildTxtar(t, c.Dst), before)
+		})
+	}
+}
+
 func TestBuildNilConfig(t *testing.T) {
 	cwd := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(cwd, "templates"), 0o755); err != nil {
@@ -138,11 +234,26 @@ func TestServe(t *testing.T) {
 		url        string
 		wantStatus int
 	}{
-		{url: "/", wantStatus: http.StatusOK},
-		{url: "/watched", wantStatus: http.StatusOK},
-		{url: "/404", wantStatus: http.StatusOK},
-		{url: "/does-not-exist", wantStatus: http.StatusNotFound},
-		{url: "/icons/", wantStatus: http.StatusNotFound},
+		{
+			url:        "/",
+			wantStatus: http.StatusOK,
+		},
+		{
+			url:        "/watched",
+			wantStatus: http.StatusOK,
+		},
+		{
+			url:        "/404",
+			wantStatus: http.StatusOK,
+		},
+		{
+			url:        "/does-not-exist",
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			url:        "/icons/",
+			wantStatus: http.StatusNotFound,
+		},
 	}
 
 	for _, u := range urls {
@@ -188,14 +299,46 @@ func TestShouldRebuild(t *testing.T) {
 		op   fsnotify.Op
 		want bool
 	}{
-		"macOS garbage":   {".DS_Store", fsnotify.Create, false},
-		"vim temp file":   {"lololol/4913", fsnotify.Write, false},
-		"vim backup file": {"pages/hello.md~", fsnotify.Create, false},
-		"file creation":   {"pages/hello.md", fsnotify.Create, true},
-		"file removal":    {"pages/hello.md", fsnotify.Remove, true},
-		"file write":      {"pages/hello.md", fsnotify.Write, true},
-		"ignore chmod":    {"pages/hello.md", fsnotify.Chmod, false},
-		"ignore rename":   {"pages/hello.md", fsnotify.Rename, false},
+		"macOS garbage": {
+			".DS_Store",
+			fsnotify.Create,
+			false,
+		},
+		"vim temp file": {
+			"lololol/4913",
+			fsnotify.Write,
+			false,
+		},
+		"vim backup file": {
+			"pages/hello.md~",
+			fsnotify.Create,
+			false,
+		},
+		"file creation": {
+			"pages/hello.md",
+			fsnotify.Create,
+			true,
+		},
+		"file removal": {
+			"pages/hello.md",
+			fsnotify.Remove,
+			true,
+		},
+		"file write": {
+			"pages/hello.md",
+			fsnotify.Write,
+			true,
+		},
+		"ignore chmod": {
+			"pages/hello.md",
+			fsnotify.Chmod,
+			false,
+		},
+		"ignore rename": {
+			"pages/hello.md",
+			fsnotify.Rename,
+			false,
+		},
 	}
 
 	for name, tc := range cases {
@@ -276,10 +419,24 @@ func TestDebouncer(t *testing.T) {
 
 func TestSortPages(t *testing.T) {
 	pages := []*Page{
-		{Title: "undated-a"},
-		{Title: "older", Date: &date{Time: time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)}},
-		{Title: "newer", Date: &date{Time: time.Date(2024, time.February, 1, 0, 0, 0, 0, time.UTC)}},
-		{Title: "undated-b"},
+		{
+			Title: "undated-a",
+		},
+		{
+			Title: "older",
+			Date: &date{
+				Time: time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+			},
+		},
+		{
+			Title: "newer",
+			Date: &date{
+				Time: time.Date(2024, time.February, 1, 0, 0, 0, 0, time.UTC),
+			},
+		},
+		{
+			Title: "undated-b",
+		},
 	}
 
 	sortPages(pages)
@@ -311,7 +468,9 @@ Foo.
 
 	const strippedContent = "<p>Foo.</p>"
 
-	p := &Page{path: "foo.md"}
+	p := &Page{
+		path: "foo.md",
+	}
 	if err := p.parse(strings.NewReader(content)); err != nil {
 		t.Fatal(err)
 	}
@@ -441,7 +600,9 @@ Test
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			p := &Page{path: tc.name}
+			p := &Page{
+				path: tc.name,
+			}
 			err := p.parse(strings.NewReader(tc.content))
 
 			// Don't use && because we want to trap all cases where err is
@@ -533,7 +694,9 @@ func TestNavLinkTemplateFunc(t *testing.T) {
 				},
 				Vanity: true,
 			},
-			p:        &Page{Permalink: "/hello"},
+			p: &Page{
+				Permalink: "/hello",
+			},
 			title:    "Hello, world!",
 			iconName: "hello",
 			path:     "/hello",

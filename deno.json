@@ -1,0 +1,6 @@
+{
+  "fmt": {
+    "include": ["static/js", "static/vendor/*.d.ts"],
+    "semiColons": false
+  }
+}

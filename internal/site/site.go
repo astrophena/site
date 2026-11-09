@@ -9,8 +9,8 @@ A source tree is expected to contain these directories:
 
 	build      Default output directory for the generated site.
 	pages      Source pages in HTML or Markdown format.
-	static     Static assets copied into the generated site, with hashing and
-	           minification applied where appropriate.
+	static     Static assets copied into the generated site, with TypeScript
+	           and CSS bundled from js/main.ts and other assets hashed.
 	templates  HTML templates used to render pages. Front matter selects the
 	           template for each page, and template files must have a .html
 	           extension.
@@ -45,6 +45,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -57,12 +58,11 @@ import (
 
 	"go.astrophena.name/base/logger"
 
+	"github.com/evanw/esbuild/pkg/api"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/feeds"
 	"github.com/tdewolff/minify/v2"
-	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
-	"github.com/tdewolff/minify/v2/js"
 	mjson "github.com/tdewolff/minify/v2/json"
 	"rsc.io/markdown"
 )
@@ -159,6 +159,10 @@ func Build(c *Config) error {
 	if err := filepath.WalkDir(filepath.Join(b.c.Src, "static"), b.hashStatic); err != nil {
 		return err
 	}
+	assets, err := b.bundleAssets()
+	if err != nil {
+		return err
+	}
 
 	// Sort pages for output and feed generation.
 	sortPages(b.pages)
@@ -208,32 +212,33 @@ func Build(c *Config) error {
 		return err
 	}
 	// Copy static files.
-	return filepath.WalkDir(filepath.Join(b.c.Src, "static"), b.copyStatic)
+	if err := filepath.WalkDir(filepath.Join(b.c.Src, "static"), b.copyStatic); err != nil {
+		return err
+	}
+	for _, file := range assets {
+		if err := os.MkdirAll(filepath.Dir(file.Path), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(file.Path, file.Contents, 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 const robotsTxt = `User-agent: *
 `
 
-type min struct {
-	m *minify.M
-}
-
-func newMin() *min {
+func newMin() *minify.M {
 	m := minify.New()
-	m.AddFunc("text/css", css.Minify)
 	m.Add("text/html", &html.Minifier{
 		KeepDocumentTags:    true,
 		KeepDefaultAttrVals: true,
 		KeepEndTags:         true,
 	})
-	m.AddFunc("application/javascript", js.Minify)
 	m.AddFunc("application/json", mjson.Minify)
 
-	return &min{m: m}
-}
-
-func (m *min) Bytes(mediaType string, b []byte) ([]byte, error) {
-	return m.m.Bytes(mediaType, b)
+	return m
 }
 
 var serveReadyHook func() // used in tests after Serve starts accepting requests
@@ -298,7 +303,11 @@ func Serve(ctx context.Context, c *Config, addr string) error {
 	defer l.Close()
 	logger.Info(ctx, "listening for HTTP requests", slog.String("addr", "http://"+l.Addr().String()))
 
-	httpSrv := &http.Server{Handler: &staticHandler{fs: os.DirFS(c.Dst)}}
+	httpSrv := &http.Server{
+		Handler: &staticHandler{
+			fs: os.DirFS(c.Dst),
+		},
+	}
 	errCh := make(chan error, 1)
 	go func() {
 		if err := httpSrv.Serve(l); err != nil {
@@ -510,7 +519,7 @@ type buildContext struct {
 	pages     []*Page
 	templates map[string]*template.Template
 	static    map[string]string // path -> hashed path (e.g. /css/main.css -> /css/main-[hash].css)
-	min       *min
+	min       *minify.M
 }
 
 func newBuildContext(c *Config) *buildContext {
@@ -689,7 +698,9 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 	}
 	defer f.Close()
 
-	p := &Page{path: path}
+	p := &Page{
+		path: path,
+	}
 	if err := p.parse(f); err != nil {
 		return err
 	}
@@ -700,8 +711,67 @@ func (b *buildContext) parsePages(path string, d fs.DirEntry, err error) error {
 	return nil
 }
 
-var skipHashing = []string{
-	"robots.txt",
+func (b *buildContext) bundleAssets() ([]api.OutputFile, error) {
+	root, err := filepath.Abs(filepath.Join(b.c.Src, "static"))
+	if err != nil {
+		return nil, err
+	}
+	if _, err := os.Stat(filepath.Join(root, "js", "main.ts")); errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	outdir, err := filepath.Abs(b.c.Dst)
+	if err != nil {
+		return nil, err
+	}
+	goroot, err := exec.Command("go", "env", "GOROOT").Output()
+	if err != nil {
+		return nil, fmt.Errorf("find Go runtime: %w", err)
+	}
+
+	source := "\"use strict\"\n"
+	if b.c.Vanity {
+		source += "import './css/godoc.css'\n"
+	}
+	source += "import './js/main.ts'\n"
+	result := api.Build(api.BuildOptions{
+		AbsWorkingDir: root,
+		Stdin: &api.StdinOptions{
+			Contents:   source,
+			ResolveDir: root,
+			Sourcefile: "site.ts",
+			Loader:     api.LoaderTS,
+		},
+		Alias: map[string]string{
+			"go:wasm_exec": filepath.Join(strings.TrimSpace(string(goroot)), "lib", "wasm", "wasm_exec.js"),
+		},
+		Outdir:            outdir,
+		EntryNames:        "[ext]/main-[hash]",
+		Bundle:            true,
+		Platform:          api.PlatformBrowser,
+		Format:            api.FormatIIFE,
+		Target:            api.ES2022,
+		MinifyWhitespace:  true,
+		MinifyIdentifiers: true,
+		MinifySyntax:      true,
+		LegalComments:     api.LegalCommentsEndOfFile,
+	})
+	if len(result.Errors) > 0 {
+		messages := api.FormatMessages(result.Errors, api.FormatMessagesOptions{
+			Kind: api.ErrorMessage,
+		})
+		return nil, fmt.Errorf("bundle assets: %s", strings.Join(messages, "\n"))
+	}
+	for _, file := range result.OutputFiles {
+		rel, err := filepath.Rel(outdir, file.Path)
+		if err != nil {
+			return nil, err
+		}
+		ext := filepath.Ext(file.Path)
+		b.static["/"+ext[1:]+"/main"+ext] = "/" + filepath.ToSlash(rel)
+	}
+	return result.OutputFiles, nil
 }
 
 func (b *buildContext) hashStatic(path string, d fs.DirEntry, err error) error {
@@ -712,11 +782,13 @@ func (b *buildContext) hashStatic(path string, d fs.DirEntry, err error) error {
 	if d.IsDir() || isIgnorable(path) {
 		return nil
 	}
+	switch filepath.Ext(path) {
+	case ".ts", ".js", ".css":
+		return nil
+	}
 
-	for _, skip := range skipHashing {
-		if strings.Contains(path, skip) {
-			return nil
-		}
+	if strings.Contains(path, "robots.txt") {
+		return nil
 	}
 
 	rel, err := filepath.Rel(filepath.Join(b.c.Src, "static"), path)
@@ -761,6 +833,10 @@ func (b *buildContext) copyStatic(path string, d fs.DirEntry, err error) error {
 	if d.IsDir() || isIgnorable(path) {
 		return nil
 	}
+	switch filepath.Ext(path) {
+	case ".ts", ".js", ".css":
+		return nil
+	}
 
 	rel, err := filepath.Rel(filepath.Join(b.c.Src, "static"), path)
 	if err != nil {
@@ -777,17 +853,8 @@ func (b *buildContext) copyStatic(path string, d fs.DirEntry, err error) error {
 		return err
 	}
 
-	var mediaType string
-	switch filepath.Ext(path) {
-	case ".css":
-		mediaType = "text/css"
-	case ".js":
-		mediaType = "application/javascript"
-	case ".json":
-		mediaType = "application/json"
-	}
-	if mediaType != "" {
-		minified, err := b.min.Bytes(mediaType, buf)
+	if filepath.Ext(path) == ".json" {
+		minified, err := b.min.Bytes("application/json", buf)
 		if err != nil {
 			return err
 		}
@@ -827,8 +894,6 @@ type Page struct {
 	MetaTags    map[string]string `json:"meta_tags,omitempty"`    // meta_tags: Determines additional HTML meta tags that will be added to this page, optional.
 	Summary     string            `json:"summary,omitempty"`      // summary: Page summary, used in RSS feed, optional.
 	Type        string            `json:"type,omitempty"`         // type: Used to distinguish different kinds of pages, page by default.
-	CSS         []string          `json:"css,omitempty"`          // css: Additional CSS files that should be loaded, optional.
-	JS          []string          `json:"js,omitempty"`           // js: Additional JavaScript files that should be loaded, optional.
 
 	path     string // path to the page source
 	dstPath  string // where to write the built page
@@ -966,9 +1031,13 @@ func (p *Page) build(b *buildContext, tpl *template.Template, w io.Writer) error
 
 func (b *buildContext) buildFeed() error {
 	feed := &feeds.Feed{
-		Title:   b.c.Title,
-		Link:    &feeds.Link{Href: b.c.BaseURL.String() + "/"},
-		Author:  &feeds.Author{Name: b.c.Author},
+		Title: b.c.Title,
+		Link: &feeds.Link{
+			Href: b.c.BaseURL.String() + "/",
+		},
+		Author: &feeds.Author{
+			Name: b.c.Author,
+		},
 		Created: time.Now(),
 	}
 
@@ -989,8 +1058,10 @@ func (b *buildContext) buildFeed() error {
 		pu.Path = path.Join(pu.Path, p.Permalink)
 
 		item := &feeds.Item{
-			Title:       p.Title,
-			Link:        &feeds.Link{Href: pu.String()},
+			Title: p.Title,
+			Link: &feeds.Link{
+				Href: pu.String(),
+			},
 			Author:      feed.Author,
 			Description: p.Summary,
 			Content:     string(p.contents),

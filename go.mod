@@ -4,6 +4,7 @@ go 1.27
 
 require (
 	github.com/PuerkitoBio/goquery v1.13.0
+	github.com/evanw/esbuild v0.28.2
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/feeds v1.2.0
 	github.com/tdewolff/minify/v2 v2.24.24

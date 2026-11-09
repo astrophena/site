@@ -75,7 +75,9 @@ func Build(ctx context.Context, c *Config) error {
 	}
 
 	// Initialize internal state.
-	b := &buildContext{c: c}
+	b := &buildContext{
+		c: c,
+	}
 
 	// Initialize templates.
 	var err error
@@ -198,6 +200,7 @@ func Build(ctx context.Context, c *Config) error {
 		"static/css/",
 		"static/icons/",
 		"static/js/",
+		"static/vendor/",
 		"templates/",
 	} {
 		if err := os.CopyFS(filepath.Join(siteDir, dir), os.DirFS(dir)); err != nil {

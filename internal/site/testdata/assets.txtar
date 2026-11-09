@@ -1,0 +1,61 @@
+-- pages/index.html --
+{
+  "title": "Assets",
+  "template": "layout",
+  "permalink": "/"
+}
+
+<h1>Assets</h1>
+
+-- templates/layout.html --
+<html>
+  <head>
+    <link rel="stylesheet" href="{{ static "/css/main.css" }}">
+    <script defer src="{{ static "/js/main.js" }}"></script>
+  </head>
+  <body>{{ content . }}</body>
+</html>
+
+-- static/js/main.ts --
+import "../css/main.css"
+import { greet } from "./greet.ts"
+import suffix from "../vendor/suffix.js"
+
+document.body.dataset.greeting = greet("world") + suffix
+
+-- static/js/greet.ts --
+export function greet(name: string): string {
+  return `Hello, ${name}`
+}
+
+export function unused(): string {
+  return "this function is unused"
+}
+
+-- static/js/unused.ts --
+This unused source is not valid TypeScript.
+
+-- static/vendor/suffix.js --
+export default "!";
+
+-- static/css/main.css --
+@import "./colors.css";
+
+body {
+  margin: 0px;
+}
+
+-- static/css/colors.css --
+body {
+  color: navy;
+}
+
+-- static/css/godoc.css --
+.highlight {
+  color: gold;
+}
+
+-- static/data.json --
+{
+  "hello": "world"
+}

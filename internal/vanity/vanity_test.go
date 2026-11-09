@@ -32,7 +32,9 @@ var repos = []repo{
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "nogomod.bundle"),
 		DefaultBranch: "master",
-		Owner:         &owner{Login: "example"},
+		Owner: &owner{
+			Login: "example",
+		},
 	},
 	{
 		Name:          "noroot",
@@ -41,7 +43,9 @@ var repos = []repo{
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "noroot.bundle"),
 		DefaultBranch: "master",
-		Owner:         &owner{Login: "example"},
+		Owner: &owner{
+			Login: "example",
+		},
 	},
 	{
 		Name:          "nothing",
@@ -50,7 +54,9 @@ var repos = []repo{
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "nothing.bundle"),
 		DefaultBranch: "master",
-		Owner:         &owner{Login: "example"},
+		Owner: &owner{
+			Login: "example",
+		},
 	},
 	{
 		Name:          "base",
@@ -59,7 +65,9 @@ var repos = []repo{
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "base.bundle"),
 		DefaultBranch: "master",
-		Owner:         &owner{Login: "example"},
+		Owner: &owner{
+			Login: "example",
+		},
 	},
 	{
 		Name:          "internalonlyrepo",
@@ -68,7 +76,9 @@ var repos = []repo{
 		Archived:      false,
 		CloneURL:      filepath.Join("internal", "vanity", "testdata", "internalonlyrepo.bundle"),
 		DefaultBranch: "master",
-		Owner:         &owner{Login: "example"},
+		Owner: &owner{
+			Login: "example",
+		},
 	},
 }
 
@@ -79,38 +89,72 @@ var secondPageRepo = repo{
 	Archived:      false,
 	CloneURL:      filepath.Join("internal", "vanity", "testdata", "nothing.bundle"),
 	DefaultBranch: "master",
-	Owner:         &owner{Login: "example"},
+	Owner: &owner{
+		Login: "example",
+	},
 }
 
 // TODO: Derive this from the Git bundles to keep test fixtures in sync.
 var filesForRepo = map[string][]file{
 	"nogomod": {
-		{Path: "README.md"},
+		{
+			Path: "README.md",
+		},
 	},
 	"noroot": {
-		{Path: "go.mod"},
-		{Path: "hello/hello.go"},
+		{
+			Path: "go.mod",
+		},
+		{
+			Path: "hello/hello.go",
+		},
 	},
 	"nothing": {
-		{Path: "go.mod"},
-		{Path: "nothing.go"},
+		{
+			Path: "go.mod",
+		},
+		{
+			Path: "nothing.go",
+		},
 	},
 	"base": {
-		{Path: "LICENSE.md"},
-		{Path: "README.md"},
-		{Path: "base.go"},
-		{Path: "go.mod"},
-		{Path: "testutil/testutil.go"},
-		{Path: "txtar/txtar.go"},
+		{
+			Path: "LICENSE.md",
+		},
+		{
+			Path: "README.md",
+		},
+		{
+			Path: "base.go",
+		},
+		{
+			Path: "go.mod",
+		},
+		{
+			Path: "testutil/testutil.go",
+		},
+		{
+			Path: "txtar/txtar.go",
+		},
 	},
 	"internalonlyrepo": {
-		{Path: "go.mod"},
-		{Path: "internal/pkg1/pkg1.go"},
-		{Path: "internal/deeper/pkg2/pkg2.go"},
+		{
+			Path: "go.mod",
+		},
+		{
+			Path: "internal/pkg1/pkg1.go",
+		},
+		{
+			Path: "internal/deeper/pkg2/pkg2.go",
+		},
 	},
 	"page2repo": {
-		{Path: "go.mod"},
-		{Path: "nothing.go"},
+		{
+			Path: "go.mod",
+		},
+		{
+			Path: "nothing.go",
+		},
 	},
 }
 
@@ -256,7 +300,9 @@ func TestListReposPagination(t *testing.T) {
 					Description:   "Pagination filler.",
 					CloneURL:      filepath.Join("internal", "vanity", "testdata", "nothing.bundle"),
 					DefaultBranch: "master",
-					Owner:         &owner{Login: "example"},
+					Owner: &owner{
+						Login: "example",
+					},
 				})
 			}
 			respondJSON(t, w, fullPage)
@@ -301,12 +347,18 @@ func TestGenerateDocContinuesAfterMissingPackage(t *testing.T) {
 		Name: "base",
 		Dir:  cloneDir,
 		Pkgs: []*pkg{
-			{ImportPath: "example.com/base/missing"},
-			{ImportPath: "example.com/base/testutil"},
+			{
+				ImportPath: "example.com/base/missing",
+			},
+			{
+				ImportPath: "example.com/base/testutil",
+			},
 		},
 	}
 
-	if err := r.generateDoc(t.Context(), &Config{ImportRoot: "example.com"}); err != nil {
+	if err := r.generateDoc(t.Context(), &Config{
+		ImportRoot: "example.com",
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -464,7 +516,9 @@ func TestModifyHTML(t *testing.T) {
 `,
 	}
 
-	if err := p.modifyHTML(&Config{ImportRoot: "go.astrophena.name"}); err != nil {
+	if err := p.modifyHTML(&Config{
+		ImportRoot: "go.astrophena.name",
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -519,21 +573,31 @@ func TestHasOnlyInternalPackages(t *testing.T) {
 		},
 		"all internal": {
 			pkgs: []*pkg{
-				{ImportPath: "example.com/mod/internal/pkg1"},
-				{ImportPath: "example.com/mod/internal/deeper/pkg2"},
+				{
+					ImportPath: "example.com/mod/internal/pkg1",
+				},
+				{
+					ImportPath: "example.com/mod/internal/deeper/pkg2",
+				},
 			},
 			want: true,
 		},
 		"mixed": {
 			pkgs: []*pkg{
-				{ImportPath: "example.com/mod/internal/pkg1"},
-				{ImportPath: "example.com/mod/public"},
+				{
+					ImportPath: "example.com/mod/internal/pkg1",
+				},
+				{
+					ImportPath: "example.com/mod/public",
+				},
 			},
 			want: false,
 		},
 		"internaltools is public": {
 			pkgs: []*pkg{
-				{ImportPath: "example.com/mod/internaltools"},
+				{
+					ImportPath: "example.com/mod/internaltools",
+				},
 			},
 			want: false,
 		},

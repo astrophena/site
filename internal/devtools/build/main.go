@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"go.astrophena.name/base/cli"
 	"go.astrophena.name/site/internal/devtools/internal"
@@ -53,21 +52,6 @@ func (a *app) Run(ctx context.Context) error {
 	}
 
 	if !a.skipStarplay {
-		gorootb, err := exec.Command("go", "env", "GOROOT").Output()
-		if err != nil {
-			return err
-		}
-		goroot := strings.TrimSuffix(string(gorootb), "\n")
-
-		// Copy wasm_exec.js from GOROOT to prevent version incompatibility.
-		wasmExecJS, err := os.ReadFile(filepath.Join(goroot, "lib", "wasm", "wasm_exec.js"))
-		if err != nil {
-			return err
-		}
-		if err := os.WriteFile(filepath.Join("static", "js", "go_wasm_exec.js"), wasmExecJS, 0o644); err != nil {
-			return err
-		}
-
 		build := exec.Command(
 			"go",
 			"build",
