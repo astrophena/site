@@ -144,290 +144,333 @@
     c.points = points.map((p) => [(p[0] - x) / radius, (p[1] - y) / radius]);
   }
 
-  const canvas = document.createElement("canvas");
-  const sky = document.createElement("canvas");
-  const ctx = canvas.getContext("2d", { alpha: false });
-  const base = sky.getContext("2d", { alpha: false });
-  if (!ctx || !base) return;
+  class Starfield {
+    #canvas = document.createElement("canvas");
+    #sky = document.createElement("canvas");
+    #ctx;
+    #base;
+    #motion;
+    #width = 0;
+    #height = 0;
+    #scale = 1;
+    #stars = [];
+    #lines = [];
+    #quiet = [];
+    #layoutDirty = true;
+    #paintDirty = true;
+    #frame = 0;
+    #timer = 0;
+    #twinkle = null;
+    #lastActivity;
 
-  canvas.id = "starfield";
-  canvas.setAttribute("aria-hidden", "true");
-  document.body.prepend(canvas);
+    constructor() {
+      this.#ctx = this.#canvas.getContext("2d", { alpha: false });
+      this.#base = this.#sky.getContext("2d", { alpha: false });
+      if (!this.#ctx || !this.#base) return;
 
-  const motion = matchMedia("(prefers-reduced-motion: reduce)");
-  let width = 0, height = 0, scale = 1;
-  let stars = [], lines = [], quiet = [];
-  let layoutDirty = true, paintDirty = true;
-  let frame = 0, timer = 0, twinkle = null;
-  let lastActivity = performance.now();
+      this.#canvas.id = "starfield";
+      this.#canvas.setAttribute("aria-hidden", "true");
+      document.body.prepend(this.#canvas);
 
-  function layout() {
-    stars = [];
-    lines = [];
-    const unit = Math.min(width, height), compact = unit < 600;
-    const sizeScale = compact ? 1.15 : 1;
-    for (const c of CONSTELLATIONS) {
-      const place = compact || width < height ? c.tall : c.wide;
-      if (!place) continue;
-      const half = Math.min(place[2] * unit, 420) / 2;
-      const angle = place[3] * Math.PI / 180;
-      const cos = Math.cos(angle), sin = Math.sin(angle);
-      const points = c.points.map((
-        [x, y],
-      ) => [(x * cos - y * sin) * half, (x * sin + y * cos) * half]);
-      const xs = points.map((p) => p[0]), ys = points.map((p) => p[1]);
-      const x = Math.max(
-        16 - Math.min(...xs),
-        Math.min(width - 16 - Math.max(...xs), place[0] * width),
-      );
-      const y = Math.max(
-        16 - Math.min(...ys),
-        Math.min(height - 16 - Math.max(...ys), place[1] * height),
-      );
-      const figure = points.map((p, i) =>
-        star(
-          x + p[0],
-          y + p[1],
-          (2.3 - 0.28 * c.stars[i][2]) * sizeScale,
-          Math.min(0.85, Math.max(0.3, 0.85 - 0.12 * c.stars[i][2])),
-          c.stars[i][3],
-        )
-      );
-      stars.push(...figure);
-      for (let i = 0; i < c.lines.length; i += 2) {
-        const a = figure[c.lines[i]], b = figure[c.lines[i + 1]];
-        const dx = b.x - a.x, dy = b.y - a.y, length = Math.hypot(dx, dy);
-        const start = a.size + 3, end = b.size + 3;
-        if (length < start + end + 4) continue;
-        lines.push([
-          a.x + dx * start / length,
-          a.y + dy * start / length,
-          b.x - dx * end / length,
-          b.y - dy * end / length,
-        ]);
+      this.#motion = matchMedia("(prefers-reduced-motion: reduce)");
+      this.#lastActivity = performance.now();
+
+      addEventListener("resize", () => this.onResize());
+      addEventListener("scroll", () => this.invalidate(), { passive: true });
+      for (
+        const type of [
+          "pointermove",
+          "pointerdown",
+          "keydown",
+          "wheel",
+          "touchstart",
+        ]
+      ) {
+        addEventListener(type, () => this.activity(), { passive: true });
       }
+      document.addEventListener("site:load", () => this.invalidate());
+      document.addEventListener("toggle", () => this.invalidate(), true);
+      document.addEventListener("load", () => this.invalidate(), true);
+      document.addEventListener(
+        "visibilitychange",
+        () => this.onVisibilityChange(),
+      );
+      this.#motion.addEventListener("change", () => {
+        this.stop();
+        this.invalidate();
+      });
+      if (window.ResizeObserver) {
+        new ResizeObserver(() => this.invalidate()).observe(
+          document.getElementById("page"),
+        );
+      }
+      this.request();
     }
 
-    // Pick the best of four candidates to avoid clumps. Work in viewport
-    // pixels so narrow screens don't lose stars by cropping a square sky.
-    const taken = stars.slice(), background = [], rand = random(0x5ca1ab1e);
-    const count = Math.min(
-      MAX_STARS,
-      Math.max(60, Math.round(width * height / 8000)),
-    );
-    for (
-      let attempt = 0;
-      attempt < count * 2 && background.length < count;
-      attempt++
-    ) {
-      let x = 0, y = 0, best = -1;
-      for (let i = 0; i < 4; i++) {
-        const px = rand() * width, py = rand() * height;
-        if (
-          taken.some((s) => Math.abs(s.x - px) < 16 && Math.abs(s.y - py) < 16)
-        ) continue;
-        let distance = Infinity;
-        for (const s of background) {
-          distance = Math.min(distance, (s.x - px) ** 2 + (s.y - py) ** 2);
+    layout() {
+      this.#stars = [];
+      this.#lines = [];
+      const width = this.#width, height = this.#height;
+      const unit = Math.min(width, height), compact = unit < 600;
+      const sizeScale = compact ? 1.15 : 1;
+      for (const c of CONSTELLATIONS) {
+        const place = compact || width < height ? c.tall : c.wide;
+        if (!place) continue;
+        const half = Math.min(place[2] * unit, 420) / 2;
+        const angle = place[3] * Math.PI / 180;
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        const points = c.points.map((
+          [x, y],
+        ) => [(x * cos - y * sin) * half, (x * sin + y * cos) * half]);
+        const xs = points.map((p) => p[0]), ys = points.map((p) => p[1]);
+        const x = Math.max(
+          16 - Math.min(...xs),
+          Math.min(width - 16 - Math.max(...xs), place[0] * width),
+        );
+        const y = Math.max(
+          16 - Math.min(...ys),
+          Math.min(height - 16 - Math.max(...ys), place[1] * height),
+        );
+        const figure = points.map((p, i) =>
+          star(
+            x + p[0],
+            y + p[1],
+            (2.3 - 0.28 * c.stars[i][2]) * sizeScale,
+            Math.min(0.85, Math.max(0.3, 0.85 - 0.12 * c.stars[i][2])),
+            c.stars[i][3],
+          )
+        );
+        this.#stars.push(...figure);
+        for (let i = 0; i < c.lines.length; i += 2) {
+          const a = figure[c.lines[i]], b = figure[c.lines[i + 1]];
+          const dx = b.x - a.x, dy = b.y - a.y, length = Math.hypot(dx, dy);
+          const start = a.size + 3, end = b.size + 3;
+          if (length < start + end + 4) continue;
+          this.#lines.push([
+            a.x + dx * start / length,
+            a.y + dy * start / length,
+            b.x - dx * end / length,
+            b.y - dy * end / length,
+          ]);
         }
-        if (distance > best) {
-          x = px;
-          y = py;
-          best = distance;
+      }
+
+      // Pick the best of four candidates to avoid clumps. Work in viewport
+      // pixels so narrow screens don't lose stars by cropping a square sky.
+      const taken = this.#stars.slice(),
+        background = [],
+        rand = random(0x5ca1ab1e);
+      const count = Math.min(
+        MAX_STARS,
+        Math.max(60, Math.round(width * height / 8000)),
+      );
+      for (
+        let attempt = 0;
+        attempt < count * 2 && background.length < count;
+        attempt++
+      ) {
+        let x = 0, y = 0, best = -1;
+        for (let i = 0; i < 4; i++) {
+          const px = rand() * width, py = rand() * height;
+          if (
+            taken.some((s) =>
+              Math.abs(s.x - px) < 16 && Math.abs(s.y - py) < 16
+            )
+          ) continue;
+          let distance = Infinity;
+          for (const s of background) {
+            distance = Math.min(distance, (s.x - px) ** 2 + (s.y - py) ** 2);
+          }
+          if (distance > best) {
+            x = px;
+            y = py;
+            best = distance;
+          }
+        }
+        if (best < 0) continue;
+        const magnitude = rand() ** 3;
+        const tint = rand() < 0.15 ? 0.3 + rand() * 0.5 : -rand() * 0.6;
+        background.push(
+          star(
+            x,
+            y,
+            (0.7 + 1.3 * magnitude) * sizeScale,
+            0.18 + 0.46 * magnitude,
+            tint,
+          ),
+        );
+      }
+      this.#stars.push(...background);
+    }
+
+    measureText() {
+      this.#quiet = [];
+      for (const selector of textRegions) {
+        const el = document.querySelector(selector);
+        if (!el) continue;
+        let bounds = el.getBoundingClientRect();
+        if (selector === "footer") {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          bounds = range.getBoundingClientRect();
+        }
+        if (bounds.width && bounds.height) this.#quiet.push(bounds);
+      }
+    }
+
+    brightnessAt(x, y) {
+      let brightness = 1;
+      for (const r of this.#quiet) {
+        const distance = Math.max(
+          r.left - x,
+          x - r.right,
+          r.top - y,
+          y - r.bottom,
+        );
+        const t = Math.min(1, Math.max(0, (distance + 8) / 64));
+        brightness = Math.min(brightness, t * t * (3 - 2 * t));
+      }
+      return QUIET_DIM + (1 - QUIET_DIM) * brightness;
+    }
+
+    drawStar(context, s, gain = 1) {
+      const brightness = s.brightness * this.brightnessAt(s.x, s.y) * gain;
+      context.fillStyle = `rgba(${s.rgb},${brightness * 0.12})`;
+      context.beginPath();
+      context.arc(s.x, s.y, s.size * 1.8, 0, 2 * Math.PI);
+      context.fill();
+      context.fillStyle = `rgba(${s.rgb},${Math.min(1, brightness * 1.2)})`;
+      context.beginPath();
+      context.arc(s.x, s.y, s.size * 0.55, 0, 2 * Math.PI);
+      context.fill();
+    }
+
+    paint() {
+      this.measureText();
+      const base = this.#base;
+      base.globalCompositeOperation = "source-over";
+      base.fillStyle = getComputedStyle(document.body).backgroundColor;
+      base.fillRect(0, 0, this.#width, this.#height);
+      base.globalCompositeOperation = "lighter";
+      base.lineWidth = 1 / this.#scale;
+      for (const [x0, y0, x1, y1] of this.#lines) {
+        const gradient = base.createLinearGradient(x0, y0, x1, y1);
+        const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 12));
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const alpha = LINE_ALPHA *
+            this.brightnessAt(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
+          gradient.addColorStop(t, `rgba(153,179,219,${alpha})`);
+        }
+        base.strokeStyle = gradient;
+        base.beginPath();
+        base.moveTo(x0, y0);
+        base.lineTo(x1, y1);
+        base.stroke();
+      }
+      for (const s of this.#stars) this.drawStar(base, s);
+      this.#paintDirty = false;
+    }
+
+    draw(now) {
+      this.#frame = 0;
+      clearTimeout(this.#timer);
+      this.#timer = 0;
+      const canvas = this.#canvas, sky = this.#sky, ctx = this.#ctx;
+      if (this.#layoutDirty) {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        if (w !== this.#width || h !== this.#height) {
+          this.#width = w;
+          this.#height = h;
+          this.layout();
+          this.#twinkle = null;
+        }
+        this.#scale = Math.min(
+          devicePixelRatio || 1,
+          2,
+          Math.sqrt(MAX_PIXELS / Math.max(1, this.#width * this.#height)),
+        );
+        const pixelsWide = Math.round(this.#width * this.#scale),
+          pixelsHigh = Math.round(this.#height * this.#scale);
+        if (canvas.width !== pixelsWide || canvas.height !== pixelsHigh) {
+          canvas.width = sky.width = pixelsWide;
+          canvas.height = sky.height = pixelsHigh;
+        }
+        this.#base.setTransform(this.#scale, 0, 0, this.#scale, 0, 0);
+        this.#layoutDirty = false;
+        this.#paintDirty = true;
+      }
+      if (this.#paintDirty) this.paint();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(sky, 0, 0);
+      ctx.setTransform(this.#scale, 0, 0, this.#scale, 0, 0);
+      ctx.globalCompositeOperation = "lighter";
+      if (this.#twinkle) {
+        const phase = (now - this.#twinkle.start) / 2500;
+        if (phase >= 1) {
+          this.#twinkle = null;
+        } else {
+          this.drawStar(
+            ctx,
+            this.#twinkle.star,
+            Math.sin(Math.PI * phase) ** 2 * 0.7,
+          );
         }
       }
-      if (best < 0) continue;
-      const magnitude = rand() ** 3;
-      const tint = rand() < 0.15 ? 0.3 + rand() * 0.5 : -rand() * 0.6;
-      background.push(
-        star(
-          x,
-          y,
-          (0.7 + 1.3 * magnitude) * sizeScale,
-          0.18 + 0.46 * magnitude,
-          tint,
-        ),
-      );
-    }
-    stars.push(...background);
-  }
-
-  function measureText() {
-    quiet = [];
-    for (const selector of textRegions) {
-      const el = document.querySelector(selector);
-      if (!el) continue;
-      let bounds = el.getBoundingClientRect();
-      if (selector === "footer") {
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        bounds = range.getBoundingClientRect();
+      canvas.classList.add("ready");
+      if (this.#motion.matches) return;
+      if (this.#twinkle) {
+        this.#timer = setTimeout(() => this.request(), 1000 / 15);
+      } else if (now - this.#lastActivity < IDLE_AFTER) {
+        this.#timer = setTimeout(() => {
+          this.#timer = 0;
+          if (performance.now() - this.#lastActivity >= IDLE_AFTER) return;
+          this.#twinkle = {
+            star: this.#stars[Math.floor(Math.random() * this.#stars.length)],
+            start: performance.now(),
+          };
+          this.request();
+        }, 3000 + Math.random() * 5000);
       }
-      if (bounds.width && bounds.height) quiet.push(bounds);
     }
-  }
 
-  function brightnessAt(x, y) {
-    let brightness = 1;
-    for (const r of quiet) {
-      const distance = Math.max(
-        r.left - x,
-        x - r.right,
-        r.top - y,
-        y - r.bottom,
-      );
-      const t = Math.min(1, Math.max(0, (distance + 8) / 64));
-      brightness = Math.min(brightness, t * t * (3 - 2 * t));
-    }
-    return QUIET_DIM + (1 - QUIET_DIM) * brightness;
-  }
-
-  function drawStar(context, s, gain = 1) {
-    const brightness = s.brightness * brightnessAt(s.x, s.y) * gain;
-    context.fillStyle = `rgba(${s.rgb},${brightness * 0.12})`;
-    context.beginPath();
-    context.arc(s.x, s.y, s.size * 1.8, 0, 2 * Math.PI);
-    context.fill();
-    context.fillStyle = `rgba(${s.rgb},${Math.min(1, brightness * 1.2)})`;
-    context.beginPath();
-    context.arc(s.x, s.y, s.size * 0.55, 0, 2 * Math.PI);
-    context.fill();
-  }
-
-  function paint() {
-    measureText();
-    base.globalCompositeOperation = "source-over";
-    base.fillStyle = getComputedStyle(document.body).backgroundColor;
-    base.fillRect(0, 0, width, height);
-    base.globalCompositeOperation = "lighter";
-    base.lineWidth = 1 / scale;
-    for (const [x0, y0, x1, y1] of lines) {
-      const gradient = base.createLinearGradient(x0, y0, x1, y1);
-      const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 12));
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const alpha = LINE_ALPHA *
-          brightnessAt(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
-        gradient.addColorStop(t, `rgba(153,179,219,${alpha})`);
+    request() {
+      if (!this.#frame && !document.hidden) {
+        this.#frame = requestAnimationFrame((now) => this.draw(now));
       }
-      base.strokeStyle = gradient;
-      base.beginPath();
-      base.moveTo(x0, y0);
-      base.lineTo(x1, y1);
-      base.stroke();
     }
-    for (const s of stars) drawStar(base, s);
-    paintDirty = false;
-  }
 
-  function draw(now) {
-    frame = 0;
-    clearTimeout(timer);
-    timer = 0;
-    if (layoutDirty) {
-      const w = canvas.clientWidth, h = canvas.clientHeight;
-      if (w !== width || h !== height) {
-        width = w;
-        height = h;
-        layout();
-        twinkle = null;
+    invalidate() {
+      this.#paintDirty = true;
+      this.request();
+    }
+
+    stop() {
+      clearTimeout(this.#timer);
+      cancelAnimationFrame(this.#frame);
+      this.#timer = this.#frame = 0;
+      this.#twinkle = null;
+    }
+
+    activity() {
+      this.#lastActivity = performance.now();
+      if (!this.#motion.matches && !this.#timer) this.request();
+    }
+
+    onResize() {
+      this.#layoutDirty = true;
+      this.request();
+    }
+
+    onVisibilityChange() {
+      this.stop();
+      if (!document.hidden) {
+        this.activity();
+        this.invalidate();
       }
-      scale = Math.min(
-        devicePixelRatio || 1,
-        2,
-        Math.sqrt(MAX_PIXELS / Math.max(1, width * height)),
-      );
-      const pixelsWide = Math.round(width * scale),
-        pixelsHigh = Math.round(height * scale);
-      if (canvas.width !== pixelsWide || canvas.height !== pixelsHigh) {
-        canvas.width = sky.width = pixelsWide;
-        canvas.height = sky.height = pixelsHigh;
-      }
-      base.setTransform(scale, 0, 0, scale, 0, 0);
-      layoutDirty = false;
-      paintDirty = true;
-    }
-    if (paintDirty) paint();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(sky, 0, 0);
-    ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    ctx.globalCompositeOperation = "lighter";
-    if (twinkle) {
-      const phase = (now - twinkle.start) / 2500;
-      if (phase >= 1) twinkle = null;
-      else drawStar(ctx, twinkle.star, Math.sin(Math.PI * phase) ** 2 * 0.7);
-    }
-    canvas.classList.add("ready");
-    if (motion.matches) return;
-    if (twinkle) {
-      timer = setTimeout(request, 1000 / 15);
-    } else if (now - lastActivity < IDLE_AFTER) {
-      timer = setTimeout(() => {
-        timer = 0;
-        if (performance.now() - lastActivity >= IDLE_AFTER) return;
-        twinkle = {
-          star: stars[Math.floor(Math.random() * stars.length)],
-          start: performance.now(),
-        };
-        request();
-      }, 3000 + Math.random() * 5000);
     }
   }
 
-  function request() {
-    if (!frame && !document.hidden) frame = requestAnimationFrame(draw);
-  }
-
-  function invalidate() {
-    paintDirty = true;
-    request();
-  }
-
-  function stop() {
-    clearTimeout(timer);
-    cancelAnimationFrame(frame);
-    timer = frame = 0;
-    twinkle = null;
-  }
-
-  function activity() {
-    lastActivity = performance.now();
-    if (!motion.matches && !timer) request();
-  }
-
-  addEventListener("resize", () => {
-    layoutDirty = true;
-    request();
-  });
-  addEventListener("scroll", invalidate, { passive: true });
-  for (
-    const type of [
-      "pointermove",
-      "pointerdown",
-      "keydown",
-      "wheel",
-      "touchstart",
-    ]
-  ) {
-    addEventListener(type, activity, { passive: true });
-  }
-  document.addEventListener("site:load", invalidate);
-  document.addEventListener("toggle", invalidate, true);
-  document.addEventListener("load", invalidate, true);
-  document.addEventListener("visibilitychange", () => {
-    stop();
-    if (!document.hidden) {
-      activity();
-      invalidate();
-    }
-  });
-  motion.addEventListener("change", () => {
-    stop();
-    invalidate();
-  });
-  if (window.ResizeObserver) {
-    new ResizeObserver(invalidate).observe(document.getElementById("page"));
-  }
-  request();
+  new Starfield();
 })();

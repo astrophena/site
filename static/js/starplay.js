@@ -1,46 +1,55 @@
 (function () {
   "use strict";
 
-  let ready = null;
+  class Starplay {
+    #ready = null;
 
-  function report(error) {
-    const output = document.getElementById("output");
-    const button = document.getElementById("run");
-    if (output) output.value = `Unable to load the playground: ${error}`;
-    if (button) button.disabled = true;
-  }
-
-  async function load(url) {
-    const go = new Go();
-    const { instance } = await WebAssembly.instantiateStreaming(
-      fetch(url),
-      go.importObject,
-    );
-    go.run(instance).catch((error) => {
-      ready = null;
-      report(error);
-    });
-    if (typeof window.run !== "function") {
-      throw new Error("Go runtime did not start");
+    constructor() {
+      document.addEventListener("site:load", () => this.start());
+      this.start();
     }
-  }
 
-  function start() {
-    const url = document.body.dataset.starplayWasm;
-    const button = document.getElementById("run");
-    if (!url || !button) return;
-    button.disabled = true;
-    if (!ready) {
-      ready = load(url).catch((error) => {
-        ready = null;
-        throw error;
+    start() {
+      const url = document.body.dataset.starplayWasm;
+      const button = document.getElementById("run");
+      if (!url || !button) return;
+      button.disabled = true;
+      if (!this.#ready) {
+        this.#ready = this.#load(url).catch((error) => {
+          this.#ready = null;
+          throw error;
+        });
+      }
+      this.#ready.then(
+        () => {
+          if (button.isConnected) button.disabled = false;
+        },
+        (error) => this.#report(error),
+      );
+    }
+
+    async #load(url) {
+      const go = new Go();
+      const { instance } = await WebAssembly.instantiateStreaming(
+        fetch(url),
+        go.importObject,
+      );
+      go.run(instance).catch((error) => {
+        this.#ready = null;
+        this.#report(error);
       });
+      if (typeof window.run !== "function") {
+        throw new Error("Go runtime did not start");
+      }
     }
-    ready.then(() => {
-      if (button.isConnected) button.disabled = false;
-    }, report);
+
+    #report(error) {
+      const output = document.getElementById("output");
+      const button = document.getElementById("run");
+      if (output) output.value = `Unable to load the playground: ${error}`;
+      if (button) button.disabled = true;
+    }
   }
 
-  document.addEventListener("site:load", start);
-  start();
+  new Starplay();
 })();
