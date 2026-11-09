@@ -188,12 +188,6 @@ func Build(ctx context.Context, c *Config) error {
 		Template:  "main",
 		Type:      "page",
 		Permalink: "/",
-		JS: []string{
-			"/js/starfield.js",
-		},
-		CSS: []string{
-			"/css/starfield.css",
-		},
 	}, "index", repos); err != nil {
 		return err
 	}
