@@ -102,9 +102,30 @@
     return ready;
   }
 
+  function loadStyle(el, url, signal) {
+    return new Promise((resolve, reject) => {
+      function finish(error) {
+        el.onload = el.onerror = null;
+        signal.removeEventListener("abort", abort);
+        if (error) reject(error);
+        else resolve();
+      }
+      function abort() {
+        finish(new Error("navigation cancelled"));
+      }
+      el.href = new URL(el.getAttribute("href"), url).href;
+      el.onload = () => finish();
+      el.onerror = () => finish(new Error(`loading ${el.href}`));
+      signal.addEventListener("abort", abort, { once: true });
+      if (signal.aborted) abort();
+      else document.head.append(el);
+    });
+  }
+
   async function visit(url, position, pop = false) {
     cancel();
     const request = new AbortController();
+    const styles = new Map();
     pending = request;
     page.setAttribute("aria-busy", "true");
     try {
@@ -134,6 +155,20 @@
         assets(next, destination) !== assets(document, current)
       ) throw new Error("full navigation required");
 
+      const selector = "meta[data-page], link[data-page]";
+      const previous = document.head.querySelectorAll(selector);
+      const head = Array.from(next.head.querySelectorAll(selector));
+      // Fetch styles without applying them to the current page. Activate them
+      // only once every stylesheet is ready and the content can be swapped.
+      await Promise.all(
+        head.filter((el) => el.matches('link[rel="stylesheet"]')).map((el) => {
+          styles.set(el, el.getAttribute("media"));
+          el.media = "not all";
+          return loadStyle(el, destination, request.signal);
+        }),
+      );
+      if (pending !== request) return;
+
       for (const script of next.head.querySelectorAll("script[data-page]")) {
         await loadScript(script, destination);
         if (pending !== request) return;
@@ -142,14 +177,19 @@
       else push(destination);
       current = destination;
       document.title = next.title;
-      const head = "meta[data-page], link[data-page]";
-      for (const el of document.head.querySelectorAll(head)) el.remove();
+      for (const el of previous) el.remove();
       const before = document.head.querySelector(
         'link[rel="stylesheet"]:not([data-page])',
       );
-      for (const el of next.head.querySelectorAll(head)) {
+      for (const el of head) {
+        if (styles.has(el)) {
+          const media = styles.get(el);
+          if (media === null) el.removeAttribute("media");
+          else el.setAttribute("media", media);
+        }
         document.head.insertBefore(el, before);
       }
+      styles.clear();
       for (const key of Object.keys(document.body.dataset)) {
         delete document.body.dataset[key];
       }
@@ -180,6 +220,8 @@
         else location.assign(url.href);
       }
     } finally {
+      request.abort();
+      for (const el of styles.keys()) el.remove();
       if (pending === request) {
         pending = null;
         page.removeAttribute("aria-busy");
