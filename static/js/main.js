@@ -2,7 +2,8 @@
   "use strict";
 
   function enhance() {
-    Lightense("#page img:not(.avatar)", { background: "rgba(0, 0, 0, 0)" });
+    const images = document.querySelectorAll("#page img:not(.avatar)");
+    if (images.length) Lightense(images, { background: "rgba(0, 0, 0, 0)" });
   }
 
   function scrollToPage(url, position) {
@@ -128,6 +129,7 @@
       }
       const ready = new Promise((resolve, reject) => {
         const script = document.createElement("script");
+        script.async = false;
         script.src = src;
         script.dataset.page = el.dataset.page;
         script.onload = resolve;
@@ -187,10 +189,13 @@
         );
         if (this.#pending !== request) return;
 
-        for (const script of next.head.querySelectorAll("script[data-page]")) {
-          await this.loadScript(script, destination);
-          if (this.#pending !== request) return;
-        }
+        await Promise.all(
+          Array.from(
+            next.head.querySelectorAll("script[data-page]"),
+            (script) => this.loadScript(script, destination),
+          ),
+        );
+        if (this.#pending !== request) return;
         if (pop) history.replaceState(history.state, "", destination);
         else this.push(destination);
         this.#current = destination;

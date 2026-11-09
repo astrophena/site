@@ -280,6 +280,7 @@
           let distance = Infinity;
           for (const s of background) {
             distance = Math.min(distance, (s.x - px) ** 2 + (s.y - py) ** 2);
+            if (distance <= best) break;
           }
           if (distance > best) {
             x = px;
@@ -400,10 +401,28 @@
         this.#layoutDirty = false;
         this.#paintDirty = true;
       }
-      if (this.#paintDirty) this.paint();
+      const repaint = this.#paintDirty;
+      if (repaint) this.paint();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = "source-over";
-      ctx.drawImage(sky, 0, 0);
+      if (repaint) {
+        ctx.drawImage(sky, 0, 0);
+      } else if (this.#twinkle) {
+        // Restore only the twinkling star's pixels between atlas repaints.
+        const s = this.#twinkle.star;
+        const radius = s.size * 1.8 * this.#scale + 1;
+        const x = Math.max(0, Math.floor(s.x * this.#scale - radius));
+        const y = Math.max(0, Math.floor(s.y * this.#scale - radius));
+        const width = Math.min(
+          canvas.width,
+          Math.ceil(s.x * this.#scale + radius),
+        ) - x;
+        const height = Math.min(
+          canvas.height,
+          Math.ceil(s.y * this.#scale + radius),
+        ) - y;
+        ctx.drawImage(sky, x, y, width, height, x, y, width, height);
+      }
       ctx.setTransform(this.#scale, 0, 0, this.#scale, 0, 0);
       ctx.globalCompositeOperation = "lighter";
       if (this.#twinkle) {
